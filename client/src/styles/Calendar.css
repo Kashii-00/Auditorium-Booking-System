@@ -1,0 +1,41 @@
+
+.calendar-page {
+
+  padding-left: 80px;
+
+}
+
+.calendar-container {
+  display: flex;
+  
+  gap: 20px;
+
+}
+
+
+.table-container table th {
+  text-align: center;
+
+}
+
+
+.calendar-box {
+  flex: 1;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.booking-form {
+  width: 300px;
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.booking-form label {
+  display: block;
+  margin: 10px 0 5px;
+}

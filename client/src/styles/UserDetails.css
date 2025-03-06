@@ -1,0 +1,50 @@
+/* Style for the "Create new User" button */
+button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+
+  
+  /* In UserDetails.css */
+table th {
+  text-align: center;
+}
+
+table td{
+
+  text-align: center;
+}
+
+
+  
+  button:hover {
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
+  }
+
+  
+  /* Style for the "Create new User" button */
+  button {
+    background-color: #4CAF50; /* Green color for "Create new User" */
+    color: white;
+  }
+  
+  button:hover {
+    background-color: #45a049; /* Darker green on hover */
+  }
+  
+  /* Style for the delete button */
+  button.deleteBtn {
+    background-color: #f44336; /* Red color for delete */
+    color: white;
+  }
+  
+  button.deleteBtn:hover {
+    background-color: #e53935; /* Darker red on hover */
+  }
+  
+  /* Optional: If you have other types of buttons, you can specify them here */
+  
