@@ -1,0 +1,25 @@
+{
+  "name": "event-management",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^6.5.1"
+  },
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.4.7"
+  }
+}
