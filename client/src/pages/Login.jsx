@@ -50,14 +50,16 @@ const Login = ({ onLogin }) => {
           <div className="form-group">
             <label htmlFor="email">ᴇᴍᴀɪʟ</label>
             <div className="input-container">
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-              />
+            <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  autoComplete="email"  
+                />
+
             </div>
           </div>
 
@@ -67,14 +69,16 @@ const Login = ({ onLogin }) => {
               
             </div>
             <div className="input-container">
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-              />
+            <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                  autoComplete="current-password"  
+                />
+
             </div>
           </div>
 
