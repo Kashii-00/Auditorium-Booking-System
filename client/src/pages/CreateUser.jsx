@@ -12,7 +12,7 @@ const CreateUser = () => {
   const handleCreate = async () => {
     setMessage('');
     try {
-      const res = await axios.post('http://localhost:5007/api/users', {
+      const res = await axios.post('http://10.70.4.34:5007/api/users', {
         name,
         email,
         phone,

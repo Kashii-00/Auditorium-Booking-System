@@ -12,7 +12,7 @@ const EventBooking = () => {
 
   const fetchBookings = async () => {
     try {
-      const res = await axios.get('http://localhost:5007/api/bookings');
+      const res = await axios.get('http://10.70.4.34:5007/api/bookings');
       setBookings(res.data);
     } catch (err) {
       console.error(err);
@@ -21,7 +21,7 @@ const EventBooking = () => {
 
   const updateStatus = async (id, status) => {
     try {
-      await axios.put(`http://localhost:5007/api/bookings/${id}`, { status });
+      await axios.put(`http://10.70.4.34:5007/api/bookings/${id}`, { status });
       fetchBookings();
     } catch (err) {
       console.error(err);
@@ -30,7 +30,7 @@ const EventBooking = () => {
 
   const deleteBooking = async (id) => {
     try {
-      await axios.delete(`http://localhost:5007/api/bookings/${id}`);
+      await axios.delete(`http://10.70.4.34:5007/api/bookings/${id}`);
       fetchBookings();
     } catch (err) {
       console.error(err);

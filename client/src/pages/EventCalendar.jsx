@@ -26,7 +26,7 @@ const EventCalendar = ({ user }) => {
   // Wrap fetchBookings with useCallback to keep it stable across renders
   const fetchBookings = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:5007/api/bookings');
+      const response = await axios.get('http://10.70.4.34:5007/api/bookings');
       const bookingsData = response.data || [];
       const mappedEvents = bookingsData.map((b) => {
         const datePart = b.booking_date.includes("T") ? b.booking_date.split("T")[0] : b.booking_date;
@@ -58,7 +58,7 @@ const EventCalendar = ({ user }) => {
     setMessage('');
     console.log("Description being sent:", description);
     try {
-      const response = await axios.post('http://localhost:5007/api/bookings', {
+      const response = await axios.post('http://10.70.4.34:5007/api/bookings', {
         user_id: user.id,
         description,
         booking_date: bookingDate,
