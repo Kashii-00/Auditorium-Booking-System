@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const moment = require('moment');
+const jwt = require('jsonwebtoken');
+const secret = "KASHIKA2006LK"; 
 
 router.post('/login', (req, res) => {
   const { email, password } = req.body;
@@ -23,6 +25,10 @@ router.post('/login', (req, res) => {
       const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
       console.log(`User ${user.name} logged in at : ${logintime}`);
 
+      const payload = { id: user.id, name: user.name };
+      const token = jwt.sign(payload, secret, { expiresIn: '1h' });
+  
+
       const userData = {
         id: user.id,
         name: user.name,
@@ -32,7 +38,7 @@ router.post('/login', (req, res) => {
         status: user.status
       };
 
-      return res.json({ success: true, user: userData });
+      return res.json({ success: true, user, token });
     } else {
       
       return res.status(401).json({ error: 'Invalid email or password' });

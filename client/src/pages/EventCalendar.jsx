@@ -9,21 +9,27 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 const EventCalendar = ({ user }) => {
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
+  const [bookingendtime, setEndTime] = useState('');
   const [noOfPeople, setNoOfPeople] = useState(1);
   const [message, setMessage] = useState('');
   const [events, setEvents] = useState([]);
   const [description, setDescription] = useState('');
   const navigate = useNavigate();
-  const [bookingendtime,setEndTime] = useState('');
 
-  // Helper function to add one hour to the booking time
-  const addOneHour = (startStr) => {
-    const startDate = new Date(startStr);
-    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-    return endDate.toISOString();
+  // Function to generate 30-minute interval time options
+  const generateTimeOptions = () => {
+    const times = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minutes of [0, 30]) {
+        const formattedHour = hour.toString().padStart(2, '0');
+        const formattedMinutes = minutes.toString().padStart(2, '0');
+        times.push(`${formattedHour}:${formattedMinutes}`);
+      }
+    }
+    return times;
   };
 
-  // Wrap fetchBookings with useCallback to keep it stable across renders
+  // Fetch existing bookings
   const fetchBookings = useCallback(async () => {
     try {
       const response = await axios.get('http://10.70.4.34:5007/api/bookings');
@@ -31,6 +37,7 @@ const EventCalendar = ({ user }) => {
       const mappedEvents = bookingsData.map((b) => {
         const datePart = b.booking_date.includes("T") ? b.booking_date.split("T")[0] : b.booking_date;
         const startStr = `${datePart}T${b.booking_time}`;
+        const endStr = `${datePart}T${b.bookingendtime}`;
 
         let backgroundColor = b.status === 'APPROVED' ? 'green' : b.status === 'PENDING' ? 'orange' : 'red';
         return {
@@ -38,7 +45,7 @@ const EventCalendar = ({ user }) => {
           description: b.description,
           title: `${b.status} - ${b.name}`,
           start: startStr,
-          end: addOneHour(startStr),
+          end: endStr,
           backgroundColor,
           textColor: '#fff',
         };
@@ -49,30 +56,27 @@ const EventCalendar = ({ user }) => {
     }
   }, []);
 
-  // Include fetchBookings in dependency array so the hook knows about it
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
 
   const handleBooking = async () => {
     setMessage('');
-    console.log("Description being sent:", description);
     try {
       const response = await axios.post('http://10.70.4.34:5007/api/bookings', {
         user_id: user.id,
         description,
         booking_date: bookingDate,
         booking_time: bookingTime,
-        bookingendtime:bookingendtime,
+        bookingendtime: bookingendtime,
         no_of_people: noOfPeople,
-        
       });
-      console.log("Response from server:", response.data);
+
       if (response.data.success) {
         setMessage('Booking request sent!');
-        fetchBookings(); // Refresh events immediately
+        fetchBookings();
       } else {
-        setMessage('Failed to send booking request (no success flag).');
+        setMessage('Failed to send booking request.');
       }
     } catch (err) {
       console.error('Error creating booking:', err);
@@ -112,6 +116,7 @@ const EventCalendar = ({ user }) => {
           <h2 style={{ fontSize: '18px', marginBottom: '15px' }}>Book Auditorium</h2>
           <p style={{ margin: '0 0 9px' }}><strong>Name:</strong> {user?.name}</p>
           <p style={{ margin: '0 0 30px' }}><strong>Phone:</strong> {user?.phone}</p>
+          
           <label style={{ display: 'block', marginBottom: '5px' }}>Reservation Date:</label>
           <input
             type="date"
@@ -120,22 +125,36 @@ const EventCalendar = ({ user }) => {
             required
             style={{ width: '100%', marginBottom: '7px' }}
           />
+          
           <label style={{ display: 'block', marginBottom: '5px' }}>Reservation Time:</label>
-          <input
-            type="time"
+          <select 
             value={bookingTime}
             onChange={(e) => setBookingTime(e.target.value)}
             required
-            style={{ width: '100%', marginBottom: '7px' }}
-          />
+            style={{ width: "100%", marginBottom: "7px", paddingTop: "17px", paddingBottom: "17px", borderRadius: "5px", borderColor: "#A7B0C8" }}
+          >
+            <option value="" disabled>Start Time</option>
+            {generateTimeOptions().map((time) => (
+              <option key={time} value={time}>
+                {time}
+              </option>
+            ))}
+          </select>
 
-<input
-  type="time"
-  value={bookingendtime}
-  onChange={(e) => setEndTime(e.target.value)}
-  required
-  style={{ width: '100%', marginBottom: '7px' }}
-/>
+          <select 
+            value={bookingendtime}
+            onChange={(e) => setEndTime(e.target.value)}
+            required
+            style={{ width: "100%", marginBottom: "7px", paddingTop: "17px", paddingBottom: "17px", borderRadius: "5px", borderColor: "#A7B0C8" }}
+          >
+            <option value="" disabled>End Time</option>
+            {generateTimeOptions().map((time) => (
+              <option key={time} value={time}>
+                {time}
+              </option>
+            ))}
+          </select>
+
           <label style={{ display: 'block', marginBottom: '5px' }}>No. of People:</label>
           <input
             type="number"
@@ -144,17 +163,16 @@ const EventCalendar = ({ user }) => {
             min="1"
             style={{ width: '100%', marginBottom: '10px' }}
           />
+
           <label style={{ display: 'block', marginBottom: '5px' }}>Description:</label>
           <input
             type="text"
             value={description}
-            onChange={(e) => {
-              console.log("Typing description:", e.target.value);
-              setDescription(e.target.value);
-            }}
+            onChange={(e) => setDescription(e.target.value)}
             placeholder="Enter description"
             style={{ width: '100%', marginBottom: '10px' }}
           />
+
           <button
             onClick={handleBooking}
             style={{
