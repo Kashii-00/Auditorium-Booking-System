@@ -2,10 +2,9 @@ const moment = require('moment');
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const authMiddleware = require('../auth');
 
-// POST endpoint to create a booking
-router.post('/', authMiddleware, (req, res) => {
+// POST endpoint to create a booking, now including description
+router.post('/', (req, res) => {
   const {
     user_id,
     booking_date,
@@ -14,8 +13,8 @@ router.post('/', authMiddleware, (req, res) => {
     no_of_people,
     description
   } = req.body;
-  const sql = `INSERT INTO bookings (user_id, booking_date, booking_time, bookingendtime, no_of_people, description) 
-               VALUES (?, ?, ?, ?, ?, ?)`;
+  const sql = `INSERT INTO bookings (user_id, booking_date, booking_time,bookingendtime, no_of_people, description) 
+               VALUES (?, ?, ?, ?, ?,?)`;
   db.query(sql, [user_id, booking_date, booking_time, bookingendtime, no_of_people, description], (err, result) => {
     if (err) {
       console.error('Error inserting booking:', err);
@@ -24,7 +23,7 @@ router.post('/', authMiddleware, (req, res) => {
       });
     }
     const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    console.log('Booking created successfully at :', logintime, "by :", req.user.name); // ✅ Fixed
+    console.log('Booking created successfully at :', logintime, "by : ", user_id);
     return res.json({
       success: true,
       message: 'Booking created successfully',
@@ -33,7 +32,7 @@ router.post('/', authMiddleware, (req, res) => {
   });
 });
 
-// GET endpoint (no auth needed here unless you want to restrict)
+// GET endpoint to retrieve bookings
 router.get('/', (req, res) => {
   const sql = `SELECT b.*, u.name, u.email, u.phone 
                FROM bookings b
@@ -49,7 +48,7 @@ router.get('/', (req, res) => {
 });
 
 // PUT endpoint to update booking status
-router.put('/:id', authMiddleware, (req, res) => {
+router.put('/:id', (req, res) => {
   const bookingId = req.params.id;
   const {
     status
@@ -62,7 +61,7 @@ router.put('/:id', authMiddleware, (req, res) => {
       });
     }
     const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    console.log('Updated Booking Status to', status, 'at :', logintime, 'by :', req.user.name); // ✅ Fixed
+    console.log('Updated Booking Status to', status, 'at :', logintime);
     console.log('Updated Booking ID :', bookingId);
     return res.json({
       success: true,
@@ -72,7 +71,7 @@ router.put('/:id', authMiddleware, (req, res) => {
 });
 
 // DELETE endpoint to remove a booking
-router.delete('/:id', authMiddleware, (req, res) => {
+router.delete('/:id', (req, res) => {
   const bookingId = req.params.id;
   const sql = 'DELETE FROM bookings WHERE id = ?';
   db.query(sql, [bookingId], (err, result) => {
@@ -82,7 +81,7 @@ router.delete('/:id', authMiddleware, (req, res) => {
       });
     }
     const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    console.log('Booking', bookingId, 'deleted at :', logintime, 'by :', req.user.name); // ✅ Fixed
+    console.log('Booking ', bookingId, 'deleted at :', logintime);
     return res.json({
       success: true,
       message: 'Booking deleted'
