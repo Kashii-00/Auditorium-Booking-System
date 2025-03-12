@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const momemt = require('moment');
+const moment = require('moment');
 const db = require('../db');
 router.get('/', (req, res) => {
   const sql = 'SELECT id, name, email, phone, role, status FROM users';

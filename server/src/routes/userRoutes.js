@@ -1,7 +1,7 @@
 
 const express = require('express');
 const router = express.Router();
-const momemt = require('moment');
+const moment = require('moment');
 const db = require('../db');
 
 

@@ -1,6 +1,7 @@
+const moment = require('moment');
 const express = require('express');
 const router = express.Router();
-const momemt = require('moment');
+
 const db = require('../db');
 
 // POST endpoint to create a booking, now including description
