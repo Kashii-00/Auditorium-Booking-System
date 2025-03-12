@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const momemt = require('moment');
 const db = require('../db');
 router.get('/', (req, res) => {
   const sql = 'SELECT id, name, email, phone, role, status FROM users';
@@ -29,6 +30,9 @@ router.post('/', (req, res) => {
         error: 'Database error'
       });
     }
+    const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
+    console.log('New user created at :', logintime);
+    console.log('New user created successfully');
     return res.json({
       success: true,
       message: 'User created successfully'
@@ -47,6 +51,7 @@ router.put('/:id', (req, res) => {
         error: 'Database error'
       });
     }
+    console.log(`User ${userId} status updated to : ${status}`);
     return res.json({
       success: true,
       message: 'User status updated'
@@ -62,6 +67,9 @@ router.delete('/:id', (req, res) => {
         error: 'Database error'
       });
     }
+    const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
+    console.log('User', userId, 'deleted at :', logintime);
+    console.log('User deleted successfully');
     return res.json({
       success: true,
       message: 'User deleted'

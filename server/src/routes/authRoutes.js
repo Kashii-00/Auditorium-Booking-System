@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const bcrypt = require('bcrypt');
+const momemt = require('moment');
 
 router.post('/login', (req, res) => {
   const { email, password } = req.body;
@@ -20,6 +20,9 @@ router.post('/login', (req, res) => {
 
     if (user.password === password) {
 
+      const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
+      console.log(`User ${user.name} logged in at : ${logintime}`);
+
       const userData = {
         id: user.id,
         name: user.name,
@@ -28,8 +31,10 @@ router.post('/login', (req, res) => {
         phone: user.phone,
         status: user.status
       };
+
       return res.json({ success: true, user: userData });
     } else {
+      
       return res.status(401).json({ error: 'Invalid email or password' });
     }
   });

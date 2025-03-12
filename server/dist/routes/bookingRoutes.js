@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const momemt = require('moment');
 const db = require('../db');
 
 // POST endpoint to create a booking, now including description
@@ -21,6 +22,8 @@ router.post('/', (req, res) => {
         error: 'Database error'
       });
     }
+    const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
+    console.log('Booking created successfully at :', logintime);
     return res.json({
       success: true,
       message: 'Booking created successfully',
@@ -57,6 +60,9 @@ router.put('/:id', (req, res) => {
         error: 'Database error'
       });
     }
+    const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
+    console.log('Updated Booking Status at :', logintime);
+    console.log('Updated Booking ID :', bookingId);
     return res.json({
       success: true,
       message: 'Booking status updated'
@@ -74,6 +80,8 @@ router.delete('/:id', (req, res) => {
         error: 'Database error'
       });
     }
+    const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
+    console.log('Booking ', bookingId, 'deleted at :', logintime);
     return res.json({
       success: true,
       message: 'Booking deleted'

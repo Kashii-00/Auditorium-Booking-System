@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const bcrypt = require('bcrypt');
+const momemt = require('moment');
 router.post('/login', (req, res) => {
   const {
     email,
@@ -21,6 +21,8 @@ router.post('/login', (req, res) => {
     }
     const user = results[0];
     if (user.password === password) {
+      const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
+      console.log(`User ${user.name} logged in at : ${logintime}`);
       const userData = {
         id: user.id,
         name: user.name,
