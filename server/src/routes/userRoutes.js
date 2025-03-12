@@ -27,9 +27,8 @@ router.post('/', (req, res) => {
       return res.status(500).json({ error: 'Database error' });
     }
     const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    console.log('New user created at :', logintime);
-    console.log('New user created successfully');
-    return res.json({ success: true, message: 'User created successfully' });
+    console.log("User : ",name, "Created Successfuly at : ",logintime );
+    return res.json({ success: true, message: 'User created successfuly' });
   });
 });
 

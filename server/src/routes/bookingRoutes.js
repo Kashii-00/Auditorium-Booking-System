@@ -6,19 +6,39 @@ const db = require('../db');
 
 // POST endpoint to create a booking, now including description
 router.post('/', (req, res) => {
-  const { user_id, booking_date, booking_time,bookingendtime, no_of_people, description } = req.body;
-  const sql = `INSERT INTO bookings (user_id, booking_date, booking_time,bookingendtime, no_of_people, description) 
-               VALUES (?, ?, ?, ?, ?,?)`;
-  db.query(sql, [user_id, booking_date, booking_time,bookingendtime, no_of_people, description], (err, result) => {
+  const { user_id, booking_date, booking_time, bookingendtime, no_of_people, description } = req.body;
+
+  const insertSql = `INSERT INTO bookings (user_id, booking_date, booking_time, bookingendtime, no_of_people, description) 
+                     VALUES (?, ?, ?, ?, ?, ?)`;
+
+  db.query(insertSql, [user_id, booking_date, booking_time, bookingendtime, no_of_people, description], (err, result) => {
     if (err) {
       console.error('Error inserting booking:', err);
       return res.status(500).json({ error: 'Database error' });
     }
-    const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    console.log('Booking created successfully at :', logintime);
-    return res.json({ success: true, message: 'Booking created successfully', bookingId: result.insertId });
+
+    // Now fetch the user name from the users table
+    const userSql = `SELECT name FROM users WHERE id = ?`;
+    db.query(userSql, [user_id], (userErr, userResult) => {
+      const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
+
+      if (userErr || userResult.length === 0) {
+        console.warn('Booking created, but failed to fetch user name');
+        console.log('Booking created at:', logintime, 'by user_id:', user_id);
+      } else {
+        const userName = userResult[0].name;
+        console.log('Booking created at:', logintime, 'by:', userName);
+      }
+
+      return res.json({
+        success: true,
+        message: 'Booking created successfully',
+        bookingId: result.insertId,
+      });
+    });
   });
 });
+
 
 // GET endpoint to retrieve bookings
 router.get('/', (req, res) => {
