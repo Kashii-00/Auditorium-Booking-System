@@ -127,6 +127,7 @@ const EventCalendar = ({ user }) => {
           />
           
           <label style={{ display: 'block', marginBottom: '5px' }}>Reservation Time:</label>
+
           <select 
             value={bookingTime}
             onChange={(e) => setBookingTime(e.target.value)}
@@ -140,6 +141,7 @@ const EventCalendar = ({ user }) => {
               </option>
             ))}
           </select>
+
 
           <select 
             value={bookingendtime}
