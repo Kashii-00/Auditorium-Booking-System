@@ -13,13 +13,29 @@ const Sidebar = ({ user, onLogout }) => {
 
       <label style={{paddingTop:'10px'}} >-------------------------</label>
       <nav style={{paddingTop:'0px',paddingLeft:'10px'}} >
-        <Link to="/calendar" className="sidebar-link">ᴀᴜᴅɪᴛᴏʀɪᴜᴍ ᴄᴀʟᴇɴᴅᴀʀ</Link>
-        {user.role === 'ADMIN' && (
+
+
+        {user.role === 'SuperAdmin'  && (
           <>
+            <Link to="/calendar" className="sidebar-link">ᴀᴜᴅɪᴛᴏʀɪᴜᴍ ᴄᴀʟᴇɴᴅᴀʀ</Link>
             <Link to="/bookings" className="sidebar-link">ᴀᴜᴅɪᴛᴏʀɪᴜᴍ ʙᴏᴏᴋɪɴɢ</Link>
             <Link style={{paddingLeft:'35px'}} to="/users" className="sidebar-link">ᴜꜱᴇʀ ᴅᴇᴛᴀɪʟꜱ</Link>
           </>
         )}
+
+        {user.role === 'ADMIN'  && (
+          <>
+            <Link to="/calendar" className="sidebar-link">ᴀᴜᴅɪᴛᴏʀɪᴜᴍ ᴄᴀʟᴇɴᴅᴀʀ</Link>
+            <Link to="/bookings" className="sidebar-link">ᴀᴜᴅɪᴛᴏʀɪᴜᴍ ʙᴏᴏᴋɪɴɢ</Link>
+          </>
+        )}
+
+        {user.role === 'Guest'  && (
+          <>
+            <Link to="/calendar" className="sidebar-link">ᴀᴜᴅɪᴛᴏʀɪᴜᴍ ᴄᴀʟᴇɴᴅᴀʀ</Link>
+          </>
+        )}
+
       </nav>
       <button onClick={onLogout} className="logoutBtn">Logout</button>
     </div>

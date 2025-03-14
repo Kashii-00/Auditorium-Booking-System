@@ -1,29 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/UserDetails.css'; 
 
 const UserDetails = () => {
   const [users, setUsers] = useState([]);
-  // Get the current user's ID and token from localStorage
   const currentUserId = localStorage.getItem('userId');
   const token = localStorage.getItem('token');
-
+  const navigate = useNavigate();
+  
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('http://10.70.4.34:5007/api/users');
+     
+      const res = await axios.get('http://localhost:5007/api/users');
       setUsers(res.data);
     } catch (err) {
       console.error(err);
     }
   };
 
+    
   const deleteUser = async (id) => {
     try {
-      await axios.delete(`http://10.70.4.34:5007/api/users/${id}`, {
+      await axios.delete(`http://localhost:5007/api/users/${id}`, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
       fetchUsers();
     } catch (err) {
@@ -38,7 +40,11 @@ const UserDetails = () => {
   return (
     <div style={{ paddingLeft: '100px', paddingRight: '100px' }}>
       <h1>User Details</h1>
-      <table border="1" cellPadding="10" style={{ borderCollapse: 'collapse', width: '100%', marginTop: '20px' }}>
+      <table
+        border="1"
+        cellPadding="10"
+        style={{ borderCollapse: 'collapse', width: '100%', marginTop: '20px' }}
+      >
         <thead>
           <tr>
             <th>Name</th>
@@ -58,13 +64,22 @@ const UserDetails = () => {
               <td>{u.role}</td>
               <td>{u.status}</td>
               <td>
-                {/* Only show delete button if the user is not the current user */}
+                {/* Only show Delete/Edit if not the current user */}
                 {String(u.id) !== String(currentUserId) && (
-  <button onClick={() => deleteUser(u.id)} className="deleteBtn">
-    Delete
-  </button>
-)}
-
+                  <>
+                    <button onClick={() => deleteUser(u.id)} className="deleteBtn">
+                      Delete
+                    </button>
+                    {' '}
+                    <button
+                      onClick={() => navigate(`/create-user/${u.id}`)}
+                      className="editBtn"
+                      style={{ marginLeft: '8px' }}
+                    >
+                      Edit
+                    </button>
+                  </>
+                )}
               </td>
             </tr>
           ))}

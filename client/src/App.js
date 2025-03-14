@@ -21,6 +21,7 @@ function App() {
   };
 
   const isAdmin = loggedInUser?.role === 'ADMIN';
+  const isSuperAdmin = loggedInUser?.role === 'SuperAdmin';
 
   return (
     <Router>
@@ -35,9 +36,13 @@ function App() {
           <Route path="/" element={loggedInUser ? <Navigate to="/calendar" /> : <Login onLogin={handleLogin} />} />
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
           <Route path="/calendar" element={loggedInUser ? <EventCalendar user={loggedInUser} /> : <Navigate to="/login" />} />
-          <Route path="/bookings" element={isAdmin ? <EventBooking /> : <Navigate to="/calendar" />} />
-          <Route path="/users" element={isAdmin ? <UserDetails /> : <Navigate to="/calendar" />} />
-          <Route path="/create-user" element={isAdmin ? <CreateUser /> : <Navigate to="/calendar" />} />
+          <Route path="/bookings" element={(isAdmin || isSuperAdmin) ? <EventBooking /> : <Navigate to="/calendar" />} />
+          <Route path="/users" element={isSuperAdmin ? <UserDetails /> : <Navigate to="/calendar" />} />
+          <Route path="/create-user" element={isSuperAdmin ? <CreateUser /> : <Navigate to="/calendar" />} />
+          <Route 
+            path="/create-user/:id" 
+            element={isSuperAdmin ? <CreateUser /> : <Navigate to="/calendar" />} 
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
