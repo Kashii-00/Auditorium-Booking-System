@@ -14,7 +14,49 @@ const EventCalendar = ({ user }) => {
   const [message, setMessage] = useState('');
   const [events, setEvents] = useState([]);
   const [description, setDescription] = useState('');
+
   const navigate = useNavigate();
+
+  // 1) Tooltip state: stores position, visibility, and booking info
+  const [tooltip, setTooltip] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    description: '',
+    start: '',
+    end: '',
+  });
+
+  // When mouse enters an event, show the tooltip
+  const handleEventMouseEnter = (info) => {
+    // Mouse position
+    const { pageX, pageY } = info.jsEvent;
+
+    // Convert times to HH:mm format
+    const startTime = info.event.start
+      ? info.event.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : '';
+    const endTime = info.event.end
+      ? info.event.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : '';
+
+    // The 'description' is stored in extendedProps
+    const { description } = info.event.extendedProps;
+
+    setTooltip({
+      visible: true,
+      x: pageX,
+      y: pageY,
+      description: description || 'No description',
+      start: startTime,
+      end: endTime,
+    });
+  };
+
+  // When mouse leaves the event, hide the tooltip
+  const handleEventMouseLeave = () => {
+    setTooltip((prev) => ({ ...prev, visible: false }));
+  };
 
   // Function to generate 30-minute interval time options
   const generateTimeOptions = () => {
@@ -29,7 +71,7 @@ const EventCalendar = ({ user }) => {
     return times;
   };
 
-  // Fetch existing bookings
+
   const fetchBookings = useCallback(async () => {
     try {
       const response = await axios.get('http://10.70.4.34:5007/api/bookings');
@@ -39,10 +81,15 @@ const EventCalendar = ({ user }) => {
         const startStr = `${datePart}T${b.booking_time}`;
         const endStr = `${datePart}T${b.bookingendtime}`;
 
-        let backgroundColor = b.status === 'APPROVED' ? 'green' : b.status === 'PENDING' ? 'orange' : 'red';
+        let backgroundColor = b.status === 'APPROVED'
+          ? 'green'
+          : b.status === 'PENDING'
+          ? 'orange'
+          : 'red';
+
         return {
           id: b.id,
-          description: b.description,
+          description: b.description, // needed for tooltip
           title: `${b.status} - ${b.name}`,
           start: startStr,
           end: endStr,
@@ -88,7 +135,14 @@ const EventCalendar = ({ user }) => {
     <div className='container'>
       <h1>Auditorium Calendar</h1>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', paddingLeft: '100px' }}>
-        <div style={{ width: '1200px', border: '1px solid #ccc', borderRadius: '10px', padding: '20px 30px' }}>
+        <div
+          style={{
+            width: '1200px',
+            border: '1px solid #ccc',
+            borderRadius: '10px',
+            padding: '20px 30px',
+          }}
+        >
           <FullCalendar
             plugins={[dayGridPlugin, timeGridPlugin]}
             initialView="dayGridMonth"
@@ -104,20 +158,33 @@ const EventCalendar = ({ user }) => {
             eventClick={(info) => {
               navigate('/bookings', { state: { highlightId: Number(info.event.id) } });
             }}
+            // NEW: show/hide tooltip on hover
+            eventMouseEnter={handleEventMouseEnter}
+            eventMouseLeave={handleEventMouseLeave}
           />
         </div>
-        <div style={{
-          width: '250px',
-          background: '#f9f9f9',
-          padding: '5px 40px',
-          borderRadius: '7px',
-          border: '1px solid #ddd',
-        }}>
+
+        {/* Booking Form */}
+        <div
+          style={{
+            width: '250px',
+            background: '#f9f9f9',
+            padding: '5px 40px',
+            borderRadius: '7px',
+            border: '1px solid #ddd',
+          }}
+        >
           <h2 style={{ fontSize: '18px', marginBottom: '15px' }}>Book Auditorium</h2>
-          <p style={{ margin: '0 0 9px' }}><strong>Name:</strong> {user?.name}</p>
-          <p style={{ margin: '0 0 30px' }}><strong>Phone:</strong> {user?.phone}</p>
-          
-          <label style={{ display: 'block', marginBottom: '5px' }}>Reservation Date:</label>
+          <p style={{ margin: '0 0 9px' }}>
+            <strong>Name:</strong> {user?.name}
+          </p>
+          <p style={{ margin: '0 0 30px' }}>
+            <strong>Phone:</strong> {user?.phone}
+          </p>
+
+          <label style={{ display: 'block', marginBottom: '5px' }}>
+            Reservation Date:
+          </label>
           <input
             type="date"
             value={bookingDate}
@@ -125,16 +192,26 @@ const EventCalendar = ({ user }) => {
             required
             style={{ width: '100%', marginBottom: '7px' }}
           />
-          
-          <label style={{ display: 'block', marginBottom: '5px' }}>Reservation Time:</label>
 
-          <select 
+          <label style={{ display: 'block', marginBottom: '5px' }}>
+            Reservation Time:
+          </label>
+          <select
             value={bookingTime}
             onChange={(e) => setBookingTime(e.target.value)}
             required
-            style={{ width: "100%", marginBottom: "7px", paddingTop: "17px", paddingBottom: "17px", borderRadius: "5px", borderColor: "#A7B0C8" }}
+            style={{
+              width: '100%',
+              marginBottom: '7px',
+              paddingTop: '17px',
+              paddingBottom: '17px',
+              borderRadius: '5px',
+              borderColor: '#A7B0C8',
+            }}
           >
-            <option value="" disabled>Start Time</option>
+            <option value="" disabled>
+              Start Time
+            </option>
             {generateTimeOptions().map((time) => (
               <option key={time} value={time}>
                 {time}
@@ -142,14 +219,22 @@ const EventCalendar = ({ user }) => {
             ))}
           </select>
 
-
-          <select 
+          <select
             value={bookingendtime}
             onChange={(e) => setEndTime(e.target.value)}
             required
-            style={{ width: "100%", marginBottom: "7px", paddingTop: "17px", paddingBottom: "17px", borderRadius: "5px", borderColor: "#A7B0C8" }}
+            style={{
+              width: '100%',
+              marginBottom: '7px',
+              paddingTop: '17px',
+              paddingBottom: '17px',
+              borderRadius: '5px',
+              borderColor: '#A7B0C8',
+            }}
           >
-            <option value="" disabled>End Time</option>
+            <option value="" disabled>
+              End Time
+            </option>
             {generateTimeOptions().map((time) => (
               <option key={time} value={time}>
                 {time}
@@ -157,7 +242,9 @@ const EventCalendar = ({ user }) => {
             ))}
           </select>
 
-          <label style={{ display: 'block', marginBottom: '5px' }}>No. of People:</label>
+          <label style={{ display: 'block', marginBottom: '5px' }}>
+            No. of People:
+          </label>
           <input
             type="number"
             value={noOfPeople}
@@ -166,7 +253,9 @@ const EventCalendar = ({ user }) => {
             style={{ width: '100%', marginBottom: '10px' }}
           />
 
-          <label style={{ display: 'block', marginBottom: '5px' }}>Description:</label>
+          <label style={{ display: 'block', marginBottom: '5px' }}>
+            Description:
+          </label>
           <input
             type="text"
             value={description}
@@ -196,6 +285,29 @@ const EventCalendar = ({ user }) => {
           {message && <p style={{ marginTop: '10px', color: 'green' }}>{message}</p>}
         </div>
       </div>
+
+      {/* Tooltip Popup (conditionally rendered) */}
+      {tooltip.visible && (
+        <div
+          style={{
+            position: 'absolute',
+            top: tooltip.y + 10,
+            left: tooltip.x + 10,
+            backgroundColor: '#fff',
+            border: '1px solid #ccc',
+            padding: '8px 10px',
+            borderRadius: '4px',
+            zIndex: 9999,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            pointerEvents: 'none',
+          }}
+        >
+          <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+            {`Start: ${tooltip.start} - End: ${tooltip.end}`}
+          </div>
+          <div>{`Description: ${tooltip.description}`}</div>
+        </div>
+      )}
     </div>
   );
 };
