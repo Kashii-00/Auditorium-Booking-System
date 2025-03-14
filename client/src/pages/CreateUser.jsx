@@ -19,7 +19,7 @@ const CreateUser = () => {
       (async () => {
         try {
           
-          const res = await axios.get(`http://localhost:5007/api/users/${id}`);
+          const res = await axios.get(`http://10.70.4.34:5007/api/users/${id}`);
           if (res.data) {
             setName(res.data.name || '');
             setEmail(res.data.email || '');
@@ -40,7 +40,7 @@ const CreateUser = () => {
     try {
       if (!id) {
        
-        const res = await axios.post('http://localhost:5007/api/users', {
+        const res = await axios.post('http://10.70.4.34:5007/api/users', {
           name,
           email,
           phone,
@@ -55,7 +55,7 @@ const CreateUser = () => {
         }
       } else {
         
-        const res = await axios.put(`http://localhost:5007/api/users/${id}`, {
+        const res = await axios.put(`http://10.70.4.34:5007/api/users/${id}`, {
           name,
           email,
           phone,
