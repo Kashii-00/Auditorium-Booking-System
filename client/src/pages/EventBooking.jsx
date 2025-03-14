@@ -7,7 +7,7 @@ import '../styles/EventBooking.css';
 const EventBooking = () => {
   const [bookings, setBookings] = useState([]);
   const location = useLocation();
-  // Extract the highlightId from state and convert to number
+
   const highlightId = location.state?.highlightId ? Number(location.state.highlightId) : null;
 
   const fetchBookings = async () => {
