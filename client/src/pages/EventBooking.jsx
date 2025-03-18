@@ -10,9 +10,18 @@ const EventBooking = () => {
 
   const highlightId = location.state?.highlightId ? Number(location.state.highlightId) : null;
 
+  const token = localStorage.getItem('token'); // Adjust this based on your auth storage method
+
+  const axiosConfig = {
+    headers: {
+      Authorization: `Bearer ${token}`, // Include the token in all requests
+    },
+  };
+
+
   const fetchBookings = async () => {
     try {
-      const res = await axios.get('http://10.70.4.34:5007/api/bookings');
+      const res = await axios.get('http://localhost:5007/api/bookings',axiosConfig);
       setBookings(res.data);
     } catch (err) {
       console.error(err);
@@ -21,7 +30,7 @@ const EventBooking = () => {
 
   const updateStatus = async (id, status) => {
     try {
-      await axios.put(`http://10.70.4.34:5007/api/bookings/${id}`, { status });
+      await axios.put(`http://localhost:5007/api/bookings/${id}`, { status },axiosConfig);
       fetchBookings();
     } catch (err) {
       console.error(err);
@@ -30,7 +39,7 @@ const EventBooking = () => {
 
   const deleteBooking = async (id) => {
     try {
-      await axios.delete(`http://10.70.4.34:5007/api/bookings/${id}`);
+      await axios.delete(`http://localhost:5007/api/bookings/${id}`,axiosConfig);
       fetchBookings();
     } catch (err) {
       console.error(err);

@@ -1,10 +1,13 @@
 const moment = require('moment');
 const express = require('express');
 const router = express.Router();
+const logger = require('../logger');
+const authMiddleware = require('../auth');
 const db = require('../db');
 
 // POST endpoint to create a booking, now including description
-router.post('/', (req, res) => {
+router.post('/', authMiddleware, (req, res) => {
+  const user_name = req.user.name;
   const {
     user_id,
     booking_date,
@@ -13,17 +16,17 @@ router.post('/', (req, res) => {
     no_of_people,
     description
   } = req.body;
-  const sql = `INSERT INTO bookings (user_id, booking_date, booking_time,bookingendtime, no_of_people, description) 
-               VALUES (?, ?, ?, ?, ?,?)`;
+  const sql = `INSERT INTO bookings (user_id, booking_date, booking_time, bookingendtime, no_of_people, description) 
+               VALUES (?, ?, ?, ?, ?, ?)`;
   db.query(sql, [user_id, booking_date, booking_time, bookingendtime, no_of_people, description], (err, result) => {
     if (err) {
-      console.error('Error inserting booking:', err);
+      logger.info('Error inserting booking:', err);
       return res.status(500).json({
         error: 'Database error'
       });
     }
     const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    console.log('Booking created successfully at :', logintime, "by : ", user_id);
+    logger.info(`Booking created successfully at: ${logintime} by user: ${user_name}`);
     return res.json({
       success: true,
       message: 'Booking created successfully',
@@ -48,11 +51,12 @@ router.get('/', (req, res) => {
 });
 
 // PUT endpoint to update booking status
-router.put('/:id', (req, res) => {
+router.put('/:id', authMiddleware, (req, res) => {
   const bookingId = req.params.id;
   const {
     status
   } = req.body;
+  const user_name = req.user.name;
   const sql = 'UPDATE bookings SET status = ? WHERE id = ?';
   db.query(sql, [status, bookingId], (err, result) => {
     if (err) {
@@ -61,8 +65,8 @@ router.put('/:id', (req, res) => {
       });
     }
     const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    console.log('Updated Booking Status to', status, 'at :', logintime);
-    console.log('Updated Booking ID :', bookingId);
+    logger.info(`Updated Booking Status to: ${status} at: ${logintime} By: ${user_name}`);
+    logger.info(`Updated Booking ID: ${bookingId}`);
     return res.json({
       success: true,
       message: 'Booking status updated'
@@ -71,8 +75,9 @@ router.put('/:id', (req, res) => {
 });
 
 // DELETE endpoint to remove a booking
-router.delete('/:id', (req, res) => {
+router.delete('/:id', authMiddleware, (req, res) => {
   const bookingId = req.params.id;
+  const user_name = req.user.name;
   const sql = 'DELETE FROM bookings WHERE id = ?';
   db.query(sql, [bookingId], (err, result) => {
     if (err) {
@@ -81,11 +86,18 @@ router.delete('/:id', (req, res) => {
       });
     }
     const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    console.log('Booking ', bookingId, 'deleted at :', logintime);
+    logger.info(`Booking Deleted at: ${logintime} By: ${user_name}`);
+    logger.info(`Deleted Booking ID: ${bookingId}`);
     return res.json({
       success: true,
       message: 'Booking deleted'
     });
   });
 });
+
+// Clear logs every 24h (86400000ms)
+setInterval(() => {
+  console.clear(); // clear PowerShell or terminal
+  logger.info('🔄 Logs cleared - 24h cycle restart');
+}, 24 * 60 * 60 * 1000);
 module.exports = router;

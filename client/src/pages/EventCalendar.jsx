@@ -22,6 +22,7 @@ const EventCalendar = ({ user }) => {
     visible: false,
     x: 0,
     y: 0,
+    message:'',
     description: '',
     start: '',
     end: '',
@@ -47,6 +48,7 @@ const EventCalendar = ({ user }) => {
       visible: true,
       x: pageX,
       y: pageY,
+      message:message,
       description: description || 'No description',
       start: startTime,
       end: endTime,
@@ -74,7 +76,7 @@ const EventCalendar = ({ user }) => {
 
   const fetchBookings = useCallback(async () => {
     try {
-      const response = await axios.get('http://10.70.4.34:5007/api/bookings');
+      const response = await axios.get('http://localhost:5007/api/bookings');
       const bookingsData = response.data || [];
       const mappedEvents = bookingsData.map((b) => {
         const datePart = b.booking_date.includes("T") ? b.booking_date.split("T")[0] : b.booking_date;
@@ -89,6 +91,7 @@ const EventCalendar = ({ user }) => {
 
         return {
           id: b.id,
+          message:b.status,
           description: b.description, // needed for tooltip
           title: `${b.status} - ${b.name}`,
           start: startStr,
@@ -109,16 +112,27 @@ const EventCalendar = ({ user }) => {
 
   const handleBooking = async () => {
     setMessage('');
+    
     try {
-      const response = await axios.post('http://10.70.4.34:5007/api/bookings', {
-        user_id: user.id,
-        description,
-        booking_date: bookingDate,
-        booking_time: bookingTime,
-        bookingendtime: bookingendtime,
-        no_of_people: noOfPeople,
-      });
-
+      const token = localStorage.getItem('token'); // Retrieve the token from local storage
+  
+      const response = await axios.post(
+        'http://localhost:5007/api/bookings',
+        {
+          user_id: user.id,
+          description,
+          booking_date: bookingDate,
+          booking_time: bookingTime,
+          bookingendtime: bookingendtime,
+          no_of_people: noOfPeople,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send the token in the request headers
+          },
+        }
+      );
+  
       if (response.data.success) {
         setMessage('Booking request sent!');
         fetchBookings();

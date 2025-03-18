@@ -1,38 +1,41 @@
 const express = require('express');
 const router = express.Router();
 const moment = require('moment');
+const logger = require('../logger');
+const jwt = require('jsonwebtoken');
 const db = require('../db');
 const authMiddleware = require('../auth');
+const bcrypt = require('bcrypt');
+
+// GET all users
 router.get('/', (req, res) => {
   const sql = 'SELECT id, name, email, phone, role, status FROM users';
   db.query(sql, (err, results) => {
-    if (err) {
-      return res.status(500).json({
-        error: 'Database error'
-      });
-    }
+    if (err) return res.status(500).json({
+      error: 'Database error'
+    });
     return res.json(results);
   });
 });
+
+// GET user by ID
 router.get('/:id', (req, res) => {
   const userId = req.params.id;
   const sql = 'SELECT id, name, email, phone, role, status FROM users WHERE id=?';
   db.query(sql, [userId], (err, results) => {
-    if (err) {
-      console.error('Error fetching user:', err);
-      return res.status(500).json({
-        error: 'Database error'
-      });
-    }
-    if (results.length === 0) {
-      return res.status(404).json({
-        error: 'User not found'
-      });
-    }
+    if (err) return res.status(500).json({
+      error: 'Database error'
+    });
+    if (results.length === 0) return res.status(404).json({
+      error: 'User not found'
+    });
     return res.json(results[0]);
   });
 });
-router.post('/', (req, res) => {
+
+// POST create user
+router.post('/', authMiddleware, async (req, res) => {
+  const user_name = req.user.name;
   const {
     name,
     email,
@@ -40,24 +43,32 @@ router.post('/', (req, res) => {
     password,
     role
   } = req.body;
-  const sql = `INSERT INTO users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)`;
-  db.query(sql, [name, email, phone, password, role], (err, result) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const sql = `INSERT INTO users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)`;
+    db.query(sql, [name, email, phone, hashedPassword, role], (err, result) => {
+      if (err) return res.status(500).json({
         error: 'Database error'
       });
-    }
-    const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    console.log('User:', name, 'Created Successfully at:', logintime);
-    return res.json({
-      success: true,
-      message: 'User created successfully'
+      const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
+      logger.info(`User Created Successfully at: ${logintime} by: ${user_name}`);
+      return res.json({
+        success: true,
+        message: 'User created successfully'
+      });
     });
-  });
+  } catch (err) {
+    console.error('Hashing error:', err);
+    return res.status(500).json({
+      error: 'Password hashing failed'
+    });
+  }
 });
-router.put('/:id', (req, res) => {
+
+// PUT update user
+router.put('/:id', authMiddleware, async (req, res) => {
   const userId = req.params.id;
+  const user_name = req.user.name;
   const {
     name,
     email,
@@ -66,8 +77,6 @@ router.put('/:id', (req, res) => {
     role,
     status
   } = req.body;
-
-  // Build partial update
   const fields = [];
   const values = [];
   if (name) {
@@ -83,8 +92,16 @@ router.put('/:id', (req, res) => {
     values.push(phone);
   }
   if (password) {
-    fields.push('password=?');
-    values.push(password);
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      fields.push('password=?');
+      values.push(hashedPassword);
+    } catch (err) {
+      console.error('Password hashing failed:', err);
+      return res.status(500).json({
+        error: 'Password hashing failed'
+      });
+    }
   }
   if (role) {
     fields.push('role=?');
@@ -102,30 +119,26 @@ router.put('/:id', (req, res) => {
   const sql = `UPDATE users SET ${fields.join(', ')} WHERE id=?`;
   values.push(userId);
   db.query(sql, values, (err, result) => {
-    if (err) {
-      console.error('Error updating user:', err);
-      return res.status(500).json({
-        error: 'Database error'
-      });
-    }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        error: 'User not found'
-      });
-    }
-    console.log(`User ${userId} updated successfully`);
+    if (err) return res.status(500).json({
+      error: 'Database error'
+    });
+    if (result.affectedRows === 0) return res.status(404).json({
+      error: 'User not found'
+    });
+    const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
+    logger.info(`User ${userId} Updated Successfully at: ${logintime} by : ${user_name}`);
     return res.json({
       success: true,
       message: 'User updated successfully'
     });
   });
 });
+
+// DELETE user
 router.delete('/:id', authMiddleware, (req, res) => {
   const userIdToDelete = req.params.id;
-  const loggedInUserId = req.user.id; // from token
-
-  console.log('User to delete:', userIdToDelete);
-  console.log('Current user id from token:', loggedInUserId);
+  const loggedInUserId = req.user.id;
+  const user_name = req.user.name;
   if (String(userIdToDelete) === String(loggedInUserId)) {
     return res.status(403).json({
       error: 'You cannot delete your own account.'
@@ -133,22 +146,24 @@ router.delete('/:id', authMiddleware, (req, res) => {
   }
   const sql = 'DELETE FROM users WHERE id = ?';
   db.query(sql, [userIdToDelete], (err, result) => {
-    if (err) {
-      return res.status(500).json({
-        error: 'Database error'
-      });
-    }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        error: 'User not found'
-      });
-    }
+    if (err) return res.status(500).json({
+      error: 'Database error'
+    });
+    if (result.affectedRows === 0) return res.status(404).json({
+      error: 'User not found'
+    });
     const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    console.log('User', userIdToDelete, 'deleted at:', logintime);
+    logger.info(`User ${userIdToDelete} Deleted Successfully at: ${logintime} by : ${user_name}`);
     return res.json({
       success: true,
       message: 'User deleted'
     });
   });
 });
+
+// Clear logs every 24h
+setInterval(() => {
+  console.clear();
+  logger.info('🔄 Logs cleared - 24h cycle restart');
+}, 24 * 60 * 60 * 1000);
 module.exports = router;

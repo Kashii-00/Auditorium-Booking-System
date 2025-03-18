@@ -16,15 +16,18 @@ const Login = ({ onLogin }) => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post("http://10.70.4.34:5007/api/auth/login", {
+      const response = await axios.post("http://localhost:5007/api/auth/login", {
         email,
         password,
-      });
+      }); 
       if (response.data.success) {
         const { user, token } = response.data;
         // Save token and userId in localStorage
         localStorage.setItem('token', token);
         localStorage.setItem('userId', user.id);
+        localStorage.setItem("userName", user.name);
+
+
         onLogin(user);
         navigate("/calendar");
       }

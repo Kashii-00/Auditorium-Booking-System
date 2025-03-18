@@ -13,13 +13,21 @@ const CreateUser = () => {
 
   const { id } = useParams();
 
+  const token = localStorage.getItem('token'); // Adjust this based on your auth storage method
+
+  const axiosConfig = {
+    headers: {
+      Authorization: `Bearer ${token}`, // Include the token in all requests
+    },
+  };
+
 
   useEffect(() => {
     if (id) {
       (async () => {
         try {
           
-          const res = await axios.get(`http://10.70.4.34:5007/api/users/${id}`);
+          const res = await axios.get(`http://localhost:5007/api/users/${id}`,axiosConfig);
           if (res.data) {
             setName(res.data.name || '');
             setEmail(res.data.email || '');
@@ -36,35 +44,48 @@ const CreateUser = () => {
 
   const handleSubmit = async () => {
     setMessage('');
-
+  
+    if (!name.trim()) return setMessage('Name is required');
+    if (!email.trim()) return setMessage('Email is required');
+    if (!role.trim()) return setMessage('Role is required');
+    if (!status.trim()) return setMessage('Status is required');
+    if (!id && !password.trim()) return setMessage('Password is required');
+  
     try {
+      const userData = {
+        name,
+        email,
+        phone,
+        password,
+        role,
+        status,
+      };
+  
       if (!id) {
-       
-        const res = await axios.post('http://10.70.4.34:5007/api/users', {
-          name,
-          email,
-          phone,
-          password,
-          role,
-          status,
-        });
+        // Create user
+        const res = await axios.post(
+          'http://localhost:5007/api/users',
+          userData,
+          axiosConfig
+        );
         if (res.data.success) {
-          setMessage('User created successfully!');
-          setName(''); setEmail(''); setPhone('');
-          setPassword(''); setRole('USER'); setStatus('ACTIVE');
+          setMessage(res.data.message || 'User created successfully!');
+          setName('');
+          setEmail('');
+          setPhone('');
+          setPassword('');
+          setRole('USER');
+          setStatus('ACTIVE');
         }
       } else {
-        
-        const res = await axios.put(`http://10.70.4.34:5007/api/users/${id}`, {
-          name,
-          email,
-          phone,
-          role,
-          status,
-          password, 
-        });
+        // Update user
+        const res = await axios.put(
+          `http://localhost:5007/api/users/${id}`,
+          userData,
+          axiosConfig
+        );
         if (res.data.success) {
-          setMessage('User updated successfully!');
+          setMessage(res.data.message || 'User updated successfully!');
         }
       }
     } catch (err) {
@@ -72,6 +93,8 @@ const CreateUser = () => {
       setMessage('Failed to save user');
     }
   };
+  
+  
 
   return (
     <div style={{ padding: '20px', paddingLeft: '150px' }}>
