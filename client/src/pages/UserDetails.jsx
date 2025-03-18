@@ -12,7 +12,7 @@ const UserDetails = () => {
   const fetchUsers = async () => {
     try {
      
-      const res = await axios.get('http://localhost:5007/api/users');
+      const res = await axios.get('http://10.70.4.34:5007/api/users');
       setUsers(res.data);
     } catch (err) {
       console.error(err);
@@ -22,7 +22,7 @@ const UserDetails = () => {
 
   const deleteUser = async (id) => {
     try {
-      await axios.delete(`http://localhost:5007/api/users/${id}`, {
+      await axios.delete(`http://10.70.4.34:5007/api/users/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
