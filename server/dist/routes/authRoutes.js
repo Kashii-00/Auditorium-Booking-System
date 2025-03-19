@@ -25,20 +25,10 @@ router.post('/login', (req, res) => {
     }
     const user = results[0];
 
-    // Compare the plaintext password with the hashed password stored in the DB
-    bcrypt.compare(password, user.password, (err, isMatch) => {
-      if (err) {
-        return res.status(500).json({
-          error: 'Authentication error'
-        });
-      }
-      if (!isMatch) {
-        return res.status(401).json({
-          error: 'Invalid email or password'
-        });
-      }
+    // Function to log in user after password validation
+    const loginUser = () => {
       const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-      logger.info(`User ${user.name} logged in at : ${logintime}`);
+      logger.info(`User ${user.name} logged in at: ${logintime}`);
       const payload = {
         id: user.id,
         name: user.name
@@ -51,7 +41,33 @@ router.post('/login', (req, res) => {
         user,
         token
       });
-    });
+    };
+
+    // Check if the stored password is hashed (bcrypt hashes typically start with "$2")
+    if (typeof user.password === 'string' && user.password.startsWith('$2')) {
+      // Use bcrypt.compare if the password is hashed
+      bcrypt.compare(password, user.password, (err, isMatch) => {
+        if (err) {
+          return res.status(500).json({
+            error: 'Authentication error'
+          });
+        }
+        if (!isMatch) {
+          return res.status(401).json({
+            error: 'Invalid email or password'
+          });
+        }
+        loginUser();
+      });
+    } else {
+      // Otherwise, compare the password directly (plain text)
+      if (password !== user.password) {
+        return res.status(401).json({
+          error: 'Invalid email or password'
+        });
+      }
+      loginUser();
+    }
   });
 });
 
