@@ -4,6 +4,7 @@ const db = require('../db');
 const moment = require('moment');
 const jwt = require('jsonwebtoken');
 const logger = require('../logger');
+const bcrypt = require('bcrypt'); // Added bcrypt import
 const secret = "KASHIKA2006LK";
 router.post('/login', (req, res) => {
   const {
@@ -23,7 +24,19 @@ router.post('/login', (req, res) => {
       });
     }
     const user = results[0];
-    if (user.password === password) {
+
+    // Compare the plaintext password with the hashed password stored in the DB
+    bcrypt.compare(password, user.password, (err, isMatch) => {
+      if (err) {
+        return res.status(500).json({
+          error: 'Authentication error'
+        });
+      }
+      if (!isMatch) {
+        return res.status(401).json({
+          error: 'Invalid email or password'
+        });
+      }
       const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
       logger.info(`User ${user.name} logged in at : ${logintime}`);
       const payload = {
@@ -33,24 +46,18 @@ router.post('/login', (req, res) => {
       const token = jwt.sign(payload, secret, {
         expiresIn: '1h'
       });
-      const userData = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        phone: user.phone,
-        status: user.status
-      };
       return res.json({
         success: true,
         user,
         token
       });
-    } else {
-      return res.status(401).json({
-        error: 'Invalid email or password'
-      });
-    }
+    });
   });
 });
+
+// Clear logs every 24h (86400000ms)
+setInterval(() => {
+  console.clear(); // clear PowerShell or terminal
+  logger.info('🔄 Logs cleared - 24h cycle restart');
+}, 24 * 60 * 60 * 1000);
 module.exports = router;
