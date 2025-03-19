@@ -53,10 +53,4 @@ router.post('/login', (req, res) => {
     }
   });
 });
-
-// Clear logs every 24h (86400000ms)
-setInterval(() => {
-  console.clear(); // clear PowerShell or terminal
-  logger.info('🔄 Logs cleared - 24h cycle restart');
-}, 24 * 60 * 60 * 1000);
 module.exports = router;
