@@ -27,7 +27,7 @@ useEffect(() => {
   if (id) {
     (async () => {
       try {
-        const res = await axios.get(`http://localhost:5007/api/users/${id}`, axiosConfig);
+        const res = await axios.get(`http://10.70.4.34:5007/api/users/${id}`, axiosConfig);
         if (res.data) {
           setName(res.data.name || '');
           setEmail(res.data.email || '');
@@ -67,8 +67,8 @@ const handleSubmit = async () => {
     };
 
     const endpoint = id 
-      ? `http://localhost:5007/api/users/${id}`
-      : 'http://localhost:5007/api/users';
+      ? `http://10.70.4.34:5007/api/users/${id}`
+      : 'http://10.70.4.34:5007/api/users';
     
     const method = id ? 'put' : 'post';
 

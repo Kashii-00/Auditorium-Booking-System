@@ -79,7 +79,7 @@ const EventCalendar = ({ user }) => {
 
   const fetchBookings = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:5007/api/bookings');
+      const response = await axios.get('http://10.70.4.34:5007/api/bookings');
       const bookingsData = response.data || [];
       const mappedEvents = bookingsData.map((b) => {
         const datePart = b.booking_date.includes("T") ? b.booking_date.split("T")[0] : b.booking_date;
@@ -121,7 +121,7 @@ const EventCalendar = ({ user }) => {
       const token = localStorage.getItem('token'); // Retrieve the token from local storage
   
       const response = await axios.post(
-        'http://localhost:5007/api/bookings',
+        'http://10.70.4.34:5007/api/bookings',
         {
           user_id: user.id,
           description,

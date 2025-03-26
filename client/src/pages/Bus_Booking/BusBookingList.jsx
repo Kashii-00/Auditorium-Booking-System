@@ -23,7 +23,7 @@ const BusBookingDetails = () => {
   // Fetch bus booking data from your API
   const fetchBookings = async () => {
     try {
-      const res = await axios.get('http://localhost:5007/api/busBookings', axiosConfig);
+      const res = await axios.get('http://10.70.4.34:5007/api/busBookings', axiosConfig);
       setBookings(res.data);
     } catch (err) {
       console.error('Error fetching bus bookings:', err);
@@ -33,7 +33,7 @@ const BusBookingDetails = () => {
   // Update the status (e.g., Approve or Deny) of a booking
   const updateStatus = async (id, status) => {
     try {
-      await axios.put(`http://localhost:5007/api/busBookings/${id}`, { status }, axiosConfig);
+      await axios.put(`http://10.70.4.34:5007/api/busBookings/${id}`, { status }, axiosConfig);
       fetchBookings();
     } catch (err) {
       console.error('Error updating status:', err);
@@ -43,7 +43,7 @@ const BusBookingDetails = () => {
   // Delete a booking
   const deleteBooking = async (id) => {
     try {
-      await axios.delete(`http://localhost:5007/api/busBookings/${id}`, axiosConfig);
+      await axios.delete(`http://10.70.4.34:5007/api/busBookings/${id}`, axiosConfig);
       fetchBookings();
     } catch (err) {
       console.error('Error deleting booking:', err);

@@ -63,7 +63,7 @@ const BusBooking = ({ user }) => {
   // Fetch bus bookings from the API and map them to calendar events
   const fetchBookings = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:5007/api/busBookings');
+      const response = await axios.get('http://10.70.4.34:5007/api/busBookings');
       const bookingsData = response.data || [];
       const mappedEvents = bookingsData.map((b) => {
         let backgroundColor = b.status === 'APPROVED'
@@ -112,7 +112,7 @@ const BusBooking = ({ user }) => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        'http://localhost:5007/api/busBookings',
+        'http://10.70.4.34:5007/api/busBookings',
         {
           user_id: user.id,
           fromPlace,
