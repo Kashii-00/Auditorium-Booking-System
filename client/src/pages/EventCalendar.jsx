@@ -26,6 +26,7 @@ const EventCalendar = ({ user }) => {
     description: '',
     start: '',
     end: '',
+    status: '',
   });
 
   // When mouse enters an event, show the tooltip
@@ -43,6 +44,7 @@ const EventCalendar = ({ user }) => {
 
     // The 'description' is stored in extendedProps
     const { description } = info.event.extendedProps;
+    const {status} = info.event.extendedProps;
 
     setTooltip({
       visible: true,
@@ -52,6 +54,7 @@ const EventCalendar = ({ user }) => {
       description: description || 'No description',
       start: startTime,
       end: endTime,
+      status: status || 'N/A',
     });
   };
 
@@ -76,7 +79,7 @@ const EventCalendar = ({ user }) => {
 
   const fetchBookings = useCallback(async () => {
     try {
-      const response = await axios.get('http://10.70.4.34:5007/api/bookings');
+      const response = await axios.get('http://localhost:5007/api/bookings');
       const bookingsData = response.data || [];
       const mappedEvents = bookingsData.map((b) => {
         const datePart = b.booking_date.includes("T") ? b.booking_date.split("T")[0] : b.booking_date;
@@ -84,7 +87,7 @@ const EventCalendar = ({ user }) => {
         const endStr = `${datePart}T${b.bookingendtime}`;
 
         let backgroundColor = b.status === 'APPROVED'
-          ? 'green'
+          ? 'green' 
           : b.status === 'PENDING'
           ? 'orange'
           : 'red';
@@ -94,6 +97,7 @@ const EventCalendar = ({ user }) => {
           message:b.status,
           description: b.description, // needed for tooltip
           title: `${b.status} - ${b.name}`,
+          status: b.status,
           start: startStr,
           end: endStr,
           backgroundColor,
@@ -117,7 +121,7 @@ const EventCalendar = ({ user }) => {
       const token = localStorage.getItem('token'); // Retrieve the token from local storage
   
       const response = await axios.post(
-        'http://10.70.4.34:5007/api/bookings',
+        'http://localhost:5007/api/bookings',
         {
           user_id: user.id,
           description,
@@ -320,6 +324,7 @@ const EventCalendar = ({ user }) => {
             {`Start: ${tooltip.start} - End: ${tooltip.end}`}
           </div>
           <div>{`Description: ${tooltip.description}`}</div>
+          <div>{`Status: ${tooltip.status}`}</div>
         </div>
       )}
     </div>

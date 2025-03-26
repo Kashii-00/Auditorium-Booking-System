@@ -33,7 +33,7 @@ db.query('SELECT 1', err => {
     console.error('Database connection failed:', err);
   } else {
     logger.info('Connected to MySQL database');
-    logger.info('DB_HOST:', process.env.DB_HOST);
+    logger.info(`DB HOST: ${process.env.DB_HOST}`);
   }
 });
 module.exports = db;

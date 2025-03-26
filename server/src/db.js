@@ -2,6 +2,7 @@ require('dotenv').config();
 const mysql = require('mysql');
 const logger = require('./logger');
 
+
 const db = mysql.createPool({
   connectionLimit: 10,
   host: process.env.DB_HOST,
@@ -9,6 +10,9 @@ const db = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   timezone: process.env.DB_TIMEZONE,
+
+  
+
 });
 
 
@@ -38,7 +42,8 @@ db.query('SELECT 1', (err) => {
     console.error('Database connection failed:', err);
   } else {
     logger.info('Connected to MySQL database');
-    logger.info('DB_HOST:', process.env.DB_HOST);
+    logger.info(`DB HOST: ${process.env.DB_HOST}`);
+
   }
 });
 

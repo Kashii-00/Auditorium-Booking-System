@@ -6,7 +6,7 @@ const CreateUser = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [role, setRole] = useState('USER');
+  const [role, setRole] = useState(['USER']);
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState('ACTIVE');
   const [message, setMessage] = useState('');
@@ -22,77 +22,75 @@ const CreateUser = () => {
   };
 
 
-  useEffect(() => {
-    if (id) {
-      (async () => {
-        try {
-          
-          const res = await axios.get(`http://10.70.4.34:5007/api/users/${id}`,axiosConfig);
-          if (res.data) {
-            setName(res.data.name || '');
-            setEmail(res.data.email || '');
-            setPhone(res.data.phone || '');
-            setRole(res.data.role || 'USER');
-            setStatus(res.data.status || 'ACTIVE');
-          }
-        } catch (err) {
-          console.error('Error fetching user to edit:', err);
+  // Update the useEffect that fetches user data
+useEffect(() => {
+  if (id) {
+    (async () => {
+      try {
+        const res = await axios.get(`http://localhost:5007/api/users/${id}`, axiosConfig);
+        if (res.data) {
+          setName(res.data.name || '');
+          setEmail(res.data.email || '');
+          setPhone(res.data.phone || '');
+          // Parse roles if they come as string
+          const roles = typeof res.data.role === 'string' 
+            ? JSON.parse(res.data.role)
+            : res.data.role || ['USER'];
+          setRole(Array.isArray(roles) ? roles : [roles]);
+          setStatus(res.data.status || 'ACTIVE');
         }
-      })();
-    }
-  }, [id]);
-
-  const handleSubmit = async () => {
-    setMessage('');
-  
-    if (!name.trim()) return setMessage('Name is required');
-    if (!email.trim()) return setMessage('Email is required');
-    if (!role.trim()) return setMessage('Role is required');
-    if (!status.trim()) return setMessage('Status is required');
-    if (!id && !password.trim()) return setMessage('Password is required');
-  
-    try {
-      const userData = {
-        name,
-        email,
-        phone,
-        password,
-        role,
-        status,
-      };
-  
-      if (!id) {
-        // Create user
-        const res = await axios.post(
-          'http://10.70.4.34:5007/api/users',
-          userData,
-          axiosConfig
-        );
-        if (res.data.success) {
-          setMessage(res.data.message || 'User created successfully!');
-          setName('');
-          setEmail('');
-          setPhone('');
-          setPassword('');
-          setRole('USER');
-          setStatus('ACTIVE');
-        }
-      } else {
-        // Update user
-        const res = await axios.put(
-          `http://10.70.4.34:5007/api/users/${id}`,
-          userData,
-          axiosConfig
-        );
-        if (res.data.success) {
-          setMessage(res.data.message || 'User updated successfully!');
-        }
+      } catch (err) {
+        console.error('Error fetching user to edit:', err);
       }
-    } catch (err) {
-      console.error(err);
-      setMessage('Failed to save user');
+    })();
+  }
+}, [id]);
+
+// Update the handleSubmit function
+const handleSubmit = async () => {
+  setMessage('');
+
+  if (!name.trim()) return setMessage('Name is required');
+  if (!email.trim()) return setMessage('Email is required');
+  if (!role.length) return setMessage('At least one role is required');
+  if (!status.trim()) return setMessage('Status is required');
+  if (!id && !password.trim()) return setMessage('Password is required');
+
+  try {
+    const userData = {
+      name,
+      email,
+      phone,
+      password,
+      role: Array.from(new Set(role)), // Ensure unique roles
+      status,
+    };
+
+    const endpoint = id 
+      ? `http://localhost:5007/api/users/${id}`
+      : 'http://localhost:5007/api/users';
+    
+    const method = id ? 'put' : 'post';
+
+    const res = await axios[method](endpoint, userData, axiosConfig);
+
+    if (res.data.success) {
+      setMessage(res.data.message);
+      if (!id) {
+        // Clear form after creating new user
+        setName('');
+        setEmail('');
+        setPhone('');
+        setPassword('');
+        setRole(['USER']);
+        setStatus('ACTIVE');
+      }
     }
-  };
+  } catch (err) {
+    console.error(err);
+    setMessage('Failed to save user');
+  }
+};
   
   
 
@@ -138,12 +136,46 @@ const CreateUser = () => {
           required={!id}
         />
 
-        <label>Role</label>
-        <select value={role} onChange={(e)=>setRole(e.target.value)}>
-          <option value="USER">USER</option>
-          <option value="SuperAdmin">SuperAdmin</option>
-          <option value="ADMIN">ADMIN</option>
-        </select>
+        <label>Role,</label>
+        <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: '1px',
+        marginBottom: '15px',
+        marginTop: '5px',
+        backgroundColor: '#f5f5f5',
+        padding: '10px 15px',
+        borderRadius: '5px'
+        }}>
+          {['USER', 'ADMIN','SuperAdmin','BUS_BOOKING','AUDITORIUM_BOOKING'].map((roleOption) => (
+            <label key={roleOption} style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}>
+              <input
+                type="checkbox"
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  cursor: 'pointer'
+                }}
+                checked={role.includes(roleOption)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setRole([...role, roleOption]);
+                  } else {
+                    setRole(role.filter(r => r !== roleOption));
+                  }
+                }}
+              />
+              {roleOption}
+            </label>
+          ))}
+        </div>
 
         <label>Status</label>
         <select value={status} onChange={(e) => setStatus(e.target.value)}>

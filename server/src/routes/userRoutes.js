@@ -31,12 +31,14 @@ router.get('/:id', (req, res) => {
 // POST create user
 router.post('/', authMiddleware, async (req, res) => {
   const user_name = req.user.name;
+
   const { name, email, phone, password, role } = req.body;
+  const roleJson = JSON.stringify(role);
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql = `INSERT INTO users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)`;
-    db.query(sql, [name, email, phone, hashedPassword, role], (err, result) => {
+    db.query(sql, [name, email, phone, hashedPassword, roleJson], (err, result) => {
       if (err) return res.status(500).json({ error: 'Database error' });
       const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
       logger.info(`User Created Successfully at: ${logintime} by: ${user_name}`);
@@ -50,58 +52,64 @@ router.post('/', authMiddleware, async (req, res) => {
 
 
 
-// PUT update user
+// Update the PUT route
 router.put('/:id', authMiddleware, async (req, res) => {
   const userId = req.params.id;
   const user_name = req.user.name;
   const { name, email, phone, password, role, status } = req.body;
 
-  const fields = [];
+  const updates = [];
   const values = [];
 
   if (name) {
-    fields.push('name=?');
+    updates.push('name = ?');
     values.push(name);
   }
   if (email) {
-    fields.push('email=?');
+    updates.push('email = ?');
     values.push(email);
   }
   if (phone) {
-    fields.push('phone=?');
+    updates.push('phone = ?');
     values.push(phone);
   }
   if (password) {
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
-      fields.push('password=?');
+      updates.push('password = ?');
       values.push(hashedPassword);
     } catch (err) {
-      console.error('Password hashing failed:', err);
       return res.status(500).json({ error: 'Password hashing failed' });
     }
   }
   if (role) {
-    fields.push('role=?');
-    values.push(role);
+    updates.push('role = ?');
+    // Ensure role is an array and stringify it once
+    const roleArray = Array.isArray(role) ? role : [role];
+    values.push(JSON.stringify(roleArray));
   }
   if (status) {
-    fields.push('status=?');
+    updates.push('status = ?');
     values.push(status);
   }
 
-  if (fields.length === 0) {
+  if (updates.length === 0) {
     return res.status(400).json({ error: 'No fields to update' });
   }
 
-  const sql = `UPDATE users SET ${fields.join(', ')} WHERE id=?`;
+  const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
   values.push(userId);
 
   db.query(sql, values, (err, result) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
     const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    logger.info(`User ${userId} Updated Successfully at: ${logintime} by : ${user_name}`);
+    logger.info(`User ${userId} Updated Successfully at: ${logintime} by: ${user_name}`);
     return res.json({ success: true, message: 'User updated successfully' });
   });
 });

@@ -13,9 +13,10 @@ const Navbar = ({ user, onLogout }) => {
           <>
             <span className="navbar-greeting">ᴡᴇʟᴄᴏᴍᴇ ʙᴀᴄᴋ, {user.name}</span>
             
+            
           </>
         ) : (
-          <Link to="/login">Login</Link>
+          <Link to="/login">Login</Link> 
         )}
       </div>
     </header>

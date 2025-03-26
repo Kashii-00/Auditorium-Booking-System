@@ -1,48 +1,52 @@
-// client/src/pages/EventBooking.jsx
+// client/src/pages/BusBookingDetails.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
-import '../styles/EventBooking.css';
+import './BusBookingList.css';
 
-const EventBooking = () => {
+
+const BusBookingDetails = () => {
   const [bookings, setBookings] = useState([]);
   const location = useLocation();
 
+  // Get highlighted booking id if passed via location state
   const highlightId = location.state?.highlightId ? Number(location.state.highlightId) : null;
 
-  const token = localStorage.getItem('token'); // Adjust this based on your auth storage method
+  const token = localStorage.getItem('token'); // Adjust based on your auth storage
 
   const axiosConfig = {
     headers: {
-      Authorization: `Bearer ${token}`, // Include the token in all requests
+      Authorization: `Bearer ${token}`,
     },
   };
 
-
+  // Fetch bus booking data from your API
   const fetchBookings = async () => {
     try {
-      const res = await axios.get('http://localhost:5007/api/bookings',axiosConfig);
+      const res = await axios.get('http://localhost:5007/api/busBookings', axiosConfig);
       setBookings(res.data);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching bus bookings:', err);
     }
   };
 
+  // Update the status (e.g., Approve or Deny) of a booking
   const updateStatus = async (id, status) => {
     try {
-      await axios.put(`http://localhost:5007/api/bookings/${id}`, { status },axiosConfig);
+      await axios.put(`http://localhost:5007/api/busBookings/${id}`, { status }, axiosConfig);
       fetchBookings();
     } catch (err) {
-      console.error(err);
+      console.error('Error updating status:', err);
     }
   };
 
+  // Delete a booking
   const deleteBooking = async (id) => {
     try {
-      await axios.delete(`http://localhost:5007/api/bookings/${id}`,axiosConfig);
+      await axios.delete(`http://localhost:5007/api/busBookings/${id}`, axiosConfig);
       fetchBookings();
     } catch (err) {
-      console.error(err);
+      console.error('Error deleting booking:', err);
     }
   };
 
@@ -52,35 +56,32 @@ const EventBooking = () => {
 
   return (
     <div className='container'>
-      <h1>Event Booking Details</h1>
+      <h1>Bus Booking Details</h1>
       <div className="table-container">
-        <table border="1" cellPadding="1" style={{ borderCollapse: 'collapse', width: '100%' }}>
+        <table> 
           <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Booking Date</th>
-              <th>Booking Start</th>
-              <th>Booking End</th>
-              <th>Description</th>
+            <tr >
+              <th>Passenger</th>
+              <th>Contact Information</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Date of Travel</th>
+              <th>Date of Return</th>
+              <th>Booked By</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {bookings.map((b) => (
-              <tr 
-                key={b.id}
-                className={highlightId === Number(b.id) ? 'highlight' : ''}
-              >
+              <tr key={b.id} className={highlightId === Number(b.id) ? 'highlight' : ''}>
+                <td >{b.forWho}</td>
+                <td>{b.ContactNo}</td>
+                <td>{b.fromPlace}</td>
+                <td>{b.toPlace}</td>
+                <td>{b.travelDate || b.date}</td>
+                <td>{b.ReturnDate || b.ReturnDate}</td>
                 <td>{b.name}</td>
-                <td>{b.email}</td>
-                <td>{b.phone}</td>
-                <td>{b.booking_date}</td>
-                <td>{b.booking_time}</td>
-                <td>{b.bookingendtime}</td>
-                <td>{b.description}</td>
                 <td>{b.status}</td>
                 <td>
                   {b.status === 'PENDING' && (
@@ -100,4 +101,4 @@ const EventBooking = () => {
   );
 };
 
-export default EventBooking;
+export default BusBookingDetails;
