@@ -8,6 +8,7 @@ import CreateUser from './pages/CreateUser';
 import NotFound from './pages/NotFound';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
+import AccessDenied from '../src/pages/AccessDenied';
 import BusBooking from './pages/Bus_Booking/busBooking';
 import BusBookingList from './pages/Bus_Booking/BusBookingList';
 
@@ -15,15 +16,21 @@ function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
 
   useEffect(() => {
-    if (loggedInUser) {
-      console.log('Current user roles:', loggedInUser.role);
+    // Load user from localStorage on startup
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        handleLogin(userData);
+      } catch (error) {
+        console.error('Error loading saved user:', error);
+      }
     }
-  }, [loggedInUser]);
+  }, []);
 
   const handleLogin = (userData) => {
     if (typeof userData.role === 'string') {
       try {
-        // Parse the role string and ensure it's an array
         const parsedRoles = JSON.parse(userData.role);
         userData.role = Array.isArray(parsedRoles) ? parsedRoles : [parsedRoles];
       } catch (error) {
@@ -32,12 +39,13 @@ function App() {
       }
     }
     setLoggedInUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
-
-
 
   const handleLogout = () => {
     setLoggedInUser(null);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
   };
 
   const hasRole = (roleToCheck) => {
@@ -46,97 +54,105 @@ function App() {
     return userRoles.includes(roleToCheck);
   };
 
-  // Helper function to check if user has any of the specified roles
-  const hasAnyRole = (...roles) => {
-    return roles.some(role => hasRole(role));
+  // Access control checks
+  const canAccessCalendar = hasRole('SuperAdmin') || hasRole('calendar_access');
+  const canAccessBookings = hasRole('SuperAdmin') || hasRole('bookings_access');
+  const canAccessBus = hasRole('SuperAdmin') || hasRole('bus_access');
+  const canAccessBusBookings = hasRole('SuperAdmin') || hasRole('busbookings_access');
+  const canAccessUserManagement = hasRole('SuperAdmin');
+
+  // Protected Route Component
+  const ProtectedRoute = ({ element: Element, canAccess, ...props }) => {
+    if (!loggedInUser) return <Navigate to="/" />;
+    return canAccess ? <Element {...props} /> : <AccessDenied />;
   };
 
-  const hasUserAccess = () => {
-    return hasAnyRole('SuperAdmin', 'ADMIN', 'USER', 'AUDITORIUM_BOOKING', 'BUS_BOOKING');
-  };
+  return (
+    <Router>
+      {loggedInUser && (
+        <>
+          <Navbar user={loggedInUser} onLogout={handleLogout} />
+          <Sidebar user={loggedInUser} onLogout={handleLogout} />
+        </>
+      )}
+      <div style={{ 
+        marginTop: loggedInUser ? '60px' : '0', 
+        marginLeft: loggedInUser ? '200px' : '0',
+        padding: '0px'
+      }}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={
+            loggedInUser ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
+          } />
 
-  
-// Remove the broad hasUserAccess function and replace with specific access checks
-const canAccessCalendar = hasAnyRole('SuperAdmin', 'ADMIN', 'USER', 'AUDITORIUM_BOOKING');
-const canAccessBookings = hasAnyRole('SuperAdmin', 'ADMIN', 'AUDITORIUM_BOOKING');
-const canAccessBus = hasAnyRole('SuperAdmin', 'ADMIN', 'USER', 'BUS_BOOKING');
-const canAccessBusBookings = hasAnyRole('SuperAdmin', 'ADMIN', 'BUS_BOOKING');
-const canAccessUserManagement = hasRole('SuperAdmin');
+          {/* Default Route */}
+          <Route path="/" element={
+            !loggedInUser ? <Login onLogin={handleLogin} /> :
+            hasRole('SuperAdmin') ? <Navigate to="/calendar" /> :
+            hasRole('bus_access') ? <Navigate to="/bus" /> :
+            hasRole('calendar_access') ? <Navigate to="/calendar" /> :
+            <AccessDenied />
+          } />
 
-  // Update the Routes section
-return (
-  <Router>
-    {loggedInUser && (
-      <>
-        <Navbar user={loggedInUser} onLogout={handleLogout} />
-        <Sidebar user={loggedInUser} onLogout={handleLogout} />
-      </>
-    )}
-    <div style={{ marginTop: loggedInUser ? '60px' : '0', marginLeft: loggedInUser ? '200px' : '0' }}>
-      <Routes>
-        {/* Default route with role-based redirect */}
-        <Route path="/" element={
-        !loggedInUser ? (
-          <Login onLogin={handleLogin} />
-        ) : hasRole('BUS_BOOKING') && !hasRole('AUDITORIUM_BOOKING') ? (
-          <Navigate to="/bus" />
-        ) : (
-          <Navigate to="/calendar" />
-        )
-      } />
+          {/* Protected Routes */}
+          <Route path="/calendar" element={
+            <ProtectedRoute 
+              element={EventCalendar} 
+              canAccess={canAccessCalendar} 
+              user={loggedInUser} 
+            />
+          } />
 
-        <Route path="/login" element={
-          loggedInUser ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
-        } />
+          <Route path="/bookings" element={
+            <ProtectedRoute 
+              element={EventBooking} 
+              canAccess={canAccessBookings} 
+            />
+          } />
 
-        {/* Protected routes */}
-        <Route path="/calendar" element={
-          !loggedInUser ? <Navigate to="/login" /> :
-          canAccessCalendar ? <EventCalendar user={loggedInUser} /> :
-          <Navigate to="/" />
-        } />
+          <Route path="/bus" element={
+            <ProtectedRoute 
+              element={BusBooking} 
+              canAccess={canAccessBus} 
+              user={loggedInUser} 
+            />
+          } />
 
-        <Route path="/bookings" element={
-          !loggedInUser ? <Navigate to="/login" /> :
-          canAccessBookings ? <EventBooking /> :
-          <Navigate to="/" />
-        } />
+          <Route path="/busbookings" element={
+            <ProtectedRoute 
+              element={BusBookingList} 
+              canAccess={canAccessBusBookings} 
+            />
+          } />
 
-        <Route path="/bus" element={
-          !loggedInUser ? <Navigate to="/login" /> :
-          canAccessBus ? <BusBooking user={loggedInUser} /> :
-          <Navigate to="/" />
-        } />
+          <Route path="/users" element={
+            <ProtectedRoute 
+              element={UserDetails} 
+              canAccess={canAccessUserManagement} 
+            />
+          } />
 
-        <Route path="/busbookings" element={
-          !loggedInUser ? <Navigate to="/login" /> :
-          canAccessBusBookings ? <BusBookingList /> :
-          <Navigate to="/" />
-        } />
+          <Route path="/create-user" element={
+            <ProtectedRoute 
+              element={CreateUser} 
+              canAccess={canAccessUserManagement} 
+            />
+          } />
 
-        <Route path="/users" element={
-          !loggedInUser ? <Navigate to="/login" /> :
-          canAccessUserManagement ? <UserDetails /> :
-          <Navigate to="/" />
-        } />
+          <Route path="/create-user/:id" element={
+            <ProtectedRoute 
+              element={CreateUser} 
+              canAccess={canAccessUserManagement} 
+            />
+          } />
 
-        <Route path="/create-user" element={
-          !loggedInUser ? <Navigate to="/login" /> :
-          canAccessUserManagement ? <CreateUser /> :
-          <Navigate to="/" />
-        } />
-
-        <Route path="/create-user/:id" element={
-          !loggedInUser ? <Navigate to="/login" /> :
-          canAccessUserManagement ? <CreateUser /> :
-          <Navigate to="/" />
-        } />
-
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </div>
-  </Router>
-);
+          {/* Catch-all Route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+    </Router>
+  );
 }
 
 export default App;

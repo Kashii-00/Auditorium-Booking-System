@@ -1,58 +1,76 @@
-// client/src/pages/EventBooking.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import '../styles/EventBooking.css';
 
 const EventBooking = () => {
   const [bookings, setBookings] = useState([]);
+  const [error, setError] = useState(null);
   const location = useLocation();
 
   const highlightId = location.state?.highlightId ? Number(location.state.highlightId) : null;
 
-  const token = localStorage.getItem('token'); // Adjust this based on your auth storage method
-
-  const axiosConfig = {
+  // Memoize the config getter
+  const getConfig = useCallback(() => ({
     headers: {
-      Authorization: `Bearer ${token}`, // Include the token in all requests
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
     },
-  };
+  }), []);
 
-
-  const fetchBookings = async () => {
+  // Create memoized fetchBookings function
+  const fetchBookings = useCallback(async () => {
     try {
-      const res = await axios.get('http://10.70.4.34:5007/api/bookings',axiosConfig);
+      const res = await axios.get('http://10.70.4.34:5007/api/bookings', getConfig());
       setBookings(res.data);
+      setError(null);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching bookings:', err);
+      setError('Failed to fetch bookings');
     }
-  };
+  }, [getConfig]);
 
+  // Update status function
   const updateStatus = async (id, status) => {
     try {
-      await axios.put(`http://10.70.4.34:5007/api/bookings/${id}`, { status },axiosConfig);
-      fetchBookings();
+      await axios.put(
+        `http://10.70.4.34:5007/api/bookings/${id}`, 
+        { status }, 
+        getConfig()
+      );
+      await fetchBookings();
+      setError(null);
     } catch (err) {
-      console.error(err);
+      console.error('Error updating status:', err);
+      setError('Failed to update booking status');
     }
   };
 
+  // Delete booking function
   const deleteBooking = async (id) => {
-    try {
-      await axios.delete(`http://10.70.4.34:5007/api/bookings/${id}`,axiosConfig);
-      fetchBookings();
-    } catch (err) {
-      console.error(err);
+    if (window.confirm('Are you sure you want to delete this booking?')) {
+      try {
+        await axios.delete(`http://10.70.4.34:5007/api/bookings/${id}`, getConfig());
+        await fetchBookings();
+        setError(null);
+      } catch (err) {
+        console.error('Error deleting booking:', err);
+        setError('Failed to delete booking');
+      }
     }
   };
 
+  // Effect for initial fetch and polling
   useEffect(() => {
     fetchBookings();
-  }, []);
+    const interval = setInterval(fetchBookings, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, [fetchBookings]);
+
 
   return (
     <div className='container'>
       <h1>Event Booking Details</h1>
+      {error && <div className="error-message">{error}</div>}
       <div className="table-container">
         <table border="1" cellPadding="1" style={{ borderCollapse: 'collapse', width: '100%' }}>
           <thead>

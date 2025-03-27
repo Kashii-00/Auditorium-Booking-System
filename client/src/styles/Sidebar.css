@@ -1,4 +1,71 @@
 /* Sidebar container */
+
+.sidebar-dropdown {
+  width: 100%;
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  padding:10px;
+  margin: 20px 0px 10px -6px;
+  border-radius: 9px;
+  color: white;
+  border: 1px solid #ccc;
+  background-color: #34495e;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-align: center; /* Center the selected text */
+  appearance: none; /* Remove default dropdown arrow */
+  background-image: linear-gradient(45deg, transparent 50%, #fff 50%),
+                    linear-gradient(135deg, #fff 50%, transparent 50%);
+  background-position: calc(100% - 20px) calc(1em + 2px),
+                      calc(100% - 15px) calc(1em + 2px);
+  background-size: 5px 5px,
+                  5px 5px;
+  background-repeat: no-repeat;
+}
+
+.sidebar-dropdown:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(41, 128, 185, 0.5);
+}
+
+/* Style the dropdown options */
+.sidebar-dropdown option {
+  background-color: #34495e;
+  color: white;
+  padding: 15px;
+  text-align: center;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Option hover effect */
+.sidebar-dropdown option:hover {
+  background-color: #2980b9;
+}
+
+/* Option selected state */
+.sidebar-dropdown option:checked {
+  background-color: #2980b9;
+  color: white;
+  font-weight: bold;
+}
+
+/* Custom hover effect for dropdown */
+.sidebar-dropdown:hover {
+  background-color: #285a79;
+  transform: scale(1.02);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border-color: #3787b8;
+}
+
+.sidebar-links {
+  display: flex;
+  flex-direction: column;
+  margin-top: 5px;
+  padding-left: 2px;
+  padding-right: 15px;
+}
+
 .sidebar {
   position: fixed;
   top: 0;
@@ -42,7 +109,7 @@
   display: block;
   color: #ecf0f1;
   text-decoration: none;
-  margin: 10px 0;
+  margin: 5px 0;
   font-size: 16px;
   padding: 5px;
   border-radius: 6px;
