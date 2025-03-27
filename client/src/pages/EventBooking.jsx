@@ -69,7 +69,7 @@ const EventBooking = () => {
 
   return (
     <div className='container'>
-      <h1>Event Booking Details</h1>
+      <h1>Auditorium Booking Details</h1>
       {error && <div className="error-message">{error}</div>}
       <div className="table-container">
         <table border="1" cellPadding="1" style={{ borderCollapse: 'collapse', width: '100%' }}>

@@ -151,7 +151,7 @@ const EventCalendar = ({ user }) => {
 
   return (
     <div className='container'>
-      <h1>Auditorium Calendar</h1>
+      <h1>Auditorium Booking</h1>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', paddingLeft: '100px' }}>
         <div
           style={{

@@ -143,7 +143,7 @@ const BusBooking = ({ user }) => {
 
   return (
     <div className='container'>
-      <h1>Bus Booking Calendar</h1>
+      <h1>Bus Booking </h1>
       <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', paddingLeft: '100px' }}>
         {/* Calendar Section */}
         <div

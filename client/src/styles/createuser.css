@@ -26,3 +26,20 @@
     font-size: 14px;
     color: #333;
   }
+
+  .password-change-section {
+    margin: 15px 0;
+  }
+  
+  .password-change-section label {
+    display: block;
+    margin-bottom: 8px;
+  }
+  
+  .password-change-section input[type="checkbox"] {
+    margin-right: 8px;
+  }
+  
+  .password-change-section input[type="password"] {
+    margin-top: 8px;
+  }

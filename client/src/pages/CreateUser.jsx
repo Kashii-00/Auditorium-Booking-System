@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams,useNavigate } from 'react-router-dom';
 import '../styles/createuser.css';
 
 const CreateUser = () => {
@@ -12,6 +12,10 @@ const CreateUser = () => {
   const [message, setMessage] = useState('');
   const [baseRole, setBaseRole] = useState('USER');
   const [accessLevels, setAccessLevels] = useState([]);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+
+  const navigate = useNavigate();
 
   const { id } = useParams();
 
@@ -105,14 +109,16 @@ const CreateUser = () => {
         ? ['SuperAdmin']
         : [baseRole, ...accessLevels];
 
-      const userData = {
-        name,
-        email,
-        phone,
-        ...(password && { password }),
-        role: roles,
-        status
-      };
+        const userData = {
+          name,
+          email,
+          phone,
+          role: roles,
+          status,
+          ...((!id || showPasswordChange) && { 
+            password: id ? newPassword : password 
+          })
+        };
 
       const endpoint = id 
         ? `http://10.70.4.34:5007/api/users/${id}`
@@ -122,17 +128,8 @@ const CreateUser = () => {
       const res = await axios[method](endpoint, userData, axiosConfig);
 
       if (res.data) {
-        setMessage(id ? 'User updated successfully' : 'User created successfully');
-        if (!id) {
-          // Clear form after creating new user
-          setName('');
-          setEmail('');
-          setPhone('');
-          setPassword('');
-          setBaseRole('USER');
-          setAccessLevels([]);
-          setStatus('ACTIVE');
-        }
+        alert(id ? 'User updated successfully!' : 'User created successfully!');
+        navigate('/users'); // Add navigation after successful submission
       }
     } catch (err) {
       console.error('Error saving user:', err);
@@ -173,7 +170,7 @@ const CreateUser = () => {
           onChange={(e) => setPhone(e.target.value)}
         />
 
-        {!id && (
+        {!id ? (
           <>
             <label>Password</label>
             <input 
@@ -183,6 +180,29 @@ const CreateUser = () => {
               required
             />
           </>
+        ) : (
+          <div className="password-change-section">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={showPasswordChange}
+                onChange={(e) => setShowPasswordChange(e.target.checked)}
+              />
+              <span>Change Password</span>
+            </label>
+            
+            {showPasswordChange && (
+              <>
+                <label>New Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                />
+              </>
+            )}
+          </div>
         )}
 
         <label>Base Role :</label>
