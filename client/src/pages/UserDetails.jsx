@@ -17,7 +17,7 @@ const UserDetails = () => {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const userData = await authRequest('get', 'http://10.70.4.34:5007/api/users');
+      const userData = await authRequest('get', 'http://10.70.4.34:5003/api/users');
       setUsers(userData);
     } catch (err) {
       console.error(err);
@@ -70,7 +70,7 @@ const UserDetails = () => {
   
   const deleteUser = useCallback(async (id) => {
     try {
-      await authRequest('delete', `http://10.70.4.34:5007/api/users/${id}`);
+      await authRequest('delete', `http://10.70.4.34:5003/api/users/${id}`);
       await fetchUsers();
     } catch (err) {
       console.error(err);

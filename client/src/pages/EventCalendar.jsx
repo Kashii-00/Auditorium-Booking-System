@@ -209,7 +209,7 @@ const EventCalendar = ({ user }) => {
   const fetchBookings = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://10.70.4.34:5007/api/bookings', {
+      const response = await axios.get('http://10.70.4.34:5003/api/bookings', {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -266,7 +266,7 @@ const EventCalendar = ({ user }) => {
       const token = localStorage.getItem('token');
       
       const response = await axios.post(
-        'http://10.70.4.34:5007/api/bookings',
+        'http://10.70.4.34:5003/api/bookings',
         {
           user_id: user.id,
           description,

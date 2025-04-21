@@ -189,7 +189,7 @@ function C_Registration() {
     try {
       const response = await authRequest(
         'get',
-        `http://10.70.4.34:5007/api/CourseRegistrationRoute?courseId=${formData.courseId}`
+        `http://10.70.4.34:5003/api/CourseRegistrationRoute?courseId=${formData.courseId}`
       );
       let exists = false;
       if (Array.isArray(response)) {
@@ -277,7 +277,7 @@ function C_Registration() {
 
       const response = await authRequest(
         'post',
-        "http://10.70.4.34:5007/api/CourseRegistrationRoute",
+        "http://10.70.4.34:5003/api/CourseRegistrationRoute",
         payload
       );
       if (response && response.success) {

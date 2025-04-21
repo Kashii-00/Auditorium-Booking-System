@@ -115,7 +115,7 @@ const BusBookingList = () => {
     try {
       fetchInProgress.current = true;
       lastFetchTime.current = now;
-      const bookingsData = await authRequest('get', 'http://10.70.4.34:5007/api/busBookings');
+      const bookingsData = await authRequest('get', 'http://10.70.4.34:5003/api/busBookings');
       setBookings(bookingsData);
       setError(null);
     } catch (err) {
@@ -139,7 +139,7 @@ const BusBookingList = () => {
   // Update status
   const updateStatus = async (id, status) => {
     try {
-      await authRequest('put', `http://10.70.4.34:5007/api/busBookings/${id}`, { status });
+      await authRequest('put', `http://10.70.4.34:5003/api/busBookings/${id}`, { status });
       fetchBookings();
     } catch (err) {
       setError('Failed to update booking status');
@@ -150,7 +150,7 @@ const BusBookingList = () => {
   const deleteBooking = async (id) => {
     if (window.confirm('Are you sure you want to delete this booking?')) {
       try {
-        await authRequest('delete', `http://10.70.4.34:5007/api/busBookings/${id}`);
+        await authRequest('delete', `http://10.70.4.34:5003/api/busBookings/${id}`);
         setPopupMessage('Booking successfully deleted!');
         setShowPopup(true);
         fetchBookings();

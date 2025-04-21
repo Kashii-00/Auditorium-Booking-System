@@ -69,12 +69,12 @@ try {
     console.log(`${colors.yellow}⚠️  Some route files may have issues\n${colors.reset}`);
   }
 } catch (err) {
-  console.log(`${colors.red}❌ Error checking route files: ${err.message}\n${colors.reset}`);
+  console.log(`${colors.red}❌ Error checking route   files: ${err.message}\n${colors.reset}`);
 }
 
 // 3. Check server connectivity
 console.log(`${colors.cyan}CHECKING SERVER CONNECTIVITY${colors.reset}`);
-const serverPort = process.env.PORT || 5007;
+const serverPort = process.env.PORT || 5003;
 
 const checkServer = () => {
   const req = http.request({

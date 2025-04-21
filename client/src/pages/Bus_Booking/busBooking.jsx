@@ -113,7 +113,7 @@ const BusBooking = ({ user }) => {
     try {
       fetchInProgress.current = true;
       lastFetchTime.current = now;
-      const bookingsData = await authRequest('get', 'http://10.70.4.34:5007/api/busBookings');
+      const bookingsData = await authRequest('get', 'http://10.70.4.34:5003/api/busBookings');
       const mappedEvents = (bookingsData || []).map((b) => {
         let backgroundColor = b.status === 'APPROVED'
           ? 'green'
@@ -153,7 +153,7 @@ const BusBooking = ({ user }) => {
     try {
       const formattedTravelDate = new Date(travelDate).toISOString().split('T')[0];
       const formattedReturnDate = new Date(returnDate).toISOString().split('T')[0];
-      const response = await authRequest('post', 'http://10.70.4.34:5007/api/busBookings', {
+      const response = await authRequest('post', 'http://10.70.4.34:5003/api/busBookings', {
         user_id: user.id,
         fromPlace,
         toPlace,

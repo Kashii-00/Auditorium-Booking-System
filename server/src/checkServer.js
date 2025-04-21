@@ -3,13 +3,13 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-const PORT = process.env.PORT || 5007;
+const PORT = process.env.PORT || 5003;
 
 console.log('Checking server configuration...');
 
 // Check for crucial environment variables
 console.log('\n--- Environment Variables ---');
-console.log(`PORT: ${process.env.PORT || 'Not set, using default 5007'}`);
+console.log(`PORT: ${process.env.PORT || 'Not set, using default 5003'}`);
 console.log(`DB_HOST: ${process.env.DB_HOST || 'Not set!'}`);
 console.log(`DB_USER: ${process.env.DB_USER || 'Not set!'}`);
 console.log(`DB_DATABASE: ${process.env.DB_DATABASE || 'Not set!'}`);

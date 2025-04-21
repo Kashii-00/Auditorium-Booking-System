@@ -141,7 +141,7 @@ const EventBooking = () => {
   // Create memoized fetchBookings function
   const fetchBookings = useCallback(async () => {
     try {
-      const bookingsData = await authRequest('get', 'http://10.70.4.34:5007/api/bookings');
+      const bookingsData = await authRequest('get', 'http://10.70.4.34:5003/api/bookings');
       setBookings(bookingsData);
       setError(null);
     } catch (err) {
@@ -170,7 +170,7 @@ const EventBooking = () => {
   // Update status function
   const updateStatus = async (id, status) => {
     try {
-      await authRequest('put', `http://10.70.4.34:5007/api/bookings/${id}`, { status });
+      await authRequest('put', `http://10.70.4.34:5003/api/bookings/${id}`, { status });
       await fetchBookings();
       setError(null);
     } catch (err) {
@@ -183,7 +183,7 @@ const EventBooking = () => {
   const deleteBooking = async (id) => {
     if (window.confirm('Are you sure you want to delete this booking?')) {
       try {
-        await authRequest('delete', `http://10.70.4.34:5007/api/bookings/${id}`);
+        await authRequest('delete', `http://10.70.4.34:5003/api/bookings/${id}`);
         await fetchBookings();
         setError(null);
         setShowPopup(true);

@@ -75,7 +75,7 @@ const CreateUser = () => {
       if (!id) return;
 
       try {
-        const userData = await authRequest('get', `http://10.70.4.34:5007/api/users/${id}`);
+        const userData = await authRequest('get', `http://10.70.4.34:5003/api/users/${id}`);
 
         if (userData) {
           const { name, email, phone, role, status } = userData;
@@ -135,8 +135,8 @@ const CreateUser = () => {
       };
 
       const endpoint = id 
-        ? `http://10.70.4.34:5007/api/users/${id}`
-        : 'http://10.70.4.34:5007/api/users';
+        ? `http://10.70.4.34:5003/api/users/${id}`
+        : 'http://10.70.4.34:5003/api/users';
       
       const method = id ? 'put' : 'post';
       const response = await authRequest(method, endpoint, userData);

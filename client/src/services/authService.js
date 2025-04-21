@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://10.70.4.34:5007/api';
+const API_URL = 'http://10.70.4.34:5003/api';
 
 // In-memory storage for access token (not accessible from browser console)
 let accessToken = null;

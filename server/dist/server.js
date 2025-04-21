@@ -86,7 +86,7 @@ app.use((err, req, res, next) => {
     message: DEBUG ? err.message : 'Something went wrong'
   });
 });
-const port = process.env.PORT || 5007;
+const port = process.env.PORT || 5003;
 const server = app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
