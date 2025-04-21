@@ -1,14 +1,16 @@
+"use strict";
+
 const express = require('express');
 const router = express.Router();
 const moment = require('moment');
 const logger = require('../logger');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
-const authMiddleware = require('../auth');
+const auth = require('../auth');
 const bcrypt = require('bcrypt');
 
 // GET all users
-router.get('/', (req, res) => {
+router.get('/', auth.authMiddleware, (req, res) => {
   const sql = 'SELECT id, name, email, phone, role, status FROM users';
   db.query(sql, (err, results) => {
     if (err) return res.status(500).json({
@@ -19,7 +21,7 @@ router.get('/', (req, res) => {
 });
 
 // GET user by ID
-router.get('/:id', (req, res) => {
+router.get('/:id', auth.authMiddleware, (req, res) => {
   const userId = req.params.id;
   const sql = 'SELECT id, name, email, phone, role, status FROM users WHERE id=?';
   db.query(sql, [userId], (err, results) => {
@@ -34,7 +36,7 @@ router.get('/:id', (req, res) => {
 });
 
 // POST create user
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', auth.authMiddleware, async (req, res) => {
   const user_name = req.user.name;
   const {
     name,
@@ -43,7 +45,9 @@ router.post('/', authMiddleware, async (req, res) => {
     password,
     role
   } = req.body;
-  const roleJson = JSON.stringify(role);
+  // Always store role as JSON array
+  const roleArray = Array.isArray(role) ? role : [role];
+  const roleJson = JSON.stringify(roleArray);
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql = `INSERT INTO users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)`;
@@ -67,7 +71,7 @@ router.post('/', authMiddleware, async (req, res) => {
 });
 
 // Update the PUT route
-router.put('/:id', authMiddleware, async (req, res) => {
+router.put('/:id', auth.authMiddleware, async (req, res) => {
   const userId = req.params.id;
   const user_name = req.user.name;
   const {
@@ -105,7 +109,6 @@ router.put('/:id', authMiddleware, async (req, res) => {
   }
   if (role) {
     updates.push('role = ?');
-    // Ensure role is an array and stringify it once
     const roleArray = Array.isArray(role) ? role : [role];
     values.push(JSON.stringify(roleArray));
   }
@@ -142,7 +145,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
 });
 
 // DELETE user
-router.delete('/:id', authMiddleware, (req, res) => {
+router.delete('/:id', auth.authMiddleware, (req, res) => {
   const userIdToDelete = req.params.id;
   const loggedInUserId = req.user.id;
   const user_name = req.user.name;

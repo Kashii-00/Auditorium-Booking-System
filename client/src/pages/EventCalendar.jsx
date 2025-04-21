@@ -1,28 +1,117 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import "../styles/Calendar.css";
 import { useNavigate } from 'react-router-dom';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
+import SuccessPopup from './Course&Batch/styles/SuccessPopup';
 import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import { 
+  FaUser, 
+  FaPhone, 
+  FaPaperPlane,
+  FaCheck,
+} from 'react-icons/fa';
+import defaultUserImage from '../styles/profile-user.png';
 
 const EventCalendar = ({ user }) => {
+  // Form state
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
   const [bookingendtime, setEndTime] = useState('');
+  const [showPopup, setShowPopup] = useState(false);
   const [noOfPeople, setNoOfPeople] = useState(1);
   const [message, setMessage] = useState('');
   const [events, setEvents] = useState([]);
   const [description, setDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Error tracking
+  const [errors, setErrors] = useState({});
+  
+  // Calendar refs and state
+  const calendarRef = useRef(null);
+  const [isCalendarMounted, setIsCalendarMounted] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const navigate = useNavigate();
 
-  // 1) Tooltip state: stores position, visibility, and booking info
+  // Handle calendar resize when sidebar changes or window resizes
+  const handleResize = useCallback(() => {
+    if (isCalendarMounted && calendarRef.current?.getApi) {
+      setTimeout(() => {
+        try {
+          const api = calendarRef.current.getApi();
+          if (api) {
+            api.updateSize();
+          }
+        } catch (error) {
+          console.log('Calendar API not ready yet');
+        }
+      }, 300);
+    }
+  }, [isCalendarMounted]);
+
+  // Initialize when calendar is mounted
+  useEffect(() => {
+    if (calendarRef.current) {
+      setIsCalendarMounted(true);
+    }
+  }, []);  
+  
+  // Listen for sidebar toggle events
+  useEffect(() => {
+    // Always sync sidebar state from localStorage on mount and on popstate
+    const syncSidebarState = () => {
+      const stored = localStorage.getItem('sidebarState');
+      if (stored !== null) {
+        const isCollapsed = stored === 'true';
+        setSidebarCollapsed(isCollapsed);
+        window.dispatchEvent(new CustomEvent('sidebarToggle', {
+          detail: { isCollapsed }
+        }));
+      }
+    };
+
+    // On mount, sync sidebar state
+    syncSidebarState();
+
+    // Listen for browser back/forward navigation and sync sidebar state
+    window.addEventListener('popstate', syncSidebarState);
+
+    const handleSidebarToggle = (e) => {
+      setSidebarCollapsed(e.detail.isCollapsed);
+      if (isCalendarMounted) {
+        setTimeout(handleResize, 500);
+      }
+      localStorage.setItem('sidebarState', e.detail.isCollapsed);
+    };
+
+    const handleSidebarHover = (e) => {
+      setSidebarCollapsed(!e.detail.isHovered);
+      if (isCalendarMounted) {
+        setTimeout(handleResize, 500);
+      }
+    };
+
+    window.addEventListener('sidebarToggle', handleSidebarToggle);
+    window.addEventListener('sidebarHover', handleSidebarHover);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('sidebarToggle', handleSidebarToggle);
+      window.removeEventListener('sidebarHover', handleSidebarHover);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('popstate', syncSidebarState);
+    };
+  }, [handleResize, isCalendarMounted]);
+
+  // Tooltip state: stores position, visibility, and booking info
   const [tooltip, setTooltip] = useState({
     visible: false,
     x: 0,
     y: 0,
-    message:'',
     description: '',
     start: '',
     end: '',
@@ -44,13 +133,12 @@ const EventCalendar = ({ user }) => {
 
     // The 'description' is stored in extendedProps
     const { description } = info.event.extendedProps;
-    const {status} = info.event.extendedProps;
+    const { status } = info.event.extendedProps;
 
     setTooltip({
       visible: true,
       x: pageX,
       y: pageY,
-      message:message,
       description: description || 'No description',
       start: startTime,
       end: endTime,
@@ -70,56 +158,113 @@ const EventCalendar = ({ user }) => {
       for (let minutes of [0, 30]) {
         const formattedHour = hour.toString().padStart(2, '0');
         const formattedMinutes = minutes.toString().padStart(2, '0');
-        times.push(`${formattedHour}:${formattedMinutes}`);
+        const time = `${formattedHour}:${formattedMinutes}`;
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour % 12 || 12;
+        const displayTime = `${displayHour}:${formattedMinutes} ${period}`;
+        times.push({ value: time, label: displayTime });
       }
     }
     return times;
   };
 
+  // Add validation function
+  const validateForm = () => {
+    const newErrors = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const selectedDate = new Date(bookingDate);
+    selectedDate.setHours(0, 0, 0, 0);
 
+    if (!bookingDate) {
+      newErrors.date = 'Date is required';
+    } else if (selectedDate < today) {
+      newErrors.date = 'Cannot book dates in the past';
+    }
+
+    if (!bookingTime) {
+      newErrors.startTime = 'Start time is required';
+    }
+
+    if (!bookingendtime) {
+      newErrors.endTime = 'End time is required';
+    } else if (bookingTime && bookingendtime <= bookingTime) {
+      newErrors.endTime = 'End time must be after start time';
+    }
+
+    if (!description.trim()) {
+      newErrors.description = 'Description is required';
+    }
+
+    if (!noOfPeople || noOfPeople < 1) {
+      newErrors.people = 'Number of people must be at least 1';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Fetch bookings from API
   const fetchBookings = useCallback(async () => {
     try {
-      const response = await axios.get('http://10.70.4.34:5007/api/bookings');
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://10.70.4.34:5007/api/bookings', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
       const bookingsData = response.data || [];
       const mappedEvents = bookingsData.map((b) => {
-        const datePart = b.booking_date.includes("T") ? b.booking_date.split("T")[0] : b.booking_date;
+        const datePart = b.booking_date.includes("T") 
+          ? b.booking_date.split("T")[0] 
+          : b.booking_date;
         const startStr = `${datePart}T${b.booking_time}`;
         const endStr = `${datePart}T${b.bookingendtime}`;
 
-        let backgroundColor = b.status === 'APPROVED'
-          ? 'green' 
-          : b.status === 'PENDING'
-          ? 'orange'
-          : 'red';
+        const status = b.status.toLowerCase();
 
         return {
           id: b.id,
-          message:b.status,
-          description: b.description, // needed for tooltip
-          title: `${b.status} - ${b.name}`,
+          title: b.description,
           status: b.status,
           start: startStr,
           end: endStr,
-          backgroundColor,
-          textColor: '#fff',
+          className: `status-${status}`,
+          extendedProps: {
+            description: b.description,
+            status: b.status,
+            people: b.no_of_people
+          }
         };
       });
+      
       setEvents(mappedEvents);
     } catch (error) {
       console.error('Error fetching bookings:', error);
     }
   }, []);
 
+  // Initial fetch and polling setup
   useEffect(() => {
     fetchBookings();
+    const interval = setInterval(fetchBookings, 30000); // Poll every 30 seconds
+    return () => clearInterval(interval);
   }, [fetchBookings]);
 
+  // Handle booking form submission
   const handleBooking = async () => {
+    if (!validateForm()) {
+      return;
+    }
+    
+    setIsSubmitting(true);
     setMessage('');
     
     try {
-      const token = localStorage.getItem('token'); // Retrieve the token from local storage
-  
+      const token = localStorage.getItem('token');
+      
       const response = await axios.post(
         'http://10.70.4.34:5007/api/bookings',
         {
@@ -132,37 +277,89 @@ const EventCalendar = ({ user }) => {
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Send the token in the request headers
+            Authorization: `Bearer ${token}`,
           },
         }
       );
   
       if (response.data.success) {
-        setMessage('Booking request sent!');
+        setMessage('Booking request sent successfully!');
         fetchBookings();
+        setShowPopup(true);
+        
+        // Reset form fields
+        setBookingDate('');
+        setBookingTime('');
+        setEndTime('');
+        setNoOfPeople(1);
+        setDescription('');
+        
+        setTimeout(() => {
+          setShowPopup(false);
+        }, 3000);
       } else {
         setMessage('Failed to send booking request.');
       }
     } catch (err) {
       console.error('Error creating booking:', err);
       setMessage('Failed to send booking request.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  // Update calendar when sidebar changes or window resizes
+  useEffect(() => {
+    const handleSidebarToggle = (e) => {
+      setSidebarCollapsed(e.detail.isCollapsed);
+      if (isCalendarMounted) {
+        // Use a longer delay for sidebar toggle since it's a bigger layout change
+        setTimeout(handleResize, 500);
+      }
+    };
+
+    const handleSidebarHover = (e) => {
+      setSidebarCollapsed(!e.detail.isHovered);
+      if (isCalendarMounted) {
+        setTimeout(handleResize, 500);
+      }
+    };
+
+    const handleWindowResize = () => {
+      if (isCalendarMounted) {
+        handleResize();
+      }
+    };
+
+    window.addEventListener('sidebarToggle', handleSidebarToggle);
+    window.addEventListener('sidebarHover', handleSidebarHover);
+    window.addEventListener('resize', handleWindowResize);
+    
+    return () => {
+      window.removeEventListener('sidebarToggle', handleSidebarToggle);
+      window.removeEventListener('sidebarHover', handleSidebarHover);
+      window.removeEventListener('resize', handleWindowResize);
+    };
+  }, [handleResize, isCalendarMounted]);
+
   return (
-    <div className='container'>
-      <h1>Auditorium Booking</h1>
-      <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', paddingLeft: '100px' }}>
-        <div
-          style={{
-            width: '1200px',
-            border: '1px solid #ccc',
-            borderRadius: '10px',
-            padding: '20px 30px',
-          }}
-        >
+    <div className={`content-wrapper ${sidebarCollapsed ? 'expanded' : ''}`}>
+      
+      {showPopup && (
+        <SuccessPopup 
+          message="Booking added successfully!"
+          onClose={() => setShowPopup(false)}
+        />
+      )}
+
+      <h1>Auditorium Reservation System</h1>
+      
+      <div className="calendar-container">
+        {/* Calendar Section */}
+        <div className="calendar-main">
           <FullCalendar
-            plugins={[dayGridPlugin, timeGridPlugin]}
+            ref={calendarRef}
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
             headerToolbar={{
               left: 'prev,next today',
@@ -170,161 +367,220 @@ const EventCalendar = ({ user }) => {
               right: 'dayGridMonth,timeGridWeek,timeGridDay',
             }}
             events={events}
-            height="auto"
-            dayMaxEventRows={2}
-            contentHeight={700}
-            eventClick={(info) => {
-              navigate('/bookings', { state: { highlightId: Number(info.event.id) } });
+            height="100%"
+            handleWindowResize={true}
+            viewDidMount={() => {
+              setIsCalendarMounted(true);
+              setTimeout(handleResize, 300);
             }}
-            // NEW: show/hide tooltip on hover
+            dayMaxEventRows={3}
+            fixedWeekCount={false}
+            stickyHeaderDates={true}
+            stickyFooterScrollbar={true}
+            contentHeight="auto"
+            eventTimeFormat={{
+              hour: '2-digit',
+              minute: '2-digit',
+              meridiem: true
+            }}
+            nowIndicator={true}
+            eventClick={(info) => {
+              navigate('/bookings', { 
+                state: { 
+                  highlightId: Number(info.event.id),
+                  sidebarState: sidebarCollapsed
+                }
+              });
+            }}
+            eventDidMount={(info) => {
+              const status = info.event.extendedProps.status.toLowerCase();
+              info.el.classList.add(`status-${status}`);
+            }}
             eventMouseEnter={handleEventMouseEnter}
             eventMouseLeave={handleEventMouseLeave}
+            eventContent={(eventInfo) => {
+              return (
+                <div className="fc-event-main-frame">
+                  <div className="fc-event-title-container">
+                    <div className="fc-event-title">
+                      {eventInfo.timeText && (
+                        <span className="fc-event-time">{eventInfo.timeText} • </span>
+                      )}
+                      {eventInfo.event.title}
+                    </div>
+                  </div>
+                </div>
+              );
+            }}
           />
         </div>
 
         {/* Booking Form */}
-        <div
-          style={{
-            width: '250px',
-            background: '#f9f9f9',
-            padding: '5px 40px',
-            borderRadius: '7px',
-            border: '1px solid #ddd',
-          }}
-        >
-          <h2 style={{ fontSize: '18px', marginBottom: '15px' }}>Book Auditorium</h2>
-          <p style={{ margin: '0 0 9px' }}>
-            <strong>Name:</strong> {user?.name}
-          </p>
-          <p style={{ margin: '0 0 30px' }}>
-            <strong>Phone:</strong> {user?.phone}
-          </p>
+        <div className="booking-form">
+          <h2 className="form-title">Reserve the Auditorium</h2>
+          
+          <div className="user-info-container">
+            <div className="user-photo">
+              <img src={user?.photo || defaultUserImage} alt="User" />
+            </div>
+            <div className="user-details">
+              <div className="user-detail">
+                <FaUser className="detail-icon" />
+                <span>{user?.name || 'User'}</span>
+              </div>
+              <div className="user-detail">
+                <FaPhone className="detail-icon" />
+                <span>{user?.phone || 'No phone provided'}</span>
+              </div>
+            </div>
+          </div>
 
-          <label style={{ display: 'block', marginBottom: '5px' }}>
-            Reservation Date:
-          </label>
-          <input
-            type="date"
-            value={bookingDate}
-            onChange={(e) => setBookingDate(e.target.value)}
-            required
-            style={{ width: '100%', marginBottom: '7px' }}
-          />
+          <div className="form-group">
+            <label htmlFor="booking-date">
+             
+              <span>Reservation Date</span>
+            </label>
+            <input
+              id="booking-date"
+              type="date"
+              value={bookingDate}
+              onChange={(e) => setBookingDate(e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+              required
+              className={errors.date ? 'error' : ''}
+            />
+           
+          </div>
 
-          <label style={{ display: 'block', marginBottom: '5px' }}>
-            Reservation Time:
-          </label>
-          <select
-            value={bookingTime}
-            onChange={(e) => setBookingTime(e.target.value)}
-            required
-            style={{
-              width: '100%',
-              marginBottom: '7px',
-              paddingTop: '17px',
-              paddingBottom: '17px',
-              borderRadius: '5px',
-              borderColor: '#A7B0C8',
-            }}
-          >
-            <option value="" disabled>
-              Start Time
-            </option>
-            {generateTimeOptions().map((time) => (
-              <option key={time} value={time}>
-                {time}
-              </option>
-            ))}
-          </select>
+          <div className="form-group">
+            <label htmlFor="booking-time">
+              
+              <span>Time Slot</span>
+            </label>
+            <div className="time-inputs">
+              <select
+                id="booking-time"
+                value={bookingTime}
+                onChange={(e) => {
+                  setBookingTime(e.target.value);
+                  if (bookingendtime && bookingendtime <= e.target.value) {
+                    setEndTime('');
+                  }
+                }}
+                required
+                className={errors.startTime ? 'error' : ''}
+              >
+                <option value="" disabled>Start Time</option>
+                {generateTimeOptions().map((time) => (
+                  <option key={time.value} value={time.value}>
+                    {time.label}
+                  </option>
+                ))}
+              </select>
 
-          <select
-            value={bookingendtime}
-            onChange={(e) => setEndTime(e.target.value)}
-            required
-            style={{
-              width: '100%',
-              marginBottom: '7px',
-              paddingTop: '17px',
-              paddingBottom: '17px',
-              borderRadius: '5px',
-              borderColor: '#A7B0C8',
-            }}
-          >
-            <option value="" disabled>
-              End Time
-            </option>
-            {generateTimeOptions().map((time) => (
-              <option key={time} value={time}>
-                {time}
-              </option>
-            ))}
-          </select>
+              <span className="time-separator">to</span>
 
-          <label style={{ display: 'block', marginBottom: '5px' }}>
-            No. of People:
-          </label>
-          <input
-            type="number"
-            value={noOfPeople}
-            onChange={(e) => setNoOfPeople(e.target.value)}
-            min="1"
-            style={{ width: '100%', marginBottom: '10px' }}
-          />
+              <select
+                value={bookingendtime}
+                onChange={(e) => setEndTime(e.target.value)}
+                required
+                className={errors.endTime ? 'error' : ''}
+                disabled={!bookingTime}
+              >
+                <option value="" disabled>End Time</option>
+                {generateTimeOptions()
+                  .filter(time => !bookingTime || time.value > bookingTime)
+                  .map((time) => (
+                    <option key={time.value} value={time.value}>
+                      {time.label}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            
+          </div>
 
-          <label style={{ display: 'block', marginBottom: '5px' }}>
-            Description:
-          </label>
-          <input
-            type="text"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Enter description"
-            style={{ width: '100%', marginBottom: '10px' }}
-          />
+          <div className="form-group">
+            <label htmlFor="no-of-people">
+              
+              <span>Number of Attendees</span>
+            </label>
+            <input
+              id="no-of-people"
+              type="number"
+              value={noOfPeople}
+              onChange={(e) => setNoOfPeople(Math.max(1, parseInt(e.target.value) || 0))}
+              min="1"
+              required
+              className={errors.people ? 'error' : ''}
+            />
+            
+          </div>
 
-          <button
+          <div className="form-group">
+            <label htmlFor="description">
+              
+              <span>Event Description</span>
+            </label>
+            <textarea
+              id="description"
+              rows="3"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter a brief description of your event"
+              required
+              className={errors.description ? 'error' : ''}
+            />
+            
+          </div>
+
+          <button 
+            className="submit-button" 
             onClick={handleBooking}
-            style={{
-              marginTop: '10px',
-              padding: '12px 20px',
-              fontSize: '16px',
-              backgroundColor: '#4CAF50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              transition: 'background-color 0.3s ease, transform 0.2s ease',
-            }}
-            onMouseEnter={(e) => (e.target.style.backgroundColor = '#12492f')}
-            onMouseLeave={(e) => (e.target.style.backgroundColor = '#4CAF50')}
+            disabled={isSubmitting}
           >
-            Submit
+            {isSubmitting ? (
+              <span>Submitting...</span>
+            ) : (
+              <>
+                <FaPaperPlane />
+                <span>Submit Booking</span>
+              </>
+            )}
           </button>
-          {message && <p style={{ marginTop: '10px', color: 'green' }}>{message}</p>}
+          
+          {message && (
+            <div className="success-message">
+              <FaCheck style={{ marginRight: '8px' }} />
+              {message}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Tooltip Popup (conditionally rendered) */}
+      {/* Tooltip Popup */}
       {tooltip.visible && (
-        <div
-          style={{
-            position: 'absolute',
-            top: tooltip.y + 10,
-            left: tooltip.x + 10,
-            backgroundColor: '#fff',
-            border: '1px solid #ccc',
-            padding: '8px 10px',
-            borderRadius: '4px',
-            zIndex: 9999,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-            pointerEvents: 'none',
-          }}
-        >
-          <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
-            {`Start: ${tooltip.start} - End: ${tooltip.end}`}
+        <div className="event-tooltip" style={{
+          top: tooltip.y + 15,
+          left: tooltip.x + 15,
+        }}>
+          <div className="tooltip-header">
+            Event Details
           </div>
-          <div>{`Description: ${tooltip.description}`}</div>
-          <div>{`Status: ${tooltip.status}`}</div>
+          
+          <div className="tooltip-row">
+            <span className="tooltip-label">Time:</span>
+            <span>{tooltip.start && tooltip.end ? `${tooltip.start} - ${tooltip.end}` : 'Not specified'}</span>
+          </div>
+          
+          <div className="tooltip-row">
+            <span className="tooltip-label">Description:</span>
+            <span>{tooltip.description}</span>
+          </div>
+          
+          <div className={`tooltip-status ${tooltip.status.toLowerCase()}`}>
+            {tooltip.status}
+          </div>
         </div>
       )}
     </div>

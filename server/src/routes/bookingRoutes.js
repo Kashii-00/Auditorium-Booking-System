@@ -2,21 +2,21 @@ const moment = require('moment');
 const express = require('express');
 const router = express.Router();
 const logger = require('../logger');
-const authMiddleware = require('../auth');
+const auth = require('../auth');
 
 const db = require('../db');
 
 // POST endpoint to create a booking, now including description
-router.post('/', authMiddleware, (req, res) => {
+router.post('/', auth.authMiddleware, (req, res) => {
   const user_name = req.user.name;
-  const { user_id,booking_date, booking_time, bookingendtime, no_of_people, description } = req.body;
+  const { user_id, description, booking_date, booking_time, bookingendtime, no_of_people, status } = req.body;
 
-  const sql = `INSERT INTO bookings (user_id, booking_date, booking_time, bookingendtime, no_of_people, description) 
-               VALUES (?, ?, ?, ?, ?, ?)`;
+  const sql = `INSERT INTO bookings (user_id, description, booking_date, booking_time, bookingendtime, no_of_people, status) 
+               VALUES (?, ?, ?, ?, ?, ?, COALESCE(?, 'PENDING'))`;
 
-  db.query(sql, [user_id, booking_date, booking_time, bookingendtime, no_of_people, description], (err, result) => {
+  db.query(sql, [user_id, description, booking_date, booking_time, bookingendtime, no_of_people, status], (err, result) => {
     if (err) {
-      logger.info('Error inserting booking:', err);
+      logger.error('Error inserting booking:', err);
       return res.status(500).json({ error: 'Database error' });
     }
     const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -26,9 +26,8 @@ router.post('/', authMiddleware, (req, res) => {
   });
 });
 
-
 // GET endpoint to retrieve bookings
-router.get('/', (req, res) => {
+router.get('/', auth.authMiddleware, (req, res) => {
   const sql = `SELECT b.*, u.name, u.email, u.phone 
                FROM bookings b
                JOIN users u ON b.user_id = u.id`;
@@ -41,7 +40,7 @@ router.get('/', (req, res) => {
 });
 
 // PUT endpoint to update booking status
-router.put('/:id', authMiddleware, (req, res) => {
+router.put('/:id', auth.authMiddleware, (req, res) => {
   const bookingId = req.params.id;
   const { status } = req.body;
   const user_name = req.user.name;
@@ -53,15 +52,15 @@ router.put('/:id', authMiddleware, (req, res) => {
     }
 
     const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    logger.info(`Updated Booking Status to: ${status} at: ${logintime} By: ${user_name}`);
-    logger.info(`Updated Booking ID: ${bookingId}`);
+    logger.info(`Updated booking status to: ${status} at: ${logintime} by: ${user_name}`);
+    logger.info(`Updated booking ID: ${bookingId}`);
 
     return res.json({ success: true, message: 'Booking status updated' });
   });
 });
 
 // DELETE endpoint to remove a booking
-router.delete('/:id',authMiddleware,(req, res) => {
+router.delete('/:id', auth.authMiddleware, (req, res) => {
   const bookingId = req.params.id;
   const user_name = req.user.name;
 
@@ -71,8 +70,8 @@ router.delete('/:id',authMiddleware,(req, res) => {
       return res.status(500).json({ error: 'Database error' });
     }
     const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    logger.info(`Booking Deleted at: ${logintime} By: ${user_name}`);
-    logger.info(`Deleted Booking ID: ${bookingId}`);
+    logger.info(`Booking deleted at: ${logintime} by: ${user_name}`);
+    logger.info(`Deleted booking ID: ${bookingId}`);
     return res.json({ success: true, message: 'Booking deleted' });
   });
 });

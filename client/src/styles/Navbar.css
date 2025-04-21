@@ -5,6 +5,14 @@
     background-color: #34495e;
     color: #ecf0f1;
     padding: 10px 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 44px;
+    z-index: 1000;
+    box-sizing: border-box;
+    margin: 0;
   }
 
   .navbar-greeting
@@ -49,4 +57,9 @@
     background: #ecf0f1;
     color: #34495e;
   }
-  
+
+  /* Add this to ensure content flows under the fixed navbar */
+  body {
+    padding-top: 44px;
+    margin: 0;
+  }

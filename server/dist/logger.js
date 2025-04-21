@@ -1,3 +1,5 @@
+"use strict";
+
 // logger.js
 const winston = require('winston');
 

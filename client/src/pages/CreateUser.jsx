@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useParams,useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import '../styles/createuser.css';
+import { FaUser, FaEnvelope, FaPhone, FaLock, FaIdCard, FaArrowLeft } from 'react-icons/fa';
+import { authRequest } from '../services/authService';
 
 const CreateUser = () => {
   const [name, setName] = useState('');
@@ -14,14 +15,46 @@ const CreateUser = () => {
   const [accessLevels, setAccessLevels] = useState([]);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const currentSidebarState = localStorage.getItem('sidebarState') === 'true';
 
   const navigate = useNavigate();
-
   const { id } = useParams();
+
+  useEffect(() => {
+    // Always sync sidebar state from localStorage on mount and on popstate
+    const syncSidebarState = () => {
+      const stored = localStorage.getItem('sidebarState');
+      if (stored !== null) {
+        const isCollapsed = stored === 'true';
+        window.dispatchEvent(new CustomEvent('sidebarToggle', {
+          detail: { isCollapsed }
+        }));
+      }
+    };
+
+    // On mount, sync sidebar state
+    syncSidebarState();
+
+    // Listen for browser back/forward navigation and sync sidebar state
+    window.addEventListener('popstate', syncSidebarState);
+
+    const handleSidebarToggle = (e) => {
+      // No setSidebarCollapsed here, but keep localStorage in sync
+      localStorage.setItem('sidebarState', e.detail.isCollapsed);
+    };
+
+    window.addEventListener('sidebarToggle', handleSidebarToggle);
+
+    return () => {
+      window.removeEventListener('sidebarToggle', handleSidebarToggle);
+      window.removeEventListener('popstate', syncSidebarState);
+    };
+  }, []);
 
   const handleBaseRoleChange = (newRole) => {
     setBaseRole(newRole);
-    // Clear access levels if SuperAdmin is selected
     if (newRole === 'SuperAdmin') {
       setAccessLevels([]);
     }
@@ -41,27 +74,19 @@ const CreateUser = () => {
     const fetchUserData = async () => {
       if (!id) return;
 
-      const token = localStorage.getItem('token');
-      const axiosConfig = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
       try {
-        const res = await axios.get(`http://10.70.4.34:5007/api/users/${id}`, axiosConfig);
-        if (res.data) {
-          const { name, email, phone, role, status } = res.data;
+        const userData = await authRequest('get', `http://10.70.4.34:5007/api/users/${id}`);
+
+        if (userData) {
+          const { name, email, phone, role, status } = userData;
           setName(name || '');
           setEmail(email || '');
           setPhone(phone || '');
           setStatus(status || 'ACTIVE');
 
-          // Handle role parsing
           const parsedRoles = typeof role === 'string' ? JSON.parse(role) : role;
           const roles = Array.isArray(parsedRoles) ? parsedRoles : [parsedRoles];
 
-          // Set base role
           if (roles.includes('SuperAdmin')) {
             setBaseRole('SuperAdmin');
           } else if (roles.includes('ADMIN')) {
@@ -70,13 +95,9 @@ const CreateUser = () => {
             setBaseRole('USER');
           }
 
-          // Set access levels
           const accessPerms = roles.filter(r => 
             r.includes('_access') || 
-            r === 'calendar_access' || 
-            r === 'bookings_access' || 
-            r === 'bus_access' || 
-            r === 'busbookings_access'
+            ['calendar_access', 'bookings_access', 'bus_access', 'busbookings_access'].includes(r)
           );
           setAccessLevels(accessPerms);
         }
@@ -90,6 +111,7 @@ const CreateUser = () => {
   }, [id]);
 
   const handleSubmit = async () => {
+    // Validation
     if (!name.trim()) return setMessage('Name is required');
     if (!email.trim()) return setMessage('Email is required');
     if (!id && !password.trim()) return setMessage('Password is required');
@@ -97,181 +119,278 @@ const CreateUser = () => {
       return setMessage('Please select at least one access level');
     }
 
-    const token = localStorage.getItem('token');
-    const axiosConfig = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
+    setIsSubmitting(true);
 
     try {
-      const roles = baseRole === 'SuperAdmin' 
-        ? ['SuperAdmin']
-        : [baseRole, ...accessLevels];
-
-        const userData = {
-          name,
-          email,
-          phone,
-          role: roles,
-          status,
-          ...((!id || showPasswordChange) && { 
-            password: id ? newPassword : password 
-          })
-        };
+      const roles = baseRole === 'SuperAdmin' ? ['SuperAdmin'] : [baseRole, ...accessLevels];
+      const userData = {
+        name,
+        email,
+        phone,
+        role: roles,
+        status,
+        ...((!id || showPasswordChange) && { 
+          password: id ? newPassword : password 
+        })
+      };
 
       const endpoint = id 
         ? `http://10.70.4.34:5007/api/users/${id}`
         : 'http://10.70.4.34:5007/api/users';
       
       const method = id ? 'put' : 'post';
-      const res = await axios[method](endpoint, userData, axiosConfig);
+      const response = await authRequest(method, endpoint, userData);
 
-      if (res.data) {
-        alert(id ? 'User updated successfully!' : 'User created successfully!');
-        navigate('/users'); // Add navigation after successful submission
+      if (response) {
+        setMessage(id ? 'User updated successfully!' : 'User created successfully!');
+        
+        // Navigate after a brief delay to show the success message
+        setTimeout(() => {
+          navigate('/users', { 
+            state: { sidebarState: currentSidebarState },
+            replace: true
+          });
+        }, 1500);
       }
     } catch (err) {
       console.error('Error saving user:', err);
       setMessage(`Failed to save user: ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div style={{ padding: '20px', paddingLeft: '150px' }}>
-      <h1>{id ? 'Edit User' : 'Create New User'}</h1>
-      {message && (
-        <div className={message.includes('Error') ? 'error-message' : 'success-message'}>
-          {message}
+    <div className="create-user-container">
+      <div className="create-user-card">
+        <div className="card-header">
+          <Link to="/users" className="back-link">
+            <FaArrowLeft /> Back to Users
+          </Link>
+          <h1>{id ? 'Edit User' : 'Create New User'}</h1>
+          <p className="form-subtitle">
+            {id ? 'Update user information and access levels' : 'Add a new user to the system'}
+          </p>
         </div>
-      )}
 
-      <div style={{ maxWidth: '300px' }}>
-        <label>Name</label>
-        <input 
-          type="text" 
-          value={name} 
-          onChange={(e) => setName(e.target.value)} 
-          required 
-        />
+        {message && (
+          <div className={message.includes('successfully') ? 'success-message' : 'error-message'}>
+            {message}
+          </div>
+        )}
 
-        <label>Email</label>
-        <input 
-          type="email" 
-          value={email} 
-          onChange={(e) => setEmail(e.target.value)} 
-          required
-        />
-
-        <label>Phone</label>
-        <input 
-          type="text" 
-          value={phone} 
-          onChange={(e) => setPhone(e.target.value)}
-        />
-
-        {!id ? (
-          <>
-            <label>Password</label>
-            <input 
-              type="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required
-            />
-          </>
-        ) : (
-          <div className="password-change-section">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={showPasswordChange}
-                onChange={(e) => setShowPasswordChange(e.target.checked)}
-              />
-              <span>Change Password</span>
+        <div className="form-grid">
+          <div className="form-group">
+            <label htmlFor="name">
+              <FaUser className="field-icon" />
+              Full Name
             </label>
-            
-            {showPasswordChange && (
-              <>
-                <label>New Password</label>
+            <input 
+              id="name"
+              type="text" 
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
+              required 
+              placeholder="Enter full name"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="email">
+              <FaEnvelope className="field-icon" />
+              Email Address
+            </label>
+            <input 
+              id="email"
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              required
+              placeholder="Enter email address"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="phone">
+              <FaPhone className="field-icon" />
+              Phone Number
+            </label>
+            <input 
+              id="phone"
+              type="text" 
+              value={phone} 
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Enter phone number"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="status">
+              <FaIdCard className="field-icon" />
+              Account Status
+            </label>
+            <select 
+              id="status"
+              value={status} 
+              onChange={(e) => setStatus(e.target.value)}
+              className="status-select"
+            >
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+              <option value="SUSPENDED">Suspended</option>
+            </select>
+          </div>
+
+          {!id ? (
+            <div className="form-group password-field">
+              <label htmlFor="password">
+                <FaLock className="field-icon" />
+                Password
+              </label>
+              <input 
+                id="password"
+                type="password" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                required
+                placeholder="Enter password"
+              />
+            </div>
+          ) : (
+            <div className="form-group password-change-section">
+              <label className="checkbox-label" htmlFor="change-password">
+                <input
+                  id="change-password"
+                  type="checkbox"
+                  checked={showPasswordChange}
+                  onChange={(e) => setShowPasswordChange(e.target.checked)}
+                />
+                <span>Change Password</span>
+              </label>
+              
+              {showPasswordChange && (
                 <input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
+                  placeholder="Enter new password"
+                  className="new-password-input"
                 />
-              </>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
 
-        <label>Base Role :</label>
-        <select  
-          value={baseRole}
-          onChange={(e) => handleBaseRoleChange(e.target.value)}
-          style={{ marginBottom: '25px',marginTop:'20px',marginLeft:'15px',borderRadius:'5px',padding:'5px'}}
-        >
-          <option value="USER">User</option>
-          <option value="ADMIN">Admin</option>
-          <option value="SuperAdmin">Super Admin</option>
-        </select> <br/>
-
-        {baseRole !== 'SuperAdmin' && (
-          <>
-            <label style={{ marginBottom: '10px' }}>Access Levels</label>
-            <div className="access-levels-container">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={accessLevels.includes('calendar_access')}
-                  onChange={() => handleAccessLevelChange('calendar_access')}
+        <div className="roles-section">
+          <h2>Role & Permissions</h2>
+          
+          <div className="base-role-section">
+            <label>Base Role:</label>
+            <div className="role-options">
+              <label className={`role-option ${baseRole === 'USER' ? 'active' : ''}`}>
+                <input 
+                  type="radio" 
+                  name="baseRole" 
+                  value="USER"
+                  checked={baseRole === 'USER'} 
+                  onChange={() => handleBaseRoleChange('USER')}
                 />
-                <span>Auditorium Calendar Access</span>
+                User
               </label>
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={accessLevels.includes('bookings_access')}
-                  onChange={() => handleAccessLevelChange('bookings_access')}
+              
+              <label className={`role-option ${baseRole === 'ADMIN' ? 'active' : ''}`}>
+                <input 
+                  type="radio" 
+                  name="baseRole" 
+                  value="ADMIN"
+                  checked={baseRole === 'ADMIN'} 
+                  onChange={() => handleBaseRoleChange('ADMIN')}
                 />
-                <span>Auditorium Bookings Access</span>
+                Admin
               </label>
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={accessLevels.includes('bus_access')}
-                  onChange={() => handleAccessLevelChange('bus_access')}
+              
+              <label className={`role-option ${baseRole === 'SuperAdmin' ? 'active' : ''}`}>
+                <input 
+                  type="radio" 
+                  name="baseRole" 
+                  value="SuperAdmin"
+                  checked={baseRole === 'SuperAdmin'} 
+                  onChange={() => handleBaseRoleChange('SuperAdmin')}
                 />
-                <span>Bus Calendar Access</span>
-              </label>
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={accessLevels.includes('busbookings_access')}
-                  onChange={() => handleAccessLevelChange('busbookings_access')}
-                />
-                <span>Bus Bookings Access</span>
+                Super Admin
               </label>
             </div>
-          </>
-        )}
+          </div>
 
-        <label>Status</label>
-        <select 
-          value={status} 
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
-          <option value="SUSPENDED">Suspended</option>
-        </select>
+          {baseRole !== 'SuperAdmin' && (
+            <>
+              <h3>Access Levels</h3>
+              <div className="access-levels-container">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={accessLevels.includes('calendar_access')}
+                    onChange={() => handleAccessLevelChange('calendar_access')}
+                  />
+                  <span>Auditorium Calendar Access</span>
+                </label>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={accessLevels.includes('bookings_access')}
+                    onChange={() => handleAccessLevelChange('bookings_access')}
+                  />
+                  <span>Auditorium Bookings Access</span>
+                </label>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={accessLevels.includes('bus_access')}
+                    onChange={() => handleAccessLevelChange('bus_access')}
+                  />
+                  <span>Bus Calendar Access</span>
+                </label>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={accessLevels.includes('busbookings_access')}
+                    onChange={() => handleAccessLevelChange('busbookings_access')}
+                  />
+                  <span>Bus Bookings Access</span>
+                </label>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={accessLevels.includes('course_registration_access')}
+                    onChange={() => handleAccessLevelChange('course_registration_access')}
+                  />
+                  <span>Course Registration Access</span>
+                </label>
+              </div>
+            </>
+          )}
+        </div>
 
-        <button 
-          onClick={handleSubmit} 
-          className="submit-button"
-        >
-          {id ? 'Update User' : 'Create User'}
-        </button>
+        <div className="form-actions">
+          <button 
+            className="cancel-button"
+            onClick={() => navigate('/users')}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </button>
+          <button 
+            className="submit-button"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting 
+              ? (id ? 'Updating...' : 'Creating...') 
+              : (id ? 'Update User' : 'Create User')
+            }
+          </button>
+        </div>
       </div>
     </div>
   );

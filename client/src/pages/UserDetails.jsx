@@ -1,94 +1,190 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import '../styles/UserDetails.css'; 
+import { FaSearch, FaUserPlus, FaEdit, FaTrash, FaUsers } from 'react-icons/fa';
+import { authRequest } from '../services/authService';
 
 const UserDetails = () => {
   const [users, setUsers] = useState([]);
-  const currentUserId = localStorage.getItem('userId');
-  const token = localStorage.getItem('token');
+  const [searchTerm, setSearchTerm] = useState('');
+  const currentUserId = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).id : null;
   const navigate = useNavigate();
-  
-  const fetchUsers = async () => {
+  const location = useLocation();
+
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => 
+    location.state?.sidebarState ?? false
+  );
+
+  const fetchUsers = useCallback(async () => {
     try {
-     
-      const res = await axios.get('http://10.70.4.34:5007/api/users');
-      setUsers(res.data);
+      const userData = await authRequest('get', 'http://10.70.4.34:5007/api/users');
+      setUsers(userData);
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
 
+  useEffect(() => {
+    // Always sync sidebar state from localStorage on mount and on popstate
+    const syncSidebarState = () => {
+      const stored = localStorage.getItem('sidebarState');
+      if (stored !== null) {
+        const isCollapsed = stored === 'true';
+        setSidebarCollapsed(isCollapsed);
+        window.dispatchEvent(new CustomEvent('sidebarToggle', {
+          detail: { isCollapsed }
+        }));
+      }
+    };
 
-  const deleteUser = async (id) => {
-    try {
-      await axios.delete(`http://10.70.4.34:5007/api/users/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      fetchUsers();
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    // On mount, sync sidebar state
+    syncSidebarState();
+
+    // Listen for browser back/forward navigation and sync sidebar state
+    window.addEventListener('popstate', syncSidebarState);
+
+    const handleSidebarToggle = (e) => {
+      setSidebarCollapsed(e.detail.isCollapsed);
+      localStorage.setItem('sidebarState', e.detail.isCollapsed);
+    };
+
+    const handleSidebarHover = (e) => {
+      setSidebarCollapsed(!e.detail.isHovered);
+    };
+
+    window.addEventListener('sidebarToggle', handleSidebarToggle);
+    window.addEventListener('sidebarHover', handleSidebarHover);
+
+    return () => {
+      window.removeEventListener('sidebarToggle', handleSidebarToggle);
+      window.removeEventListener('sidebarHover', handleSidebarHover);
+      window.removeEventListener('popstate', syncSidebarState);
+    };
+  }, []);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+    const interval = setInterval(fetchUsers, 30000);
+    return () => clearInterval(interval);
+  }, [fetchUsers]);
+  
+  const deleteUser = useCallback(async (id) => {
+    try {
+      await authRequest('delete', `http://10.70.4.34:5007/api/users/${id}`);
+      await fetchUsers();
+    } catch (err) {
+      console.error(err);
+    }
+  }, [fetchUsers]);
+
+  const filteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.phone && user.phone.includes(searchTerm))
+  );
+
+  const renderActionButtons = useCallback((user) => {
+    if (user.role.includes('SuperAdmin')) {
+      return (
+        <span className="current-user-badge">
+          {String(user.id) === String(currentUserId) ? 'Current User' : 'SuperAdmin'}
+        </span>
+      );
+    }
+
+    return (
+      <>
+        <button
+          onClick={() => navigate(`/create-user/${user.id}`)}
+          className="editBtn-user"
+          title="Edit user"
+        >
+          <FaEdit className="btn-icon" /> Edit
+        </button>
+        <button 
+          onClick={() => {
+            if (window.confirm('Are you sure you want to delete this user?')) {
+              deleteUser(user.id);
+            }
+          }}
+          className="deleteBtn-user"
+          title="Delete user"
+        >
+          <FaTrash className="btn-icon" /> Delete
+        </button>
+      </>
+    );
+  }, [currentUserId, navigate, deleteUser]);
 
   return (
-    <div style={{ paddingLeft: '100px', paddingRight: '100px' }}>
-      <h1>User Details</h1>
-      <table
-        border="1"
-        cellPadding="10"
-        style={{ borderCollapse: 'collapse', width: '100%', marginTop: '20px' }}
-      >
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>User Role</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map(u => (
-            <tr key={u.id}>
-              <td>{u.name}</td>
-              <td>{u.email}</td>
-              <td>{u.phone}</td>
-              <td>{u.role}</td>
-              <td>{u.status}</td>
-              <td>
-                {/* Only show Delete/Edit if not the current user */}
-                {String(u.id) !== String(currentUserId) && (
-                  <>
-                    <button onClick={() => deleteUser(u.id)} className="deleteBtn">
-                      Delete
-                    </button>
-                    {' '}
-                    <button
-                      onClick={() => navigate(`/create-user/${u.id}`)}
-                      className="editBtn"
-                      style={{ marginLeft: '8px' }}
-                    >
-                      Edit
-                    </button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <br/>
-      <Link className='buttonadduser' style={{ paddingLeft: '30px' }} to="/create-user">
-        <button style={{ paddingTop: '10px', paddingBottom: '10px' }}>Add User</button>
-      </Link>
+    <div className={`content-wrapper-user ${sidebarCollapsed ? 'expanded' : ''}`}>
+      <div className="user-content">
+        <div className="page-header-user">
+          <FaUsers className="header-icon" />
+          <div className="header-text">
+            <h1>User Management</h1>
+            <p className="header-description">View, edit and manage system users</p>
+          </div>
+        </div>
+
+        <div className="search-add-container">
+          <div className="search-box-user">
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <FaSearch className="search-icon-user" />
+          </div>
+          
+          <Link to="/create-user" className="add-user-btn">
+            <FaUserPlus className="btn-icon" />
+            Add User
+          </Link>
+        </div>
+
+        <div className="table-container-user">
+          <table className="user-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>User Role</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="no-data">
+                    No users found
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map(user => (
+                  <tr key={user.id} className="user-row">
+                    <td className="user-name">{user.name}</td>
+                    <td className="user-email">{user.email}</td>
+                    <td>{user.phone || '-'}</td>
+                    <td>
+                      {JSON.parse(user.role).map(role => (
+                        <span key={role} className={`role-badge ${role.toLowerCase()}`}>
+                          {role}
+                        </span>
+                      ))}
+                    </td>
+                    <td className="action-buttons-user">
+                      {renderActionButtons(user)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

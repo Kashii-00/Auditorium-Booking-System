@@ -1,50 +1,281 @@
-/* Style for the "Create new User" button */
-button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s, transform 0.2s;
-  }
-
-  
-  /* In UserDetails.css */
-table th {
-  text-align: center;
+.content-wrapper-user {
+  padding: var(--spacing-5);
+  transition: margin-left var(--transition-normal) var(--transition-ease);
+  margin-left: 130px;
+  margin-top: 80px;
+  min-height: 70vh;
+  background-color: var(--bg-main);
+  width: calc(100% - 180px);
 }
 
-table td{
-
-  text-align: center;
+.content-wrapper-user.expanded {
+  margin-left: 1px;
+  width: calc(90% - 0px);
 }
 
+.user-content {
+  background: var(--bg-card);
+  padding: var(--spacing-6);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
 
-  
-  button:hover {
-    transform: scale(1.05); /* Slightly enlarge the button on hover */
-  }
+.page-header-user {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-6);
+  padding-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--border-light);
+}
 
-  
-  /* Style for the "Create new User" button */
-  button {
-    background-color: #4CAF50; /* Green color for "Create new User" */
-    color: white;
+.header-icon {
+  font-size: 1.75rem;
+  color: var(--primary);
+  margin-right: var(--spacing-4);
+}
+
+.header-text {
+  flex: 1;
+}
+
+.page-header-user h1 {
+  font-size: 1.75rem;
+  color: var(--text-primary);
+  margin: 0;
+  margin-bottom: var(--spacing-1);
+}
+
+.header-description {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.search-add-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-6);
+}
+
+.search-box-user {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  max-width: 400px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.search-box-user input {
+  border: none;
+  outline: none;
+  width: 100%;
+  padding: 4px 8px;
+  font-size: 14px;
+  background: transparent;
+}
+
+.search-box-user .search-icon-user {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #4a6cfa;
+  width: 20px;
+  height: 20px;
+}
+
+.add-user-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-5);
+  background: var(--secondary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all var(--transition-normal);
+}
+
+.add-user-btn:hover {
+  background: var(--secondary-hover);
+  transform: translateY(-2px);
+}
+
+.add-user-btn:active {
+  transform: translateY(0);
+}
+
+.btn-icon {
+  font-size: 0.875rem;
+}
+
+.table-container-user {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.user-table th {
+  background: var(--neutral-100);
+  padding: var(--spacing-4) var(--spacing-4);
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-light);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.user-table td {
+  padding: var(--spacing-4) var(--spacing-4);
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+  transition: background-color var(--transition-fast);
+}
+
+.user-row:hover td {
+  background-color: var(--neutral-50);
+}
+
+.user-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.user-email {
+  color: var(--text-secondary);
+}
+
+.role-badge {
+  display: inline-block;
+  padding: var(--spacing-1) var(--spacing-3);
+  margin: 0 var(--spacing-1) var(--spacing-1) 0;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.role-badge.superadmin {
+  background: var(--danger-light);
+  color: var(--danger-dark);
+}
+
+.role-badge.admin {
+  background: var(--warning-light);
+  color: var(--warning-dark);
+}
+
+.role-badge.user {
+  background: var(--info-light);
+  color: var(--info-dark);
+}
+
+.role-badge.calendar_access,
+.role-badge.bookings_access,
+.role-badge.bus_access,
+.role-badge.busbookings_access {
+  background: var(--success-light);
+  color: var(--success-dark);
+}
+
+.action-buttons-user {
+  display: flex;
+  gap: var(--spacing-2);
+  justify-content: flex-end;
+  min-width: 160px;
+}
+
+.editBtn-user,
+.deleteBtn-user {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all var(--transition-normal);
+}
+
+.editBtn-user {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.editBtn-user:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.deleteBtn-user {
+  background: var(--danger-light);
+  color: var(--danger-dark);
+}
+
+.deleteBtn-user:hover {
+  background: var(--danger);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.current-user-badge {
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--neutral-200);
+  color: var(--neutral-700);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.no-data {
+  text-align: center;
+  padding: var(--spacing-8) !important;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .content-wrapper-user {
+    padding: var(--spacing-4);
   }
   
-  button:hover {
-    background-color: #45a049; /* Darker green on hover */
+  .user-content {
+    padding: var(--spacing-4);
   }
   
-  /* Style for the delete button */
-  button.deleteBtn {
-    background-color: #f44336; /* Red color for delete */
-    color: white;
+  .search-add-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-3);
   }
   
-  button.deleteBtn:hover {
-    background-color: #e53935; /* Darker red on hover */
+  .search-box-user {
+    max-width: none;
   }
   
-  /* Optional: If you have other types of buttons, you can specify them here */
-  
+  .add-user-btn {
+    text-align: center;
+  }
+}
+

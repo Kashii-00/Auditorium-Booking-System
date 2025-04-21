@@ -2,23 +2,23 @@ const express = require('express');
 const router = express.Router();
 const logger = require('../logger');
 const db = require('../db');
-const authMiddleware = require('../auth');
+const auth = require('../auth');
 const moment = require('moment');
 
-router.post('/',authMiddleware, (req, res) => {
-  const user_name=req.user.name;
-  const {user_id,fromPlace, toPlace, travelDate,returnDate,forWho,ContactNo} = req.body;
-  const sql = `INSERT INTO busBooking (user_id,fromPlace, toPlace, travelDate,returnDate,forWho,ContactNo) VALUES (?,?,?,?,?,?,?)`;
+// Use authMiddleware from auth module
+router.post('/', auth.authMiddleware, (req, res) => {
+  const user_name = req.user.name;
+  const { user_id, fromPlace, toPlace, travelDate, returnDate, forWho, ContactNo } = req.body;
+  const sql = `INSERT INTO busBooking (user_id, fromPlace, toPlace, travelDate, returnDate, forWho, ContactNo) VALUES (?,?,?,?,?,?,?)`;
 
-  db.query(sql, [user_id,fromPlace, toPlace, travelDate,returnDate,forWho,ContactNo], (err, result) => {
+  db.query(sql, [user_id, fromPlace, toPlace, travelDate, returnDate, forWho, ContactNo], (err, result) => {
     if (err) {
       logger.error('Error Inserting Booking', err);
       return res.status(500).json({ error: 'Database Error' });
     }
     const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-      logger.info(`Booking created successfully at: ${logintime} by user: ${user_name}`);
+    logger.info(`Booking created successfully at: ${logintime} by user: ${user_name}`);
     return res.json({
-      
       success: true,
       message: 'Booking created Successfully',
       bookingId: result.insertId,
@@ -27,7 +27,7 @@ router.post('/',authMiddleware, (req, res) => {
 });
 
 // GET endpoint to retrieve bookings
-router.get('/', (req, res) => {
+router.get('/', auth.authMiddleware, (req, res) => {
   const sql = `SELECT b.*, u.name, u.email, u.phone 
                FROM busBooking b
                JOIN users u ON b.user_id = u.id`;
@@ -40,7 +40,7 @@ router.get('/', (req, res) => {
 });
 
 // PUT endpoint to update booking status
-router.put('/:id', authMiddleware, (req, res) => {
+router.put('/:id', auth.authMiddleware, (req, res) => {
   const bookingId = req.params.id;
   const { status } = req.body;
   const user_name = req.user.name;
@@ -60,7 +60,7 @@ router.put('/:id', authMiddleware, (req, res) => {
 });
 
 // DELETE endpoint to remove a booking
-router.delete('/:id',authMiddleware,(req, res) => {
+router.delete('/:id', auth.authMiddleware, (req, res) => {
   const bookingId = req.params.id;
   const user_name = req.user.name;
 
