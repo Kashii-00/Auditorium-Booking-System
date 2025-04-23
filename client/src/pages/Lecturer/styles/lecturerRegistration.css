@@ -1,0 +1,176 @@
+/* Container */
+.lecturer-registration-container {
+  background: #eeecec;
+  border-radius: 12px;
+  max-width: 1300px;
+  margin: 32px auto;
+  padding: 32px 24px 24px 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  transition: margin-left 0.3s cubic-bezier(0.4,0,0.2,1), width 0.3s cubic-bezier(0.4,0,0.2,1);
+  min-width: 320px;
+}
+
+.lecturer-registration-container.expanded {
+  margin-left: 30px;
+  width: calc(100% - 90px);
+}
+.lecturer-registration-container:not(.expanded) {
+  margin-left: 190px;
+  width: calc(100% - 280px);
+}
+
+/* Header */
+.lecturer-registration-header {
+  text-align: center;
+  margin-bottom: 16px;
+
+}
+.lecturer-registration-header h2 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0;
+}
+.lecturer-registration-header p {
+  color: #666;
+  font-size: 1.1rem;
+  margin: 8px 0 0 0;
+}
+
+/* Stepper Tabs */
+.lecturer-stepper {
+  display: flex;
+  margin-bottom: 32px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+.lecturer-stepper button {
+  flex: 1;
+  padding: 16px 0;
+  background: #f5f5f5;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.lecturer-stepper button[disabled],
+.lecturer-stepper button.active {
+  background: #fff;
+  color: #222;
+  border-bottom: 3px solid #222;
+  cursor: default;
+}
+
+/* Form Grid */
+.lecturer-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px 32px;
+  margin-bottom: 24px;
+}
+.lecturer-form-group {
+  display: flex;
+  flex-direction: column;
+}
+.lecturer-form-group label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #222;
+}
+.lecturer-form-group input,
+.lecturer-form-group textarea,
+.lecturer-form-group select {
+  padding: 14px 12px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #fafbfc;
+  transition: border-color 0.2s;
+}
+.lecturer-form-group input:focus,
+.lecturer-form-group textarea:focus,
+.lecturer-form-group select:focus {
+  border-color: #3a6ea5;
+  outline: none;
+}
+.lecturer-form-group textarea {
+  min-height: 48px;
+  resize: vertical;
+}
+
+/* Full width for address */
+.lecturer-form-group.full-width {
+  grid-column: 1 / 3;
+}
+
+/* Navigation Buttons */
+.lecturer-nav-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 16px;
+}
+.lecturer-nav-btn {
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  background: #222;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.lecturer-nav-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.lecturer-nav-btn.back {
+  background: #fff;
+  color: #222;
+  border: 1.5px solid #e0e0e0;
+}
+
+/* Error Styles */
+.input-error {
+  border-color: #e74c3c !important;
+}
+.error-text {
+  color: #e74c3c;
+  font-size: 0.95em;
+  margin-top: 4px;
+  margin-left: 2px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .lecturer-registration-container {
+    max-width: 98vw;
+    padding: 16px 4vw 24px 4vw;
+  }
+  .lecturer-form-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .lecturer-form-group.full-width {
+    grid-column: 1 / 2;
+  }
+}
+@media (max-width: 600px) {
+  .lecturer-registration-header h2 {
+    font-size: 1.5rem;
+  }
+  .lecturer-registration-container {
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 8px 2vw 16px 2vw;
+  }
+}
+
+/* Cursor state for loading */
+.lecturer-registration-container.waiting {
+  cursor: wait;
+}

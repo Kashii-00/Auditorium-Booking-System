@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
-import EventCalendar from './pages/EventCalendar';
-import EventBooking from './pages/EventBooking';
-import UserDetails from './pages/UserDetails';
-import CreateUser from './pages/CreateUser';
+import Login from './pages/Login/Login';
+import EventCalendar from './pages/Auditorium_Reservation/EventCalendar';
+import EventBooking from './pages/Auditorium_Reservation/EventBooking';
+import UserDetails from './pages/Login/UserDetails';
+import CreateUser from './pages/Login/CreateUser';
 import NotFound from './pages/NotFound';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
@@ -12,6 +12,7 @@ import AccessDenied from '../src/pages/AccessDenied';
 import BusBooking from './pages/Bus_Booking/busBooking';
 import BusBookingList from './pages/Bus_Booking/BusBookingList';
 import C_Registration from './pages/Course&Batch/C_Registration';
+import lecturerRegistration from './pages/Lecturer/lecturerRegistration'; // <-- Change import to the registration form
 
 import { refreshToken, logout, initializeAuth, getCurrentUser, checkServerStatus } from './services/authService';
 
@@ -121,7 +122,7 @@ function App() {
   const canAccessBatchRegistration = hasRole('SuperAdmin');
   const canAccessCourseIN = hasRole('SuperAdmin');
   const canAccessAddMore = hasRole('SuperAdmin');
-
+  const canAccessLecturerManagement = hasRole('SuperAdmin') || hasRole('lecturer_management_access');
 
   const ProtectedRoute = ({ element: Element, canAccess, ...props }) => {
     if (!loggedInUser) return <Navigate to="/" />;
@@ -252,6 +253,19 @@ function App() {
             <ProtectedRoute 
               element={CreateUser} 
               canAccess={canAccessUserManagement} 
+            />
+          } />
+
+          <Route path="/LMmain" element={
+            <ProtectedRoute 
+              element={lecturerRegistration} 
+              canAccess={canAccessLecturerManagement}
+            />
+          } />
+          <Route path="/LRegistration" element={
+            <ProtectedRoute 
+              element={lecturerRegistration} 
+              canAccess={canAccessLecturerManagement}
             />
           } />
 

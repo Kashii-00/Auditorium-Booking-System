@@ -1,18 +1,20 @@
 // logger.js
-const winston = require('winston');
+const { createLogger, format, transports } = require('winston');
+const path = require('path');
 
-// Create a simple console logger
-const logger = winston.createLogger({
+const logger = createLogger({
   level: 'info',
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.timestamp({ format: 'HH:mm:ss' }),
-        winston.format.printf(({ timestamp, level, message }) => {
-          return `[${timestamp}] ${level.toUpperCase()}: ${message}`;
-        })
-      )
+  format: format.combine(
+    format.timestamp(),
+    format.printf(({ timestamp, level, message }) => {
+      return `[${timestamp}] ${level.toUpperCase()}: ${message}`;
     })
+  ),
+  transports: [
+    // Log to file
+    new transports.File({ filename: path.join(__dirname, '../logs/server.log'), maxsize: 5 * 1024 * 1024, maxFiles: 5 }),
+    // Log to console (PowerShell/terminal)
+    new transports.Console()
   ]
 });
 

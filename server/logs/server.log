@@ -1,0 +1,250 @@
+[2025-04-22T09:08:15.844Z] INFO: Connected to MySQL database
+[2025-04-22T09:08:15.845Z] INFO: DB HOST: localhost
+[2025-04-22T09:08:57.245Z] INFO: Connected to MySQL database
+[2025-04-22T09:08:57.246Z] INFO: DB HOST: localhost
+[2025-04-22T09:09:02.040Z] INFO: Connected to MySQL database
+[2025-04-22T09:09:02.042Z] INFO: DB HOST: localhost
+[2025-04-22T09:09:03.812Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-04-22T09:09:03.813Z] INFO: HTTP server closed
+[2025-04-22T09:09:09.158Z] INFO: Connected to MySQL database
+[2025-04-22T09:09:09.160Z] INFO: DB HOST: localhost
+[2025-04-22T09:09:27.118Z] INFO: User SuperAdmin logged in at: 2025-04-22 14:39:27
+[2025-04-22T09:09:37.199Z] INFO: Updated booking status to: APPROVED at: 2025-04-22 14:39:37 by: SuperAdmin
+[2025-04-22T09:09:37.200Z] INFO: Updated booking ID: 123
+[2025-04-22T09:10:13.126Z] INFO: Course registered successfully at: 2025-04-22 14:40:13 by user: SuperAdmin
+[2025-04-22T10:32:17.570Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-22T10:32:17.600Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-22T11:50:44.248Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-22T11:50:44.276Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-22T13:00:28.322Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-22T13:00:28.341Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-22T14:16:24.588Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-22T14:16:24.607Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-22T15:16:24.064Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-22T15:16:24.094Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-22T17:20:07.638Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-22T17:20:07.668Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-22T19:00:20.836Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-22T19:00:20.881Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-22T20:12:31.014Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-22T20:12:31.039Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-22T21:49:11.091Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-22T21:49:11.107Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-22T22:56:54.713Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-22T22:56:54.714Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-23T00:06:07.434Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-23T00:06:07.459Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-23T01:15:54.167Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-23T01:15:54.186Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-23T03:08:12.651Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-23T03:08:12.673Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-23T03:49:04.137Z] INFO: User SuperAdmin logged in at: 2025-04-23 09:19:04
+[2025-04-23T04:08:12.341Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-23T04:08:12.363Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-23T06:02:24.595Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-23T06:02:24.622Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-23T07:03:19.492Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-23T07:03:19.518Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-23T07:43:12.547Z] INFO: User SuperAdmin logged in at: 2025-04-23 13:13:12
+[2025-04-23T07:48:55.012Z] INFO: User SuperAdmin logged in at: 2025-04-23 13:18:55
+[2025-04-23T07:53:12.937Z] INFO: User SuperAdmin logged in at: 2025-04-23 13:23:12
+[2025-04-23T08:03:19.469Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-23T08:03:19.488Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-23T08:40:38.612Z] INFO: User SuperAdmin logged in at: 2025-04-23 14:10:38
+[2025-04-23T08:41:38.344Z] INFO: Booking created successfully at: 2025-04-23 14:11:38 by user: SuperAdmin
+[2025-04-23T08:43:11.389Z] INFO: Booking created successfully at: 2025-04-23 14:13:11 by user: SuperAdmin
+[2025-04-23T08:50:36.805Z] INFO: User SuperAdmin logged in at: 2025-04-23 14:20:36
+[2025-04-23T08:50:48.576Z] INFO: Updated booking status to: APPROVED at: 2025-04-23 14:20:48 by: SuperAdmin
+[2025-04-23T08:50:48.576Z] INFO: Updated booking ID: 129
+[2025-04-23T08:51:50.796Z] INFO: Booking deleted at: 2025-04-23 14:21:50 by: SuperAdmin
+[2025-04-23T08:51:50.796Z] INFO: Deleted booking ID: 129
+[2025-04-23T09:03:19.265Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-23T09:03:19.281Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-23T09:09:05.908Z] INFO: 🔄 Logs cleared - 24h cycle restart
+[2025-04-23T09:09:05.922Z] INFO: 🔄 Logs cleared - 24h cycle restart
+[2025-04-23T09:09:05.923Z] INFO: 🔄 Logs cleared - 24h cycle restart
+[2025-04-23T09:09:05.924Z] INFO: 🔄 Logs cleared - 24h cycle restart
+[2025-04-23T09:09:05.924Z] INFO: 🔄 Logs cleared - 24h cycle restart
+[2025-04-23T09:09:05.937Z] INFO: Server report generated: /Users/kashika_hettihewa/Desktop/Auditorium-Booking-System/event-management/server/reports/server-report-1745399345935.json
+[2025-04-23T09:09:30.701Z] INFO: User SuperAdmin logged in at: 2025-04-23 14:39:30
+[2025-04-23T09:13:09.201Z] INFO: User SuperAdmin logged in at: 2025-04-23 14:43:09
+[2025-04-23T09:34:41.005Z] INFO: User SuperAdmin logged in at: 2025-04-23 15:04:41
+[2025-04-23T09:53:28.935Z] INFO: User SuperAdmin logged in at: 2025-04-23 15:23:28
+[2025-04-23T10:03:19.306Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-23T10:03:19.314Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-23T10:21:07.874Z] INFO: User SuperAdmin logged in at: 2025-04-23 15:51:07
+[2025-04-23T10:31:05.334Z] INFO: User SuperAdmin logged in at: 2025-04-23 16:01:05
+[2025-04-23T10:34:12.268Z] INFO: User SuperAdmin logged in at: 2025-04-23 16:04:12
+[2025-04-23T10:42:38.698Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-04-23T10:42:38.706Z] INFO: HTTP server closed
+[2025-04-23T10:43:33.072Z] INFO: Connected to MySQL database
+[2025-04-23T10:43:33.075Z] INFO: DB HOST: localhost
+[2025-04-23T10:43:34.487Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-04-23T10:43:34.488Z] INFO: HTTP server closed
+[2025-04-23T10:44:06.252Z] INFO: Connected to MySQL database
+[2025-04-23T10:44:06.253Z] INFO: DB HOST: localhost
+[2025-04-23T10:45:10.799Z] INFO: User SuperAdmin logged in at: 2025-04-23 16:15:10
+[2025-04-23T10:47:32.548Z] INFO: User SuperAdmin logged in at: 2025-04-23 16:17:32
+[2025-04-23T10:53:43.519Z] INFO: User SuperAdmin logged in at: 2025-04-23 16:23:43
+[2025-04-23T11:47:52.227Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-23T11:47:52.242Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-23T13:08:21.111Z] INFO: Rate limiting data cleaned up successfully
+[2025-04-23T13:08:21.127Z] INFO: ✅ DB KEEP ALIVE SUCCESSFUL
+[2025-04-23T13:09:31.033Z] INFO: User SuperAdmin logged in at: 2025-04-23 18:39:31
+[2025-04-23T13:10:28.142Z] INFO: User SuperAdmin logged in at: 2025-04-23 18:40:28
+[2025-04-23T13:10:32.762Z] INFO: Updated booking status to: APPROVED at: 2025-04-23 18:40:32 by: SuperAdmin
+[2025-04-23T13:10:32.763Z] INFO: Updated booking ID: 120
+[2025-04-23T13:18:34.689Z] INFO: Connected to MySQL database
+[2025-04-23T13:18:34.691Z] INFO: DB HOST: localhost
+[2025-04-23T13:18:59.518Z] INFO: User SuperAdmin logged in at: 2025-04-23 18:48:59
+[2025-04-23T13:19:12.560Z] INFO: Updated booking status to: APPROVED at: 2025-04-23 18:49:12 by: SuperAdmin
+[2025-04-23T13:19:12.561Z] INFO: Updated booking ID: 122
+[2025-04-23T13:19:41.142Z] INFO: Booking deleted at: 2025-04-23 18:49:41 by: SuperAdmin
+[2025-04-23T13:19:41.143Z] INFO: Deleted booking ID: 118
+[2025-04-23T13:21:28.974Z] INFO: User SuperAdmin logged in at: 2025-04-23 18:51:28
+[2025-04-23T13:22:15.148Z] INFO: User Test logged in at: 2025-04-23 18:52:15
+[2025-04-23T13:23:37.174Z] INFO: Connected to MySQL database
+[2025-04-23T13:23:37.181Z] INFO: DB HOST: localhost
+[2025-04-23T13:23:59.200Z] INFO: User SuperAdmin logged in at: 2025-04-23 18:53:59
+[2025-04-23T13:25:24.978Z] INFO: Connected to MySQL database
+[2025-04-23T13:25:24.988Z] INFO: DB HOST: localhost
+[2025-04-23T13:25:39.976Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-04-23T13:25:39.988Z] INFO: HTTP server closed
+[2025-04-23T13:25:40.001Z] INFO: Database connection closed
+[2025-04-23T13:25:44.324Z] INFO: Connected to MySQL database
+[2025-04-23T13:25:44.325Z] INFO: DB HOST: localhost
+[2025-04-23T13:25:51.844Z] INFO: User SuperAdmin logged in at: 2025-04-23 18:55:51
+[2025-04-23T13:25:55.908Z] INFO: User SuperAdmin logged in at: 2025-04-23 18:55:55
+[2025-04-23T13:28:29.373Z] INFO: Connected to MySQL database
+[2025-04-23T13:28:29.380Z] INFO: DB HOST: localhost
+[2025-04-23T13:28:48.320Z] INFO: Connected to MySQL database
+[2025-04-23T13:28:48.327Z] INFO: DB HOST: localhost
+[2025-04-23T13:28:53.981Z] INFO: Connected to MySQL database
+[2025-04-23T13:28:53.982Z] INFO: DB HOST: localhost
+[2025-04-23T13:28:59.661Z] INFO: User SuperAdmin logged in at: 2025-04-23 18:58:59
+[2025-04-23T13:29:08.295Z] INFO: User SuperAdmin logged in at: 2025-04-23 18:59:08
+[2025-04-23T13:29:25.046Z] INFO: User Test logged in at: 2025-04-23 18:59:25
+[2025-04-23T13:30:07.161Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:00:07
+[2025-04-23T13:30:13.041Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:00:13
+[2025-04-23T13:30:24.511Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:00:24
+[2025-04-23T13:32:37.418Z] INFO: Connected to MySQL database
+[2025-04-23T13:32:37.425Z] INFO: DB HOST: localhost
+[2025-04-23T13:32:41.813Z] INFO: Connected to MySQL database
+[2025-04-23T13:32:41.815Z] INFO: DB HOST: localhost
+[2025-04-23T13:32:43.073Z] INFO: Connected to MySQL database
+[2025-04-23T13:32:43.074Z] INFO: DB HOST: localhost
+[2025-04-23T13:32:47.713Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:02:47
+[2025-04-23T13:32:52.456Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:02:52
+[2025-04-23T13:36:01.572Z] INFO: Connected to MySQL database
+[2025-04-23T13:36:01.576Z] INFO: DB HOST: localhost
+[2025-04-23T13:36:14.737Z] INFO: Connected to MySQL database
+[2025-04-23T13:36:14.739Z] INFO: DB HOST: localhost
+[2025-04-23T13:36:31.856Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:06:31
+[2025-04-23T13:38:50.392Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:08:50
+[2025-04-23T13:39:18.240Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:09:18
+[2025-04-23T13:44:06.993Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:14:06
+[2025-04-23T13:44:11.498Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:14:11
+[2025-04-23T13:47:48.300Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-04-23T13:47:48.314Z] INFO: HTTP server closed
+[2025-04-23T13:47:48.334Z] INFO: Database connection closed
+[2025-04-23T13:47:56.948Z] INFO: Connected to MySQL database
+[2025-04-23T13:47:56.949Z] INFO: DB HOST: localhost
+[2025-04-23T13:48:07.782Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:18:07
+[2025-04-23T13:48:27.168Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:18:27
+[2025-04-23T13:48:41.339Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:18:41
+[2025-04-23T13:48:47.999Z] INFO: Booking deleted at: 2025-04-23 19:18:47 by: SuperAdmin
+[2025-04-23T13:48:47.999Z] INFO: Deleted booking ID: 119
+[2025-04-23T13:49:00.580Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:19:00
+[2025-04-23T13:49:09.634Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:19:09
+[2025-04-23T13:50:28.393Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:20:28
+[2025-04-23T13:50:31.441Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:20:31
+[2025-04-23T13:50:47.426Z] INFO: Booking created successfully at: 2025-04-23 19:20:47 by user: SuperAdmin
+[2025-04-23T13:51:04.832Z] INFO: Booking created successfully at: 2025-04-23 19:21:04 by user: SuperAdmin
+[2025-04-23T13:51:20.755Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:21:20
+[2025-04-23T13:51:45.230Z] INFO: Booking created successfully at: 2025-04-23 19:21:45 by user: SuperAdmin
+[2025-04-23T13:52:04.568Z] INFO: Updated Booking Status to: APPROVED at: 2025-04-23 19:22:04 By: SuperAdmin
+[2025-04-23T13:52:04.568Z] INFO: Updated Booking ID: 76
+[2025-04-23T13:52:16.583Z] INFO: Booking created successfully at: 2025-04-23 19:22:16 by user: SuperAdmin
+[2025-04-23T13:53:37.627Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:23:37
+[2025-04-23T13:53:41.277Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:23:41
+[2025-04-23T13:54:05.674Z] INFO: Updated booking status to: DENIED at: 2025-04-23 19:24:05 by: SuperAdmin
+[2025-04-23T13:54:05.677Z] INFO: Updated booking ID: 124
+[2025-04-23T13:54:36.637Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-04-23T13:54:36.641Z] INFO: HTTP server closed
+[2025-04-23T13:54:36.644Z] INFO: Database connection closed
+[2025-04-23T13:54:40.412Z] INFO: Connected to MySQL database
+[2025-04-23T13:54:40.413Z] INFO: DB HOST: localhost
+[2025-04-23T13:54:47.502Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:24:47
+[2025-04-23T13:54:50.968Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:24:50
+[2025-04-23T13:54:58.457Z] INFO: Updated booking status to: APPROVED at: 2025-04-23 19:24:58 by: SuperAdmin
+[2025-04-23T13:54:58.458Z] INFO: Updated booking ID: 151
+[2025-04-23T13:55:02.369Z] INFO: Booking deleted at: 2025-04-23 19:25:02 by: SuperAdmin
+[2025-04-23T13:55:02.369Z] INFO: Deleted booking ID: 151
+[2025-04-23T13:57:28.230Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-04-23T13:57:28.244Z] INFO: HTTP server closed
+[2025-04-23T13:57:28.251Z] INFO: Database connection closed
+[2025-04-23T13:57:33.539Z] INFO: Connected to MySQL database
+[2025-04-23T13:57:33.540Z] INFO: DB HOST: localhost
+[2025-04-23T13:57:46.467Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:27:46
+[2025-04-23T13:57:50.762Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:27:50
+[2025-04-23T13:58:18.399Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:28:18
+[2025-04-23T13:58:45.302Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:28:45
+[2025-04-23T14:01:42.973Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-04-23T14:01:42.984Z] INFO: HTTP server closed
+[2025-04-23T14:01:43.000Z] INFO: Database connection closed
+[2025-04-23T14:01:47.328Z] INFO: Connected to MySQL database
+[2025-04-23T14:01:47.329Z] INFO: DB HOST: localhost
+[2025-04-23T14:02:10.095Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:32:10
+[2025-04-23T14:02:20.499Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:32:20
+[2025-04-23T14:04:29.463Z] INFO: Connected to MySQL database
+[2025-04-23T14:04:29.470Z] INFO: DB HOST: localhost
+[2025-04-23T14:04:46.456Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:34:46
+[2025-04-23T14:04:59.363Z] INFO: User SuperAdmin logged in at: 2025-04-23 19:34:59
+[2025-04-23T14:31:28.616Z] INFO: User SuperAdmin logged in at: 2025-04-23 20:01:28
+[2025-04-23T14:31:34.423Z] INFO: User SuperAdmin logged in at: 2025-04-23 20:01:34
+[2025-04-23T14:32:03.627Z] INFO: Connected to MySQL database
+[2025-04-23T14:32:03.635Z] INFO: DB HOST: localhost
+[2025-04-23T14:32:11.598Z] INFO: User SuperAdmin logged in at: 2025-04-23 20:02:11
+[2025-04-23T14:33:02.322Z] INFO: User SuperAdmin logged in at: 2025-04-23 20:03:02
+[2025-04-23T14:35:54.691Z] INFO: Connected to MySQL database
+[2025-04-23T14:35:54.699Z] INFO: DB HOST: localhost
+[2025-04-23T14:36:08.460Z] INFO: Connected to MySQL database
+[2025-04-23T14:36:08.464Z] INFO: DB HOST: localhost
+[2025-04-23T15:05:47.418Z] INFO: Connected to MySQL database
+[2025-04-23T15:05:47.424Z] INFO: DB HOST: localhost
+[2025-04-23T15:06:57.385Z] INFO: Connected to MySQL database
+[2025-04-23T15:06:57.387Z] INFO: DB HOST: localhost
+[2025-04-23T15:06:58.124Z] INFO: Connected to MySQL database
+[2025-04-23T15:06:58.127Z] INFO: DB HOST: localhost
+[2025-04-23T15:07:03.965Z] INFO: Connected to MySQL database
+[2025-04-23T15:07:03.966Z] INFO: DB HOST: localhost
+[2025-04-23T15:07:07.186Z] INFO: Connected to MySQL database
+[2025-04-23T15:07:07.190Z] INFO: DB HOST: localhost
+[2025-04-23T15:07:18.738Z] INFO: Connected to MySQL database
+[2025-04-23T15:07:18.739Z] INFO: DB HOST: localhost
+[2025-04-23T15:07:30.717Z] INFO: Connected to MySQL database
+[2025-04-23T15:07:30.718Z] INFO: DB HOST: localhost
+[2025-04-23T15:09:59.453Z] INFO: Connected to MySQL database
+[2025-04-23T15:09:59.468Z] INFO: DB HOST: localhost
+[2025-04-23T15:10:14.564Z] INFO: Connected to MySQL database
+[2025-04-23T15:10:14.567Z] INFO: DB HOST: localhost
+[2025-04-23T15:11:46.004Z] INFO: Connected to MySQL database
+[2025-04-23T15:11:46.021Z] INFO: DB HOST: localhost
+[2025-04-23T15:11:53.363Z] INFO: Connected to MySQL database
+[2025-04-23T15:11:53.389Z] INFO: DB HOST: localhost
+[2025-04-23T15:13:05.776Z] INFO: Connected to MySQL database
+[2025-04-23T15:13:05.824Z] INFO: DB HOST: localhost
+[2025-04-23T15:13:47.798Z] INFO: Connected to MySQL database
+[2025-04-23T15:13:47.893Z] INFO: DB HOST: localhost
+[2025-04-23T15:14:11.773Z] INFO: Connected to MySQL database
+[2025-04-23T15:14:11.792Z] INFO: DB HOST: localhost
+[2025-04-23T15:15:01.697Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-04-23T15:15:01.881Z] INFO: HTTP server closed
+[2025-04-23T15:15:01.994Z] INFO: Database connection closed
+[2025-04-23T15:17:53.899Z] INFO: Connected to MySQL database
+[2025-04-23T15:17:53.900Z] INFO: DB HOST: localhost
+[2025-04-23T15:18:12.464Z] INFO: User SuperAdmin logged in at: 2025-04-23 20:48:12
+[2025-04-23T15:18:40.759Z] INFO: User SuperAdmin logged in at: 2025-04-23 20:48:40
+[2025-04-23T15:18:45.013Z] INFO: User SuperAdmin logged in at: 2025-04-23 20:48:45
+[2025-04-23T15:18:56.793Z] INFO: Connected to MySQL database
+[2025-04-23T15:18:56.797Z] INFO: DB HOST: localhost

@@ -19,66 +19,20 @@ console.log(`${colors.blue}===== SERVER DIAGNOSTICS TOOL =====\n${colors.reset}`
 // 1. Check environment variables
 console.log(`${colors.cyan}CHECKING ENVIRONMENT VARIABLES${colors.reset}`);
 const requiredEnvVars = ['PORT', 'DB_HOST', 'DB_USER', 'DB_DATABASE', 'JWT_SECRET'];
-let envOk = true;
 
 requiredEnvVars.forEach(envVar => {
   if (!process.env[envVar]) {
     console.log(`${colors.yellow}⚠️  Missing ${envVar} environment variable${colors.reset}`);
-    envOk = false;
-  } else {
-    console.log(`✅ ${envVar} is set`);
   }
 });
 
-if (envOk) {
-  console.log(`${colors.green}✅ All required environment variables are set\n${colors.reset}`);
-} else {
-  console.log(`${colors.yellow}⚠️  Some environment variables are missing\n${colors.reset}`);
-}
-
-// 2. Check route files for proper middleware usage
-console.log(`${colors.cyan}CHECKING ROUTE FILES${colors.reset}`);
-const routesDir = path.join(__dirname, 'routes');
-
-try {
-  const routeFiles = fs.readdirSync(routesDir).filter(file => file.endsWith('.js'));
-  let routesOk = true;
-  
-  routeFiles.forEach(file => {
-    const filePath = path.join(routesDir, file);
-    console.log(`Checking ${file}...`);
-    
-    const content = fs.readFileSync(filePath, 'utf8');
-    
-    // Check if the file imports auth properly
-    if (!content.includes('const auth = require') && content.includes('authMiddleware')) {
-      console.log(`${colors.yellow}⚠️  ${file} may be missing auth import${colors.reset}`);
-      routesOk = false;
-    }
-    
-    // Check if the file uses auth.authMiddleware or mistakenly uses authMiddleware directly
-    if (content.includes('router.') && content.includes('authMiddleware') && !content.includes('auth.authMiddleware')) {
-      console.log(`${colors.yellow}⚠️  ${file} appears to use authMiddleware directly instead of auth.authMiddleware${colors.reset}`);
-      routesOk = false;
-    }
-  });
-  
-  if (routesOk) {
-    console.log(`${colors.green}✅ All route files appear to be correctly configured\n${colors.reset}`);
-  } else {
-    console.log(`${colors.yellow}⚠️  Some route files may have issues\n${colors.reset}`);
-  }
-} catch (err) {
-  console.log(`${colors.red}❌ Error checking route   files: ${err.message}\n${colors.reset}`);
-}
-
-// 3. Check server connectivity
+// 2. Check server connectivity
 console.log(`${colors.cyan}CHECKING SERVER CONNECTIVITY${colors.reset}`);
 const serverPort = process.env.PORT || 5003;
 
 const checkServer = () => {
   const req = http.request({
-    hostname: '10.70.4.34',
+    hostname: 'localhost',
     port: serverPort,
     path: '/api/health',
     method: 'GET',

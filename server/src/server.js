@@ -11,6 +11,7 @@ const userRoutes = require('./routes/userRoutes');
 const busBooking = require('./routes/busroute');
 const CourseRegistrationRoute = require('./routes/CourseRegistrationRoute');
 const PayCourseRoute = require('./routes/PayCourseRoute');
+const lecturerRegistrationRoutes = require('./routes/lecturerRegistration');
 const { requestMonitor } = require('./utils/monitorServer');
 
 // Initialize Express app
@@ -29,8 +30,8 @@ if (DEBUG) {
 
 // CORS configuration to support credentials
 const allowedOrigins = [
-  'http://10.70.4.34:3000',
-  'http://10.70.4.34:3060'
+  'http://localhost:3000',
+  'http://localhost:3060'
 ];
 const corsOptions = {
   origin: function (origin, callback) {
@@ -52,6 +53,14 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser()); // Add cookie-parser middleware before routes
 
+// Clear logs every 5 minutes to prevent terminal lag (for testing)
+setInterval(() => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.clear();
+    console.log(`[${new Date().toISOString()}] Console cleared to prevent lag.`);
+  }
+}, 5 * 60 * 1000); // every 5 minutes
+
 // Public health check endpoint (doesn't require authentication)
 app.get('/api/health', (req, res) => {
   res.status(200).json({
@@ -68,6 +77,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/busBookings', busBooking);
 app.use('/api/CourseRegistrationRoute', CourseRegistrationRoute);
 app.use('/api/course-payments', PayCourseRoute);
+app.use('/api/lecturer-registration', lecturerRegistrationRoutes);
 
 // Stats endpoint (admin only)
 app.get('/api/stats', (req, res) => {

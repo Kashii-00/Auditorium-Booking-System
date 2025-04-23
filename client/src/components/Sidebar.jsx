@@ -26,7 +26,7 @@ const Sidebar = ({ user, onLogout }) => {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const TIMEOUT_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+  const TIMEOUT_DURATION = 1 * 60 * 1000; // 5 minutes in milliseconds
 
   // Click outside to collapse the sidebar when not pinned
   useEffect(() => {
@@ -195,8 +195,10 @@ const Sidebar = ({ user, onLogout }) => {
   // Inactivity logout callback
   const handleInactivityLogout = useCallback(() => {
     onLogout();
+    setTimeout(() => {
+      alert('You have been logged out due to inactivity');
+    }, 100); // Show alert after navigation to login page
     navigate('/login');
-    alert('You have been logged out due to inactivity');
   }, [onLogout, navigate]);
 
   // Set up inactivity timeout
@@ -254,7 +256,7 @@ const Sidebar = ({ user, onLogout }) => {
       if (hasRole('SuperAdmin')) return '/BatchRegistration';
       return null;
     },
-    Lecturers: () => (hasRole('SuperAdmin') ? '/LMmain' : null),
+    Lecturers: () => (hasRole('SuperAdmin') || hasRole('lecturer_management_access') ? '/LMmain' : null),
   };
 
   // Handle dropdown change: navigate to first link if exists
@@ -387,13 +389,16 @@ const Sidebar = ({ user, onLogout }) => {
                 )}
               </>
             )}
-            {selectedSection === 'Lecturers' && hasRole('SuperAdmin') && (
-              <Link
-                to="/LMmain"
-                className={`sidebar-link ${location.pathname === '/LMmain' ? 'active' : ''}`}
-              >
-                <span className="sidebar-text">ʟᴇᴄᴛᴜʀᴇʀꜱ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ</span>
-              </Link>
+            {selectedSection === 'Lecturers' && (hasRole('SuperAdmin') || hasRole('lecturer_management_access')) && (
+              <>
+                <Link
+                  to="/LRegistration"
+                  className={`sidebar-link ${location.pathname === '/LRegistration' ? 'active' : ''}`}
+                >
+                  <span className="sidebar-text">ʟᴇᴄᴛᴜʀᴇʀꜱ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ</span>
+                </Link>
+              
+              </>
             )}
         </div>
       </>

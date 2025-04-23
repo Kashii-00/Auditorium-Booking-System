@@ -20,12 +20,9 @@ const BusBookingList = () => {
 
   const highlightId = location.state?.highlightId ? Number(location.state.highlightId) : null;
 
-  // Add a ref to the filter button for positioning the popup
   const filterBtnRef = useRef(null);
 
-  // Sidebar event listeners
   useEffect(() => {
-    // Always sync sidebar state from localStorage on mount and on popstate
     const syncSidebarState = () => {
       const stored = localStorage.getItem('sidebarState');
       if (stored !== null) {
@@ -37,10 +34,8 @@ const BusBookingList = () => {
       }
     };
 
-    // On mount, sync sidebar state
     syncSidebarState();
 
-    // Listen for browser back/forward navigation and sync sidebar state
     window.addEventListener('popstate', syncSidebarState);
 
     const handleSidebarToggle = (e) => {
@@ -62,7 +57,6 @@ const BusBookingList = () => {
     };
   }, []);
 
-  // Export CSV
   const exportToCSV = () => {
     const headers = ['Passenger', 'Contact', 'From', 'To', 'Travel Date', 'Return Date', 'Booked By', 'Status'];
     let filename = 'bus_bookings';
@@ -103,7 +97,6 @@ const BusBookingList = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  // Fetch bookings
   const fetchInProgress = useRef(false);
   const lastFetchTime = useRef(0);
   const MIN_FETCH_INTERVAL = 2000;
@@ -115,7 +108,7 @@ const BusBookingList = () => {
     try {
       fetchInProgress.current = true;
       lastFetchTime.current = now;
-      const bookingsData = await authRequest('get', 'http://10.70.4.34:5003/api/busBookings');
+      const bookingsData = await authRequest('get', 'http://localhost:5003/api/busBookings');
       setBookings(bookingsData);
       setError(null);
     } catch (err) {
@@ -125,7 +118,6 @@ const BusBookingList = () => {
     }
   }, []);
 
-  // Format date
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -136,21 +128,19 @@ const BusBookingList = () => {
     });
   };
 
-  // Update status
   const updateStatus = async (id, status) => {
     try {
-      await authRequest('put', `http://10.70.4.34:5003/api/busBookings/${id}`, { status });
+      await authRequest('put', `http://localhost:5003/api/busBookings/${id}`, { status });
       fetchBookings();
     } catch (err) {
       setError('Failed to update booking status');
     }
   };
 
-  // Delete booking
   const deleteBooking = async (id) => {
     if (window.confirm('Are you sure you want to delete this booking?')) {
       try {
-        await authRequest('delete', `http://10.70.4.34:5003/api/busBookings/${id}`);
+        await authRequest('delete', `http://localhost:5003/api/busBookings/${id}`);
         setPopupMessage('Booking successfully deleted!');
         setShowPopup(true);
         fetchBookings();
@@ -161,20 +151,17 @@ const BusBookingList = () => {
     }
   };
 
-  // Initial fetch and polling
   useEffect(() => {
     fetchBookings();
     const interval = setInterval(fetchBookings, 30000);
     return () => clearInterval(interval);
   }, [fetchBookings]);
 
-  // Handle filter button click to toggle popup
   const handleFilterButtonClick = (e) => {
     e.stopPropagation();
     setShowFilterPopup((prev) => !prev);
   };
 
-  // Close filter popup on outside click (fix: check for filter-popup-bus as well)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -190,7 +177,6 @@ const BusBookingList = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showFilterPopup]);
 
-  // Filtering
   const filteredBookings = bookings.filter(booking => {
     const matchesSearch =
       booking.forWho?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -201,7 +187,6 @@ const BusBookingList = () => {
     return matchesSearch && matchesStatus && matchesMonth;
   });
 
-  // Success popup
   const SuccessPopup = ({ message }) => (
     <div className="success-popup">
       <svg className="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -211,7 +196,6 @@ const BusBookingList = () => {
     </div>
   );
 
-  // Export button text
   const getExportButtonText = () => {
     const parts = ['Export'];
     if (filterStatus !== 'ALL') parts.push(filterStatus.toLowerCase());

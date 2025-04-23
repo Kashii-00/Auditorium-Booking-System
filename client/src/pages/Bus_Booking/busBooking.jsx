@@ -7,7 +7,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import { FaExclamationTriangle,FaUser, FaPhone, FaPaperPlane, FaCheck } from 'react-icons/fa';
 import '../../styles/bus.css';
 import { authRequest } from '../../services/authService';
-import defaultUserImage from '../../styles/profile-user.png';
+import defaultUserImage from '../assets/profile-user.png';
 
 const BusBooking = ({ user }) => {
   const [fromPlace, setFromPlace] = useState('Colombo');
@@ -23,7 +23,6 @@ const BusBooking = ({ user }) => {
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    // Always sync sidebar state from localStorage on mount and on popstate
     const syncSidebarState = () => {
       const stored = localStorage.getItem('sidebarState');
       if (stored !== null) {
@@ -35,10 +34,8 @@ const BusBooking = ({ user }) => {
       }
     };
 
-    // On mount, sync sidebar state
     syncSidebarState();
 
-    // Listen for browser back/forward navigation and sync sidebar state
     window.addEventListener('popstate', syncSidebarState);
 
     const handleSidebarToggle = (e) => setSidebarCollapsed(e.detail.isCollapsed);
@@ -80,6 +77,7 @@ const BusBooking = ({ user }) => {
       status: status || 'N/A',
     });
   };
+
   const handleEventMouseLeave = () => setTooltip(prev => ({ ...prev, visible: false }));
 
   const isWeekend = (date) => {
@@ -87,6 +85,7 @@ const BusBooking = ({ user }) => {
     const d = new Date(date);
     return d.getDay() === 0 || d.getDay() === 6;
   };
+
   const validateForm = () => {
     const newErrors = {};
     if (!fromPlace) newErrors.fromPlace = 'Starting location is required';
@@ -113,7 +112,7 @@ const BusBooking = ({ user }) => {
     try {
       fetchInProgress.current = true;
       lastFetchTime.current = now;
-      const bookingsData = await authRequest('get', 'http://10.70.4.34:5003/api/busBookings');
+      const bookingsData = await authRequest('get', 'http://localhost:5003/api/busBookings');
       const mappedEvents = (bookingsData || []).map((b) => {
         let backgroundColor = b.status === 'APPROVED'
           ? 'green'
@@ -153,7 +152,7 @@ const BusBooking = ({ user }) => {
     try {
       const formattedTravelDate = new Date(travelDate).toISOString().split('T')[0];
       const formattedReturnDate = new Date(returnDate).toISOString().split('T')[0];
-      const response = await authRequest('post', 'http://10.70.4.34:5003/api/busBookings', {
+      const response = await authRequest('post', 'http://localhost:5003/api/busBookings', {
         user_id: user.id,
         fromPlace,
         toPlace,

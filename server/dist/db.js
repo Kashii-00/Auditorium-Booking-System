@@ -31,11 +31,54 @@ const createTableQuery = `
         FOREIGN KEY (user_id) REFERENCES users(id)
     )
 `;
+const createLecturerTableQuery = `
+    CREATE TABLE IF NOT EXISTS lecturers (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        course_id INT NOT NULL,
+        category VARCHAR(100),
+        grade VARCHAR(100),
+        stream VARCHAR(100),
+        module VARCHAR(100),
+        nic_file VARCHAR(255),
+        photo_file VARCHAR(255),
+        passbook_file VARCHAR(255),
+        education_certificate_file VARCHAR(255),
+        cdc_book_file VARCHAR(255),
+        driving_trainer_license_file VARCHAR(255),
+        other_documents_file VARCHAR(255),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (course_id) REFERENCES courses(id)
+    )
+`;
+const createRefreshTokenTableQuery = `
+  CREATE TABLE IF NOT EXISTS user_refresh_tokens (
+    user_id INT PRIMARY KEY,
+    refresh_token VARCHAR(512) NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )
+`;
 db.query(createTableQuery, (err, result) => {
   if (err) console.error("Error creating table:", err);else console.log("Courses table is ready.");
 });
+db.query(createLecturerTableQuery, (err, result) => {
+  if (err) {
+    console.error("Error creating lecturers table:", err);
+  } else {
+    console.log("Lecturers table is ready.");
+  }
+});
+db.query(createRefreshTokenTableQuery, (err, result) => {
+  if (err) {
+    console.error("Error creating user_refresh_tokens table:", err);
+  } else {
+    console.log("user_refresh_tokens table is ready.");
+  }
+});
 
-// Keep DB connection alive every 10 minutes
+// Keep DB connection alive every hour
 setInterval(() => {
   db.query('SELECT 1', err => {
     if (err) {
@@ -46,7 +89,7 @@ setInterval(() => {
   });
 }, 60 * 60 * 1000);
 
-// Clear logs every 24 hours
+// Log rotation every 24 hours
 setInterval(() => {
   if (process.env.NODE_ENV !== 'production') {
     console.clear();

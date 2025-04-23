@@ -7,8 +7,9 @@ const db = require('../db');
 const auth = require('../auth');
 const bcrypt = require('bcrypt');
 
-// GET all users
 router.get('/', auth.authMiddleware, (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/users`);
   const sql = 'SELECT id, name, email, phone, role, status FROM users';
   db.query(sql, (err, results) => {
     if (err) return res.status(500).json({ error: 'Database error' });
@@ -16,8 +17,9 @@ router.get('/', auth.authMiddleware, (req, res) => {
   });
 });
 
-// GET user by ID
 router.get('/:id', auth.authMiddleware, (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/users/${req.params.id}`);
   const userId = req.params.id;
   const sql = 'SELECT id, name, email, phone, role, status FROM users WHERE id=?';
   db.query(sql, [userId], (err, results) => {
@@ -27,12 +29,13 @@ router.get('/:id', auth.authMiddleware, (req, res) => {
   });
 });
 
-// POST create user
 router.post('/', auth.authMiddleware, async (req, res) => {
-  const user_name = req.user.name;
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/users`);
+  console.log('User creation POST body:', req.body);
 
+  const user_name = req.user.name;
   const { name, email, phone, password, role } = req.body;
-  // Always store role as JSON array
   const roleArray = Array.isArray(role) ? role : [role];
   const roleJson = JSON.stringify(roleArray);
 
@@ -51,8 +54,11 @@ router.post('/', auth.authMiddleware, async (req, res) => {
   }
 });
 
-// Update the PUT route
 router.put('/:id', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] PUT /api/users/${req.params.id}`);
+  console.log('User update PUT body:', req.body);
+
   const userId = req.params.id;
   const user_name = req.user.name;
   const { name, email, phone, password, role, status } = req.body;
@@ -99,21 +105,17 @@ router.put('/:id', auth.authMiddleware, async (req, res) => {
   values.push(userId);
 
   db.query(sql, values, (err, result) => {
-    if (err) {
-      console.error('Database error:', err);
-      return res.status(500).json({ error: 'Database error' });
-    }
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    if (err) return res.status(500).json({ error: 'Database error' });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
     const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
     logger.info(`User ${userId} Updated Successfully at: ${logintime} by: ${user_name}`);
     return res.json({ success: true, message: 'User updated successfully' });
   });
 });
 
-// DELETE user
 router.delete('/:id', auth.authMiddleware, (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] DELETE /api/users/${req.params.id}`);
   const userIdToDelete = req.params.id;
   const loggedInUserId = req.user.id;
   const user_name = req.user.name;
@@ -131,11 +133,5 @@ router.delete('/:id', auth.authMiddleware, (req, res) => {
     return res.json({ success: true, message: 'User deleted' });
   });
 });
-
-// Clear logs every 24h
-setInterval(() => {
-  console.clear();
-  logger.info('🔄 Logs cleared - 24h cycle restart');
-}, 24 * 60 * 60 * 1000);
 
 module.exports = router;
