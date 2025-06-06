@@ -60,3 +60,43 @@
 .error-screen button:hover {
   background-color: #2980b9;
 }
+
+/* Main content positioning - Updated for consistent transitions */
+.main-content {
+  position: fixed !important;
+  top: 64px; /* Match navbar height */
+  left: 280px;
+  right: 0;
+  bottom: 0;
+  width: calc(100% - 280px) !important;
+  overflow-y: auto;
+  margin-left: 0 !important; /* Remove margin, use position instead */
+  margin-top: 0 !important; /* Remove margin, use position instead */
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: left, width;
+  
+  /* Ensure proper background */
+  background-color: #f5f6fa;
+  z-index: 1;
+}
+
+/* When sidebar is collapsed */
+body.sidebar-collapsed .main-content {
+  left: 90px !important;
+  width: calc(100% - 90px) !important;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ensure app background prevents flash during transitions */
+body, #root, .app {
+  background-color: #f5f6fa;
+}
+
+/* Media query for mobile - Updated to match others */
+@media (max-width: 900px) {
+  .main-content {
+    left: 0 !important;
+    width: 100% !important;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,368 @@
+.annual-plan-container {
+  background: #f8f9fa;
+  border-radius: 12px;
+  max-width: 1300px;
+  margin: 32px auto;
+  padding: 32px 24px 24px 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  transition: margin-left 0.3s cubic-bezier(0.4,0,0.2,1), width 0.3s cubic-bezier(0.4,0,0.2,1);
+  min-width: 320px;
+}
+
+.annual-plan-container.expanded {
+  margin-left: 30px;
+  width: calc(100% - 90px);
+}
+
+.annual-plan-container:not(.expanded) {
+  margin-left: 190px;
+  width: calc(100% - 280px);
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.controls-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.filters {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-weight: 500;
+  color: #555;
+}
+
+.course-select {
+  padding: 0.5rem 2rem 0.5rem 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.375rem;
+  background-color: white;
+  font-size: 0.95rem;
+  min-width: 250px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1em;
+}
+
+.course-select:focus {
+  outline: none;
+  border-color: #4b6bfb;
+  box-shadow: 0 0 0 3px rgba(75, 107, 251, 0.1);
+}
+
+.year-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.year-display {
+  padding: 0.5rem 1rem;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 110px;
+  justify-content: center;
+}
+
+.year-icon {
+  color: #4b6bfb;
+}
+
+.year-button {
+  border: none;
+  background: #f3f4f6;
+  color: #555;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.year-button:hover {
+  background: #e5e7eb;
+  color: #333;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.print-button, .export-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.print-button {
+  background-color: #4b6bfb;
+  color: white;
+}
+
+.print-button:hover {
+  background-color: #3b5beb;
+}
+
+.export-button {
+  background-color: #10b981;
+  color: white;
+}
+
+.export-button:hover {
+  background-color: #059669;
+}
+
+.annual-plan-content {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.plan-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.plan-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 0.5rem;
+}
+
+.plan-subtitle {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.timeline-container {
+  position: relative;
+  margin-top: 2rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.timeline-header {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.month-header {
+  flex: 1;
+  text-align: center;
+  padding: 0.75rem 0;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #4b5563;
+  border-right: 1px dashed #e5e7eb;
+}
+
+.month-header:last-child {
+  border-right: none;
+}
+
+.timeline-body {
+  position: relative;
+  height: 400px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.batch-timeline-item {
+  position: absolute;
+  height: 80px;
+  background: linear-gradient(135deg, #4b6bfb10, #4b6bfb30);
+  border-left: 3px solid #4b6bfb;
+  border-radius: 4px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  overflow: hidden;
+  z-index: 2;
+}
+
+.batch-timeline-item:nth-child(even) {
+  margin-top: 100px;
+  background: linear-gradient(135deg, #10b98110, #10b98130);
+  border-left: 3px solid #10b981;
+}
+
+.batch-timeline-item:nth-child(3n) {
+  margin-top: 190px;
+  background: linear-gradient(135deg, #f59e0b10, #f59e0b30);
+  border-left: 3px solid #f59e0b;
+}
+
+.batch-timeline-item:nth-child(4n) {
+  margin-top: 280px;
+  background: linear-gradient(135deg, #ec489910, #ec489930);
+  border-left: 3px solid #ec4899;
+}
+
+.batch-timeline-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.batch-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.batch-date {
+  font-size: 0.8rem;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+}
+
+.batch-stats {
+  display: flex;
+  gap: 1rem;
+}
+
+.student-count, .lecturer-count {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: #4b5563;
+}
+
+.timeline-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.grid-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #e5e7eb;
+}
+
+.loading-state {
+  padding: 3rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.error-message {
+  padding: 1rem;
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.no-batches-message {
+  padding: 3rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+@media print {
+  .annual-plan-container {
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+    box-shadow: none;
+    background: white;
+  }
+  
+  .controls-container,
+  .batch-timeline-item {
+    break-inside: avoid;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .annual-plan-container {
+    margin: 1rem;
+    padding: 1rem;
+    width: auto !important;
+  }
+  
+  .controls-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .course-select {
+    width: 100%;
+    min-width: unset;
+  }
+  
+  .year-selector {
+    margin: 0 auto;
+  }
+  
+  .actions {
+    justify-content: center;
+  }
+}

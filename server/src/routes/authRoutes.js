@@ -35,6 +35,8 @@ router.options('/logout', (req, res) => {
   res.sendStatus(204);
 });
 
+
+
 router.post('/login', (req, res) => {
   const { email, password } = req.body;
   const sql = 'SELECT * FROM users WHERE email = ?';
@@ -59,7 +61,7 @@ router.post('/login', (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
-            maxAge: 30 * 24 * 60 * 60 * 1000
+            maxAge: 10 * 24 * 60 * 60 * 1000
           });
           return res.json({
             success: true,

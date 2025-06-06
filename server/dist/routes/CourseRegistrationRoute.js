@@ -1,162 +1,241 @@
 "use strict";
 
+// routes/courses.js
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const auth = require('../auth');
-const moment = require('moment');
 const logger = require('../logger');
-router.get('/', auth.authMiddleware, (req, res) => {
-  const {
-    courseId
-  } = req.query;
-  if (courseId) {
-    const sql = 'SELECT id FROM courses WHERE courseId = ? LIMIT 1';
-    db.query(sql, [courseId], (err, results) => {
-      if (err) return res.status(500).json({
-        error: 'Database error'
-      });
-      return res.json({
-        exists: results.length > 0
-      });
-    });
-  } else {
-    const sql = 'SELECT * FROM courses';
-    db.query(sql, (err, results) => {
-      if (err) return res.status(500).json({
-        error: 'Database error'
-      });
-      return res.json(results);
+
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, '../../uploads/courses');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, {
+    recursive: true
+  });
+}
+
+// Configure multer storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
+const upload = multer({
+  storage
+});
+
+// Helper function to ensure field is valid JSON
+const ensureJsonField = value => {
+  if (!value) return JSON.stringify([]);
+  if (typeof value === 'string') {
+    try {
+      // Check if it's already JSON
+      JSON.parse(value);
+      return value;
+    } catch (e) {
+      // If not JSON, convert string to JSON array
+      if (value.includes(',')) {
+        return JSON.stringify(value.split(',').map(item => item.trim()));
+      }
+      return JSON.stringify([value]);
+    }
+  }
+  if (Array.isArray(value)) {
+    return JSON.stringify(value);
+  }
+  return JSON.stringify([]);
+};
+
+// Get all courses
+router.get('/', auth.authMiddleware, async (req, res) => {
+  try {
+    const query = 'SELECT * FROM courses ORDER BY courseName';
+    const courses = await db.queryPromise(query);
+    res.json(courses);
+  } catch (error) {
+    logger.error('Error fetching courses:', error);
+    res.status(500).json({
+      error: 'Database error'
     });
   }
 });
-router.post('/', auth.authMiddleware, (req, res) => {
-  const user_name = req.user?.name || 'Unknown';
-  const {
-    user_id,
-    courseId,
-    stream,
-    courseName,
-    medium,
-    location,
-    assessmentCriteria,
-    resources,
-    fees,
-    registrationFee,
-    installment1,
-    installment2,
-    additionalInstallments
-  } = req.body;
-  if (!registrationFee || isNaN(Number(registrationFee)) || Number(registrationFee) <= 0) {
-    return res.status(400).json({
-      error: 'Registration fee is required and must be greater than 0'
-    });
-  }
-  if (installment1 !== null && installment1 !== undefined && installment1 !== '' && (isNaN(Number(installment1)) || Number(installment1) <= 0)) {
-    return res.status(400).json({
-      error: 'Installment 1 is enabled and must be greater than 0'
-    });
-  }
-  if (installment2 !== null && installment2 !== undefined && installment2 !== '' && (isNaN(Number(installment2)) || Number(installment2) <= 0)) {
-    return res.status(400).json({
-      error: 'Installment 2 is enabled and must be greater than 0'
-    });
-  }
-  const mediumStr = JSON.stringify(medium);
-  const locationStr = JSON.stringify(location);
-  const assessmentCriteriaStr = JSON.stringify(assessmentCriteria);
-  const resourcesStr = JSON.stringify(resources);
-  let additionalInstallmentsArr = [];
-  if (Array.isArray(additionalInstallments)) {
-    additionalInstallmentsArr = additionalInstallments.map(inst => typeof inst === 'object' && inst !== null ? Number(inst.value) || 0 : Number(inst) || 0).filter(val => val > 0);
-  }
-  const additionalInstallmentsStr = additionalInstallmentsArr.length > 0 ? JSON.stringify(additionalInstallmentsArr) : null;
-  const sql = `INSERT INTO courses 
-    (user_id, courseId, stream, courseName, medium, location, assessmentCriteria, resources, fees, registrationFee, installment1, installment2, additionalInstallments) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-  db.query(sql, [user_id, courseId, stream, courseName, mediumStr, locationStr, assessmentCriteriaStr, resourcesStr, fees, registrationFee, installment1, installment2, additionalInstallmentsStr], (err, result) => {
-    if (err) return res.status(500).json({
-      error: 'Database error'
-    });
-    const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    logger.info(`Course registered successfully at: ${logintime} by user: ${user_name}`);
-    return res.json({
+
+// Create a new course
+router.post('/', auth.authMiddleware, upload.none(), async (req, res) => {
+  try {
+    const {
+      courseId,
+      stream,
+      courseName,
+      medium,
+      location,
+      assessmentCriteria,
+      resources,
+      fees,
+      registrationFee,
+      installment1,
+      installment2,
+      additionalInstallments,
+      description,
+      duration,
+      status = 'Active'
+    } = req.body;
+
+    // Ensure required fields
+    if (!courseId || !courseName || !stream) {
+      return res.status(400).json({
+        error: 'Missing required fields'
+      });
+    }
+
+    // Format JSON fields properly
+    const mediumJson = ensureJsonField(medium);
+    const locationJson = ensureJsonField(location);
+    const assessmentJson = ensureJsonField(assessmentCriteria);
+    const resourcesJson = ensureJsonField(resources);
+    const additionalJson = additionalInstallments ? ensureJsonField(additionalInstallments) : null;
+    const query = `
+      INSERT INTO courses (
+        user_id, courseId, stream, courseName, medium, location, 
+        assessmentCriteria, resources, fees, registrationFee, 
+        installment1, installment2, additionalInstallments, description, 
+        duration, status, created_at, updated_at
+      ) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+    `;
+    const values = [req.user.id, courseId, stream, courseName, mediumJson, locationJson, assessmentJson, resourcesJson, parseFloat(fees || 0), parseFloat(registrationFee || 0), parseFloat(installment1 || 0), parseFloat(installment2 || 0), additionalJson, description, duration, status];
+    const result = await db.queryPromise(query, values);
+    res.status(201).json({
       success: true,
-      message: 'Course registered successfully',
+      message: 'Course created successfully',
       courseId: result.insertId
     });
-  });
+  } catch (error) {
+    logger.error('Error creating course:', error);
+    res.status(500).json({
+      error: 'Failed to create course',
+      details: error.message
+    });
+  }
 });
-router.get('/:id', auth.authMiddleware, (req, res) => {
-  const courseId = req.params.id;
-  const sql = 'SELECT * FROM courses WHERE id = ?';
-  db.query(sql, [courseId], (err, results) => {
-    if (err) return res.status(500).json({
+
+// Get a single course by ID
+router.get('/:id', auth.authMiddleware, async (req, res) => {
+  try {
+    const query = 'SELECT * FROM courses WHERE id = ?';
+    const [course] = await db.queryPromise(query, [req.params.id]);
+    if (!course) {
+      return res.status(404).json({
+        error: 'Course not found'
+      });
+    }
+    res.json(course);
+  } catch (error) {
+    logger.error('Error fetching course:', error);
+    res.status(500).json({
       error: 'Database error'
     });
-    if (results.length === 0) return res.status(404).json({
-      error: 'Course not found'
-    });
-    return res.json(results[0]);
-  });
+  }
 });
-router.put('/:id', auth.authMiddleware, (req, res) => {
-  const courseId = req.params.id;
-  const user_name = req.user?.name || 'Unknown';
-  const {
-    stream,
-    courseName,
-    medium,
-    location,
-    assessmentCriteria,
-    resources,
-    fees
-  } = req.body;
-  const mediumStr = JSON.stringify(medium);
-  const locationStr = JSON.stringify(location);
-  const assessmentCriteriaStr = JSON.stringify(assessmentCriteria);
-  const resourcesStr = JSON.stringify(resources);
-  const sql = `UPDATE courses SET 
-    stream = ?, 
-    courseName = ?, 
-    medium = ?, 
-    location = ?, 
-    assessmentCriteria = ?, 
-    resources = ?, 
-    fees = ? 
-    WHERE id = ?`;
-  db.query(sql, [stream, courseName, mediumStr, locationStr, assessmentCriteriaStr, resourcesStr, fees, courseId], (err, result) => {
-    if (err) return res.status(500).json({
-      error: 'Database error'
-    });
-    if (result.affectedRows === 0) return res.status(404).json({
-      error: 'Course not found'
-    });
-    const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    logger.info(`Course updated successfully at: ${logintime} by user: ${user_name}`);
-    return res.json({
+
+// Update a course
+router.put('/:id', auth.authMiddleware, upload.none(), async (req, res) => {
+  try {
+    const {
+      courseId,
+      stream,
+      courseName,
+      medium,
+      location,
+      assessmentCriteria,
+      resources,
+      fees,
+      registrationFee,
+      installment1,
+      installment2,
+      additionalInstallments,
+      description,
+      duration,
+      status
+    } = req.body;
+
+    // Ensure required fields
+    if (!courseId || !courseName || !stream) {
+      return res.status(400).json({
+        error: 'Missing required fields'
+      });
+    }
+
+    // Format JSON fields properly
+    const mediumJson = ensureJsonField(medium);
+    const locationJson = ensureJsonField(location);
+    const assessmentJson = ensureJsonField(assessmentCriteria);
+    const resourcesJson = ensureJsonField(resources);
+    const additionalJson = additionalInstallments ? ensureJsonField(additionalInstallments) : null;
+    const query = `
+      UPDATE courses SET
+        courseId = ?, stream = ?, courseName = ?, medium = ?, location = ?,
+        assessmentCriteria = ?, resources = ?, fees = ?, registrationFee = ?,
+        installment1 = ?, installment2 = ?, additionalInstallments = ?,
+        description = ?, duration = ?, status = ?, updated_at = NOW()
+      WHERE id = ?
+    `;
+    const values = [courseId, stream, courseName, mediumJson, locationJson, assessmentJson, resourcesJson, parseFloat(fees || 0), parseFloat(registrationFee || 0), parseFloat(installment1 || 0), parseFloat(installment2 || 0), additionalJson, description, duration, status, req.params.id];
+    const result = await db.queryPromise(query, values);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        error: 'Course not found'
+      });
+    }
+    res.json({
       success: true,
       message: 'Course updated successfully'
     });
-  });
+  } catch (error) {
+    logger.error('Error updating course:', error);
+    res.status(500).json({
+      error: 'Failed to update course',
+      details: error.message
+    });
+  }
 });
-router.delete('/:id', auth.authMiddleware, (req, res) => {
-  const courseId = req.params.id;
-  const user_name = req.user?.name || 'Unknown';
-  const sql = 'DELETE FROM courses WHERE id = ?';
-  db.query(sql, [courseId], (err, result) => {
-    if (err) return res.status(500).json({
-      error: 'Database error'
-    });
-    if (result.affectedRows === 0) return res.status(404).json({
-      error: 'Course not found'
-    });
-    const logintime = moment().format('YYYY-MM-DD HH:mm:ss');
-    logger.info(`Course deleted successfully at: ${logintime} by user: ${user_name}`);
-    return res.json({
+
+// Delete a course
+router.delete('/:id', auth.authMiddleware, async (req, res) => {
+  try {
+    // Check for related records first
+    const studentCheck = await db.queryPromise('SELECT COUNT(*) as count FROM student_courses WHERE course_id = ?', [req.params.id]);
+    if (studentCheck[0].count > 0) {
+      return res.status(400).json({
+        error: 'Cannot delete course with enrolled students. Remove student enrollments first.'
+      });
+    }
+    const query = 'DELETE FROM courses WHERE id = ?';
+    const result = await db.queryPromise(query, [req.params.id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        error: 'Course not found'
+      });
+    }
+    res.json({
       success: true,
       message: 'Course deleted successfully'
     });
-  });
+  } catch (error) {
+    logger.error('Error deleting course:', error);
+    res.status(500).json({
+      error: 'Failed to delete course',
+      details: error.message
+    });
+  }
 });
 module.exports = router;

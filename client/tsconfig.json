@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",              // ← make sure baseUrl is set
+    "paths": {
+      "@/*": ["./src/*"]         // ← add the ./ prefix!
+    },
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true
+  },
+  "include": ["src","types"]
+}

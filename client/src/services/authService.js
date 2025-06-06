@@ -38,6 +38,7 @@ window.addEventListener('storage', (event) => {
   }
 });
 
+
 export const checkServerStatus = async () => {
   try {
     const response = await axios.get(`${API_URL}/health`);

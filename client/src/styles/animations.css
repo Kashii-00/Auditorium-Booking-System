@@ -4,21 +4,24 @@
 @keyframes fadeIn {
   from {
     opacity: 0;
+    /* Add slight upward movement for subtle effect */
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
 .fade-in {
-  animation: fadeIn 0.3s ease-in forwards;
+  animation: fadeIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Fade In Up */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
@@ -27,14 +30,14 @@
 }
 
 .fade-in-up {
-  animation: fadeInUp 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Fade In Down */
 @keyframes fadeInDown {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(-30px);
   }
   to {
     opacity: 1;
@@ -43,7 +46,7 @@
 }
 
 .fade-in-down {
-  animation: fadeInDown 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  animation: fadeInDown 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Slide In Right */
@@ -59,7 +62,7 @@
 }
 
 .slide-in-right {
-  animation: slideInRight 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  animation: slideInRight 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Slide In Left */
@@ -75,22 +78,22 @@
 }
 
 .slide-in-left {
-  animation: slideInLeft 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  animation: slideInLeft 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* Shake */
 @keyframes shake {
   10%, 90% {
-    transform: translateX(-1px);
+    transform: translateX(-2px);
   }
   20%, 80% {
-    transform: translateX(2px);
+    transform: translateX(4px);
   }
   30%, 50%, 70% {
-    transform: translateX(-3px);
+    transform: translateX(-6px);
   }
   40%, 60% {
-    transform: translateX(3px);
+    transform: translateX(6px);
   }
 }
 
@@ -104,7 +107,7 @@
     transform: scale(1);
   }
   50% {
-    transform: scale(1.05);
+    transform: scale(1.06);
   }
   100% {
     transform: scale(1);
@@ -112,7 +115,7 @@
 }
 
 .pulse {
-  animation: pulse 1.5s infinite;
+  animation: pulse 1.2s infinite;
 }
 
 /* Spin */
@@ -144,32 +147,32 @@
     transform: translateY(0);
   }
   40% {
-    transform: translateY(-20px);
+    transform: translateY(-18px);
   }
   60% {
-    transform: translateY(-10px);
+    transform: translateY(-8px);
   }
 }
 
 .bounce {
-  animation: bounce 1s ease;
+  animation: bounce 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Common transition classes */
 .transition-all {
-  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .transition-transform {
-  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .transition-opacity {
-  transition: opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .transition-colors {
-  transition: background-color 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), 
-              border-color 0.3s cubic-bezier(0.25, 0.1, 0.25, 1), 
-              color 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

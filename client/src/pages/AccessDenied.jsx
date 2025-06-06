@@ -11,14 +11,16 @@ const AccessDenied = () => {
   
   return (
     <div className="access-denied-container">
-      <h2>⚠️ Access Denied</h2>
-      <p>You don't have permission to access this page.</p>
-      <button 
-        onClick={handleClick}
-        className="access-denied-button"
-      >
-        Return to Home
-      </button>
+      <div className="access-denied-card">
+        <h2>⚠️ Access Denied</h2>
+        <p>You don't have permission to access this page.</p>
+        <button 
+          onClick={handleClick}
+          className="access-denied-button"
+        >
+          Return to Login
+        </button>
+      </div>
     </div>
   );
 };

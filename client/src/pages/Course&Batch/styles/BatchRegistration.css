@@ -1,0 +1,318 @@
+.batch-registration-container {
+  padding: 2rem;
+  margin-left: 280px;
+  transition: margin-left 0.3s ease;
+}
+
+.batch-registration-container.expanded {
+  margin-left: 90px;
+}
+
+.batch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.batch-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.batch-add-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.batch-add-button:hover {
+  background-color: #3182ce;
+}
+
+.batch-form-container {
+  background-color: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.batch-form-container h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.batch-form-group {
+  margin-bottom: 1.25rem;
+}
+
+.batch-form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.batch-form-row .batch-form-group {
+  flex: 1;
+}
+
+.batch-form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.batch-form-group input,
+.batch-form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.batch-form-group input:focus,
+.batch-form-group select:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.batch-form-group input.batch-error,
+.batch-form-group select.batch-error {
+  border-color: #e53e3e;
+}
+
+.batch-error-message {
+  color: #e53e3e;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.batch-form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.batch-cancel-button,
+.batch-submit-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.batch-cancel-button {
+  background-color: #edf2f7;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+}
+
+.batch-cancel-button:hover {
+  background-color: #e2e8f0;
+}
+
+.batch-submit-button {
+  background-color: #4299e1;
+  color: white;
+  border: none;
+}
+
+.batch-submit-button:hover {
+  background-color: #3182ce;
+}
+
+.batch-submit-button:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
+}
+
+.batch-search-container {
+  margin-bottom: 2rem;
+}
+
+.batch-search-input {
+  position: relative;
+  max-width: 500px;
+}
+
+.batch-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a0aec0;
+}
+
+.batch-search-input input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 2.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.batch-search-input input:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.batch-loading,
+.batch-no-data {
+  text-align: center;
+  padding: 2rem;
+  color: #718096;
+  font-size: 1.125rem;
+}
+
+.batch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.batch-card {
+  background-color: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.batch-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.batch-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.batch-card-title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #2d3748;
+}
+
+.batch-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.batch-edit-button,
+.batch-delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+}
+
+.batch-edit-button {
+  color: #4299e1;
+}
+
+.batch-edit-button:hover {
+  background-color: rgba(66, 153, 225, 0.1);
+}
+
+.batch-delete-button {
+  color: #e53e3e;
+}
+
+.batch-delete-button:hover {
+  background-color: rgba(229, 62, 62, 0.1);
+}
+
+.batch-card-course {
+  margin-bottom: 1rem;
+  color: #4a5568;
+}
+
+.batch-card-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.batch-date {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #718096;
+}
+
+.batch-date-icon {
+  color: #4299e1;
+}
+
+.batch-students-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #edf2f7;
+  color: #4a5568;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.batch-students-button:hover {
+  background-color: #e2e8f0;
+}
+
+.batch-button-icon {
+  color: #4299e1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .batch-registration-container {
+    padding: 1rem;
+    margin-left: 0;
+  }
+  
+  .batch-registration-container.expanded {
+    margin-left: 0;
+  }
+  
+  .batch-form-row {
+    flex-direction: column;
+  }
+  
+  .batch-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,399 +1,918 @@
-/* Main container styles */
-.content-wrapper {
-  position: relative;
-  margin-left: 100px;
-  width: calc(105% - 160px);
-  min-height: calc(100vh - 60px);
-  padding: 1.5rem;
-  border-radius: 20px;
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, #f3f2f2 0%, #f4f4f4 100%);
-  overflow-x: hidden;
-}
+/* Bus Calendar CSS with namespaced classes to avoid conflicts */
 
-.content-wrapper.expanded {
-  margin-left: 10px;
-  width: calc(100% - 90px);
-}
-
-.calendar-container {
-  display: flex;
-  gap: 1.5rem;
-  width: 100%;
-  height: calc(100vh - 160px);
-  align-items: stretch;
-  margin: 0 auto;
-  max-width: 1600px;
-  position: relative;
-  overflow: auto;
-}
-
-@media (max-width: 1024px) {
-  .calendar-container {
-    flex-direction: column;
-    height: auto;
-  }
-}
-
-.calendar-main {
-  flex: 1;
-  background-color: #fff;
-  min-width: 0;
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  height: 90%;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid rgba(58, 110, 165, 0.1);
-}
-
-.fc, .fc .fc-view-harness, .fc-scroller, .fc-timegrid-body, .fc-daygrid-body {
-  overflow: visible !important;
-}
-
-@media (max-width: 1024px) {
-  .calendar-main {
-    height: 600px;
-    margin-bottom: 1.5rem;
-  }
-}
-
-.fc {
-  height: 100% !important;
-  font-family: inherit;
-  width: 100% !important;
-  min-width: 900px !important;
-  min-height: 600px !important;
-}
-
-.booking-form {
-  width: 390px;
-  height: 90%;
-  padding: 1.5rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+/* Main container with transport prefix - Fixed full width */
+.transport-content-wrapper {
+  position: fixed !important;
+  top: 64px; /* Match navbar height */
+  bottom: 0;
+  left: 280px; /* Width of expanded sidebar */
+  right: 0;
+  width: calc(100% - 280px) !important;
+  padding: 20px;
   overflow-y: auto;
-  border-top: 5px solid #4a6cfa;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
+  background-color: #f5f6fa;
+  
+  /* Identical transition properties to EventBooking */
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: left, width;
+  
+  /* Prevent rendering issues during transition */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+  z-index: 10;
 }
 
-@media (max-width: 1200px) {
-  .booking-form {
-    width: 320px;
+/* When sidebar is collapsed - Use only body class */
+body.sidebar-collapsed .transport-content-wrapper {
+  left: 90px !important;
+  width: calc(100% - 90px) !important;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fix for mobile devices - prevent any transition issues */
+@media (max-width: 900px) {
+  .transport-content-wrapper,
+  .transport-content-wrapper.transport-expanded {
+    left: 0 !important;
+    width: 100% !important;
+    transition: none !important; /* Disable transitions on mobile */
   }
 }
 
-@media (max-width: 1024px) {
-  .booking-form {
-    width: 100%;
-    height: auto;
-  }
+/* Ensure child containers don't affect the transition */
+.transport-calendar-container,
+.transport-header,
+.transport-calendar-main {
+  transition: none !important;
 }
 
-@media (max-width: 600px) {
-  .booking-form {
-    padding: 1rem;
-  }
+/* Ensure the calendar has proper transition */
+.transport-calendar-container {
+  width: 100% !important;
+  transition: none !important;
 }
 
-.form-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-  color: #4a6cfa;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #4a6cfa;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.user-info-container {
+/* Booking Form Modal - Updated to display properly without blur */
+.transport-booking-form-modal {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
-  margin-bottom: 1rem;
-  padding: 1rem;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #4a6cfa 0%, #6a5acd 100%);
-  color: white;
+  justify-content: center;
+  z-index: 10000 !important; /* Higher z-index to display above content */
+  animation: transport-fadeIn 0.3s;
+  pointer-events: all !important;
 }
 
-.user-photo {
-  width: 50px;
-  height: 50px;
+.transport-booking-form-modal.transport-closing {
+  animation: transport-fadeOut 0.3s;
+}
+
+/* CRITICAL FIX: Backdrop with proper z-index and pointer events */
+.transport-booking-form-backdrop {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3); /* Lighter background, but still visible */
+  z-index: 9999 !important;
+  pointer-events: all !important;
+}
+
+.transport-booking-form-container {
+  position: relative !important;
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  z-index: 10001 !important;
+  animation: transport-slideUp 0.3s;
+  pointer-events: all !important; /* Ensures form is interactive */
+}
+
+/* Ensure the animation doesn't affect visibility */
+.transport-booking-form-modal.transport-closing .transport-booking-form-container {
+  z-index: 10001 !important;
+  pointer-events: all !important;
+}
+
+/* Transport header style */
+.transport-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.transport-header h1 {  
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: transparent;
+  letter-spacing: 0.3px;
+  background-image: linear-gradient(135deg, #2D3C5E, #1e3a8a);
+  -webkit-background-clip: text;
+  background-clip: text;
+
+}
+
+/* UPDATED: Transport calendar container - More adaptive for 1366x768 */
+.transport-calendar-container {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  height: calc(100vh - 170px); /* Default height calculation */
+  width: 100%; /* Full width */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease-in-out;
+}
+
+.transport-full-width {
+  width: 100%;
+}
+
+.transport-calendar-main {
+  flex: 1;
+  overflow: hidden;
+  padding: 0; /* Remove padding to maximize space */
+}
+
+/* UPDATED: Namespaced Full Calendar styles for transport module - Modern design */
+.transport-content-wrapper .fc {
+  height: 100% !important;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --fc-border-color: #e2e8f0;
+  --fc-event-border-color: transparent;
+}
+
+.transport-content-wrapper .fc-theme-standard td,
+.transport-content-wrapper .fc-theme-standard th {
+  border-color: #e2e8f0;
+}
+
+.transport-content-wrapper .fc-daygrid-day.fc-day-today {
+  background-color: #eef5ff; /* Lighter blue highlight */
+}
+
+/* UPDATED: Header cells - Match purple from screenshot */
+.transport-content-wrapper .fc-col-header-cell {
+  background-color: #7351e6; /* Purple color from screenshot */
+  color: white;
+  padding: 8px 0;
+}
+
+.transport-content-wrapper .fc-col-header-cell-cushion {
+  padding: 10px 4px;
+  color: white;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* UPDATED: Event styling - Better visibility */
+.transport-content-wrapper .fc-event {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 0.8rem;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Status-based colors to match screenshot */
+.transport-content-wrapper .fc-event.fc-event-draggable[style*="background-color: green"] {
+  background-color: #28a745 !important; /* Approved */
+}
+
+.transport-content-wrapper .fc-event.fc-event-draggable[style*="background-color: orange"] {
+  background-color: #ffc107 !important; /* Pending */
+}
+
+.transport-content-wrapper .fc-event.fc-event-draggable[style*="background-color: red"] {
+  background-color: #dc3545 !important; /* Denied */
+}
+
+/* Button styles */
+.transport-new-booking-button {
+  background-color: #2ecc71; /* Green color from screenshot */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 15px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 5px rgba(46, 204, 113, 0.25);
+}
+
+.transport-new-booking-button:hover {
+  background-color: #27ae60;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
+}
+
+/* Modal for booking form */
+.transport-booking-form-modal {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000 !important; /* Extremely high z-index */
+  pointer-events: all !important;
+}
+
+.transport-booking-form-modal.transport-closing {
+  animation: transport-fadeOut 0.3s;
+}
+
+.transport-booking-form-backdrop {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3); /* Lighter background, but still visible */
+  z-index: 9999 !important;
+  pointer-events: all !important;
+}
+
+.transport-booking-form-container {
+  position: relative !important;
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  z-index: 10001 !important; /* Higher than the modal itself */
+  pointer-events: all !important;
+  transform: translateZ(0); /* Hardware acceleration */
+}
+
+.transport-booking-form-modal.transport-closing .transport-booking-form-container {
+  animation: transport-slideDown 0.3s;
+}
+
+.transport-booking-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.transport-booking-form-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #2D3C5E;
+}
+
+.transport-close-button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 10003 !important;
+  pointer-events: auto !important;
+}
+
+.transport-booking-form {
+  padding: 20px;
+}
+
+/* User info section in booking form */
+.transport-user-info-container {
+  display: flex;
+  align-items: center;
+  background-color: #4a6cfa;
+  padding: 15px;
+  border-radius: 10px;
+  color: white;
+  margin-bottom: 20px;
+}
+
+.transport-user-photo {
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   overflow: hidden;
-  margin-right: 1rem;
-  border: 2px solid white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  margin-right: 15px;
+  border: 3px solid white;
+  background-color: white;
 }
 
-.user-photo img {
+.transport-user-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.user-details {
+.transport-user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.transport-user-detail {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.transport-detail-icon {
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+/* Form group styles */
+.transport-form-group {
+  margin-bottom: 20px;
+}
+
+.transport-form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.transport-form-group input,
+.transport-form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.transport-form-group input.transport-error,
+.transport-form-group select.transport-error {
+  border-color: #e53e3e;
+}
+
+/* Time inputs container */
+.transport-time-inputs {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.transport-time-separator {
+  font-weight: 500;
+}
+
+.transport-location-select {
   flex: 1;
 }
 
-.user-detail {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.15rem;
-  color: white;
-}
-
-.detail-icon {
-  margin-right: 0.5rem;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.875rem;
-}
-
-.form-group {
-  margin-bottom: 1.2rem;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-@media (max-width: 600px) {
-  .form-group {
-    margin-bottom: 1rem;
-  }
-}
-
-.form-group label {
-  margin-bottom: 0.4rem;
-  font-weight: 500;
-  font-size: 0.97rem;
-}
-
-.input-icon {
-  margin-right: 0.5rem;
-  font-size: 1rem;
-  flex-shrink: 0;
-}
-
-.time-inputs {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-}
-
-@media (max-width: 600px) {
-  .time-inputs {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-}
-
-.time-separator {
-  color: #6c757d;
-  padding: 0 0.25rem;
-  font-weight: 500;
-  font-size: 1.1rem;
-}
-
-input,
-select,
-textarea {
+/* Submit button */
+.transport-submit-button {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #dde2e8;
-  border-radius: 8px;
-  font-size: 0.97rem;
-  color: #2c3e50;
-  transition: all 0.2s ease;
-  background-color: #f9fafc;
-  margin: 0;
-  box-sizing: border-box;
-}
-
-input[type="date"],
-select {
-  min-width: 0;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-  border-color: #4a6cfa;
-  box-shadow: 0 0 0 3px rgba(74, 108, 250, 0.15);
-  background-color: white;
-}
-
-input.error,
-select.error,
-textarea.error {
-  border-color: #f44336;
-  background-color: rgba(244, 67, 54, 0.05);
-}
-
-.error-message {
-  color: #f44336;
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
-}
-
-.success-message {
-  color: #34d399;
-  text-align: center;
-  margin-top: 1rem;
-  padding: 0.5rem;
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(56, 142, 60, 0.1));
-  border-radius: 8px;
-  font-weight: 500;
-}
-
-.weekend-warning {
-  color: #856404;
-  background-color: #fff3cd;
-  border: 1px solid #ffeeba;
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 13px;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.submit-button {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #34d399, #388e3c);
+  padding: 12px;
+  background-color: #4a6cfa;
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: 6px;
+  font-size: 16px;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 20px;
 }
 
-.submit-button:hover {
-  background: linear-gradient(135deg, #4CAF50, #2e7d32);
-  transform: translateY(-3px);
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+.transport-submit-button:hover {
+  background-color: #3a5cfa;
 }
 
-.submit-button:active {
-  transform: translateY(-1px);
-}
-
-.event-tooltip {
-  position: fixed;
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
-  z-index: 9999;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  max-width: 500px;
-  pointer-events: none;
-  border-top: 3px solid #4a6cfa;
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.tooltip-header {
-  font-weight: 600;
-  color: #4a6cfa;
-  margin-bottom: 0.5rem;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-size: 0.9rem;
-}
-
-.tooltip-row {
+.transport-success-message {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #c6f6d5;
+  color: #22543d;
+  border-radius: 6px;
   display: flex;
-  margin-bottom: 0.25rem;
-  color: #6c757d;
-  font-size: 0.875rem;
+  align-items: center;
 }
 
-.tooltip-label {
-  font-weight: 500;
-  margin-right: 0.5rem;
-  width: 80px;
-  color: #6a5acd;
-}
-
-.tooltip-status {
-  display: inline-block;
-  margin-top: 0.1rem;
-  padding: 0.10rem 8.1rem;
+/* Calendar event styles */
+.transport-calendar-event {
+  padding: 4px 8px;
   border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* BUT allow the + button to be clickable */
+.transport-day-book-button,
+.transport-day-book-button button {
+  pointer-events: auto !important;
+}
+
+/* IMPROVED: Day booking button with enhanced hover effects */
+.transport-day-book-button {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  opacity: 0; /* Hidden by default */
+  transform: scale(0.8);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 3; /* Ensure button appears above day contents */
+  pointer-events: auto; /* Make button clickable */
+}
+
+.transport-day-book-button button {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: #22c55e;
+  color: white;
+  border: none;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+
+/* Show button ONLY when hovering over the day cell */
+.fc-daygrid-day:hover .transport-day-book-button {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Enhanced hover effect for the button itself */
+.transport-day-book-button button:hover {
+  background-color: #16a34a;
+  transform: scale(1.15);
+  box-shadow: 0 3px 7px rgba(0,0,0,0.25);
+}
+
+/* Ensure day cells have proper positioning context */
+.fc .fc-daygrid-day {
+  position: relative !important;
+}
+
+/* Make cells themselves non-clickable to prevent accidental clicks */
+.fc-daygrid-day-frame {
+  pointer-events: none;
+}
+
+/* IMPROVED: Calendar container sizing for 1366x768 resolution */
+@media screen and (min-width: 1366px) and (max-width: 1599px) {
+  .transport-calendar-container {
+    height: calc(100vh - 160px) !important; /* Slightly taller */
+    padding: 10px !important; /* Reduced padding */
+  }
+  
+  /* Reduce calendar toolbar spacing */
+  .transport-content-wrapper .fc .fc-toolbar {
+    margin-bottom: 5px !important;
+    row-gap: 5px !important;
+  }
+  
+  /* Optimize day cell heights for HD resolution */
+  .transport-content-wrapper .fc .fc-daygrid-day-frame {
+    min-height: 55px !important;
+    padding: 2px !important;
+  }
+  
+  /* Optimize calendar header height to save vertical space */
+  .transport-content-wrapper .fc-col-header-cell {
+    padding: 4px 0 !important;
+  }
+  
+  .transport-content-wrapper .fc-col-header-cell-cushion {
+    padding: 8px 4px !important;
+    font-size: 0.78rem !important;
+  }
+  
+  /* Make day numbers more compact */
+  .transport-content-wrapper .fc-daygrid-day-number {
+    padding: 4px !important;
+    font-size: 0.85rem !important;
+  }
+  
+  /* Better handling of events in small cells */
+  .transport-content-wrapper .fc-event {
+    padding: 2px 4px !important;
+    font-size: 0.7rem !important;
+  }
+  
+  /* Adapt header to take less space */
+  .transport-header {
+    padding: 12px 20px !important;
+    margin-bottom: 10px !important;
+  }
+  
+  .transport-header h1 {
+    font-size: 18px !important;
+  }
+  
+  /* Reduce button size */
+  .transport-new-booking-button {
+    padding: 6px 12px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  /* Optimize more link appearance */
+  .transport-content-wrapper .fc-daygrid-more-link {
+    font-size: 0.7rem !important;
+    margin-top: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Ensure all 7 days of the week are visible */
+  .transport-content-wrapper .fc-scrollgrid-sync-table {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+  
+  /* Ensure week view also displays correctly */
+  .transport-content-wrapper .fc-timeGridWeek-view .fc-scrollgrid-sync-table {
+    min-width: 800px !important;
+  }
+}
+
+/* ADDED: Ensure week and day views are properly scrollable */
+.transport-content-wrapper .fc-timeGridWeek-view,
+.transport-content-wrapper .fc-timeGridDay-view {
+  overflow-y: auto !important;
+  height: 100% !important;
+  min-height: 500px;
+  scroll-behavior: smooth;
+}
+
+.transport-content-wrapper .fc-scroller {
+  overflow-y: visible !important;
+  height: auto !important;
+}
+
+/* Allow scrolling for time grid views */
+.transport-content-wrapper .fc-time-grid-container {
+  height: auto !important;
+  min-height: 500px;
+  overflow-y: visible !important;
+}
+
+/* Ensure the calendar container properly handles scrolling */
+.transport-calendar-main {
+  overflow: auto !important;
+  position: relative;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* Fix potential issues with view height in different resolutions */
+@media screen and (min-width: 1366px) and (max-width: 1599px) {
+  /* ...existing code... */
+  
+  /* Improve scrolling for week/day views on HD screens */
+  .transport-content-wrapper .fc-timeGridWeek-view,
+  .transport-content-wrapper .fc-timeGridDay-view {
+    min-height: 450px;
+  }
+  
+  /* Ensure scrollbar visibility on HD screens */
+  .transport-calendar-main::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .transport-calendar-main::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  .transport-calendar-main::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+  }
+  
+  .transport-calendar-main::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+}
+
+/* Fix for mobile views */
+@media (max-width: 768px) {
+  .transport-content-wrapper .fc-timeGridWeek-view,
+  .transport-content-wrapper .fc-timeGridDay-view {
+    min-height: 400px;
+  }
+  
+  /* Remove unnecessary max-height restrictions on mobile */
+  .transport-calendar-container {
+    max-height: none !important;
+  }
+}
+
+/* Smart tooltip positioning for edge cases */
+.transport-event-tooltip.transport-edge-left {
+  left: 10px !important; /* Force alignment to left edge with padding */
+}
+
+.transport-event-tooltip.transport-edge-right {
+  right: 10px !important; /* Force alignment to right edge with padding */
+  left: auto !important; /* Override any left positioning */
+}
+
+.transport-event-tooltip.transport-edge-top {
+  top: 80px !important; /* Force alignment below header with padding */
+}
+
+.transport-event-tooltip.transport-edge-bottom {
+  bottom: 10px !important; /* Force alignment to bottom edge with padding */
+  top: auto !important; /* Override any top positioning */
+}
+
+/* Weekend notification */
+.transport-navbar-weekend-notification {
+  position: fixed;
+  top: 75px;
+  right: 20px;
+  left: auto;
+  background: linear-gradient(to right, #f59e0b, #d97706);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
+  z-index: 1001;
+  max-width: 300px;
+  animation: transport-slideInRight 0.3s ease-out;
+}
+
+/* UPDATED: Weekend notification positioned on right side with animation from right */
+.transport-overlay-weekend-notification {
+  position: fixed;
+  top: 90px; /* Position below navbar */
+  right: 20px;
+  background: linear-gradient(to right, #f59e0b, #d97706);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35); /* Enhanced shadow */
+  z-index: 10100; /* Higher than blur effect and backdrop */
+  max-width: 300px;
+  animation: transport-slideInRight 0.3s ease-out;
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border */
+}
+
+.transport-notification-icon {
+  font-size: 1.5rem;
+}
+
+.transport-notification-text {
+  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Enhanced blur background effect when booking form is open */
+.transport-bg-blur-active {
+  position: relative;
+}
+
+.transport-bg-blur-active::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  backdrop-filter: blur(8px); /* Increased blur amount */
+  background-color: rgba(0, 0, 0, 0.3); /* 30% opacity black background */
+  z-index: 1000; /* Layer between content and modal */
+  pointer-events: none;
+}
+
+/* Animation for sliding in from right */
+@keyframes transport-slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes transport-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes transport-fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes transport-slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* FIXED TOOLTIP STYLING - Ensures visibility for weekend bookings */
+.bus-event-tooltip {
+  position: fixed !important;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  padding: 12px;
+  width: 260px;
+  font-size: 0.9rem;
+  border: 1px solid rgba(0,0,0,0.1);
+  z-index: 10050 !important; 
+  pointer-events: none;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transition: opacity 0.2s; 
+  /* Prevent tooltip from being cut off */
+  max-width: 90vw;
+  overflow: visible;
+}
+
+/* Improved tooltip header with better text wrapping */
+.bus-tooltip-header {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4e73df;
+  margin-bottom: 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #f0f0f0;
+  word-break: break-word; /* Allow long text to wrap */
+}
+
+/* Improved tooltip row with better text wrapping */
+.bus-tooltip-row {
+  display: flex;
+  flex-wrap: wrap; /* Allow content to wrap on narrow tooltips */
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* Bus tooltip label */
+.bus-tooltip-label {
+  font-weight: 500;
+  color: #6c757d;
+  margin-right: 8px;
+  flex-shrink: 0;
+  min-width: 45px;
+}
+
+/* Bus tooltip status indicator */
+.bus-tooltip-status {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 600;
-  text-transform: uppercase;
+  text-align: center;
+  margin-top: 6px;
+  width: 100%;
 }
 
-.tooltip-status.approved {
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(46, 125, 50, 0.1));
-  color: #2e7d32;
+.bus-tooltip-status.bus-approved {
+  background-color: #dcfce7;
+  color: #16a34a;
 }
 
-.tooltip-status.pending {
-  background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(230, 81, 0, 0.1));
-  color: #e65100;
+.bus-tooltip-status.bus-pending {
+  background-color: #fef9c3;
+  color: #ca8a04;
 }
 
-.tooltip-status.denied {
-  background: linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(183, 28, 28, 0.1));
-  color: #b71c1c;
+.bus-tooltip-status.bus-denied {
+  background-color: #fee2e2;
+  color: #dc2626;
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Fix debug styles for tooltips */
+.bus-tooltip-debug-outline {
+  outline: 2px solid red !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
-::-webkit-scrollbar-track {
-  background: #e0e0e0;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-  border: 2px solid #e0e0e0;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #666;
-}
-
-@media (max-width: 768px) {
-  .content-wrapper {
-    padding: 1rem;
+/* Auto-hiding scrollbars - only visible when scrolling or hovering */
+.transport-calendar-container,
+.transport-calendar-main,
+.transport-content-wrapper .fc-scroller,
+.transport-content-wrapper .fc-time-grid-container,
+.transport-content-wrapper .fc-timeGridWeek-view,
+.transport-content-wrapper .fc-timeGridDay-view {
+  /* Hide scrollbar by default for WebKit (Chrome, Safari, Edge) */
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    background-color: transparent;
   }
-  .calendar-container {
-    gap: 1rem;
+
+  &::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
   }
+
+  /* Hide scrollbar by default for Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
 }
 
+/* Show scrollbar on hover/active scrolling for WebKit */
+.transport-calendar-container:hover::-webkit-scrollbar-thumb,
+.transport-calendar-main:hover::-webkit-scrollbar-thumb,
+.transport-content-wrapper .fc-scroller:hover::-webkit-scrollbar-thumb,
+.transport-content-wrapper .fc-time-grid-container:hover::-webkit-scrollbar-thumb,
+.transport-content-wrapper .fc-timeGridWeek-view:hover::-webkit-scrollbar-thumb,
+.transport-content-wrapper .fc-timeGridDay-view:hover::-webkit-scrollbar-thumb,
+.transport-calendar-container.scrolling::-webkit-scrollbar-thumb,
+.transport-calendar-main.scrolling::-webkit-scrollbar-thumb,
+.transport-content-wrapper .fc-scroller.scrolling::-webkit-scrollbar-thumb,
+.transport-content-wrapper .fc-time-grid-container.scrolling::-webkit-scrollbar-thumb,
+.transport-content-wrapper .fc-timeGridWeek-view.scrolling::-webkit-scrollbar-thumb,
+.transport-content-wrapper .fc-timeGridDay-view.scrolling::-webkit-scrollbar-thumb {
+  background-color: rgba(180, 180, 180, 0.5);
+}
 
+/* Show scrollbar on hover/active scrolling for Firefox */
+.transport-calendar-container:hover,
+.transport-calendar-main:hover,
+.transport-content-wrapper .fc-scroller:hover,
+.transport-content-wrapper .fc-time-grid-container:hover,
+.transport-content-wrapper .fc-timeGridWeek-view:hover,
+.transport-content-wrapper .fc-timeGridDay-view:hover,
+.transport-calendar-container.scrolling,
+.transport-calendar-main.scrolling,
+.transport-content-wrapper .fc-scroller.scrolling,
+.transport-content-wrapper .fc-time-grid-container.scrolling,
+.transport-content-wrapper .fc-timeGridWeek-view.scrolling,
+.transport-content-wrapper .fc-timeGridDay-view.scrolling {
+  scrollbar-color: rgba(180, 180, 180, 0.5) transparent;
+}
 
+/* More visible when actively scrolling for WebKit */
+.transport-calendar-container::-webkit-scrollbar-thumb:active,
+.transport-calendar-main::-webkit-scrollbar-thumb:active,
+.transport-content-wrapper .fc-scroller::-webkit-scrollbar-thumb:active,
+.transport-content-wrapper .fc-time-grid-container::-webkit-scrollbar-thumb:active,
+.transport-content-wrapper .fc-timeGridWeek-view::-webkit-scrollbar-thumb:active,
+.transport-content-wrapper .fc-timeGridDay-view::-webkit-scrollbar-thumb:active {
+  background-color: rgba(140, 140, 140, 0.7);
+}
 
+/* More visible when actively scrolling for Firefox */
+.transport-calendar-container:active,
+.transport-calendar-main:active,
+.transport-content-wrapper .fc-scroller:active,
+.transport-content-wrapper .fc-time-grid-container:active,
+.transport-content-wrapper .fc-timeGridWeek-view:active,
+.transport-content-wrapper .fc-timeGridDay-view:active {
+  scrollbar-color: rgba(140, 140, 140, 0.7) transparent;
+}
+
+/* Ensure IE uses auto-hiding scrollbars */
+.transport-calendar-container,
+.transport-calendar-main,
+.transport-content-wrapper .fc-scroller,
+.transport-content-wrapper .fc-time-grid-container,
+.transport-content-wrapper .fc-timeGridWeek-view,
+.transport-content-wrapper .fc-timeGridDay-view {
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+}

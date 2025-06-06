@@ -1,4 +1,3 @@
-
 .popup-overlay {
     position: fixed;
     top: 0;
@@ -49,6 +48,18 @@
   .popup-message {
     color: #666;
     margin-bottom: 1.5rem;
+  }
+  
+  .popup-content h3 {
+    color: #333;
+    margin: 0 0 0.5rem;
+    font-size: 1.5rem;
+  }
+  
+  .popup-content p {
+    color: #666;
+    margin: 0;
+    font-size: 1.1rem;
   }
   
   @keyframes fadeIn {

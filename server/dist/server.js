@@ -13,9 +13,13 @@ const busBooking = require('./routes/busroute');
 const CourseRegistrationRoute = require('./routes/CourseRegistrationRoute');
 const PayCourseRoute = require('./routes/PayCourseRoute');
 const lecturerRegistrationRoutes = require('./routes/lecturerRegistration');
+const studentRoutes = require('./routes/studentRoutes'); // Make sure this is imported
 const {
   requestMonitor
 } = require('./utils/monitorServer');
+
+// Import the batch routes
+const batchRoutes = require('./routes/batchRoutes');
 
 // Initialize Express app
 const app = express();
@@ -78,6 +82,8 @@ app.use('/api/busBookings', busBooking);
 app.use('/api/CourseRegistrationRoute', CourseRegistrationRoute);
 app.use('/api/course-payments', PayCourseRoute);
 app.use('/api/lecturer-registration', lecturerRegistrationRoutes);
+app.use('/api/students', studentRoutes); // Make sure this route is registered
+app.use('/api/batches', batchRoutes); // Add batch routes
 
 // Stats endpoint (admin only)
 app.get('/api/stats', (req, res) => {

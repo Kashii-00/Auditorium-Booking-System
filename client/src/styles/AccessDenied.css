@@ -1,31 +1,47 @@
 .access-denied-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.access-denied-card {
   text-align: center;
-  padding: 150px 20px;
-  color: #721c24;
-  background-color: #f8d7da;
-  border-radius: 18px;
-  margin: 20px auto;
-  max-width: 600px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  position: relative;
-  z-index: 1;
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 100%;
+}
+
+.access-denied-card h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #dc3545;
+  margin-bottom: 16px;
+}
+
+.access-denied-card p {
+  font-size: 16px;
+  color: #6c757d;
+  margin-bottom: 24px;
 }
 
 .access-denied-button {
-  color: #721c24;
-  text-decoration: underline;
-  margin-top: 20px;
-  display: inline-block;
-  cursor: pointer;
-  background: none;
+  background-color: #007bff;
+  color: #ffffff;
+  padding: 12px 20px;
   border: none;
-  padding: 10px 20px;
-  font: inherit;
-  border-radius: 5px;
-  transition: background-color 0.3s;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .access-denied-button:hover {
-  background-color: rgba(114, 28, 36, 0.1);
+  background-color: #0056b3;
 }
 
