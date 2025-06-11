@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Trash2, GraduationCap, Calendar, AlertTriangle } from "lucide-react"
+import LoadingScreen from "../LoadingScreen/LoadingScreen"
 
 const BatchLecturers = React.memo(() => {
   const { id } = useParams()
@@ -60,7 +61,7 @@ const BatchLecturers = React.memo(() => {
   // Fetch batch and lecturer data
   const fetchBatchData = useCallback(async () => {
     try {
-      const batchData = await authRequest("get", `http://10.70.4.34:5003/api/batches/${id}`)
+      const batchData = await authRequest("get", `http://10.70.4.34 :5003/api/batches/${id}`)
       setBatch(batchData)
     } catch (err) {
       console.error("Error fetching batch data:", err)
@@ -71,7 +72,7 @@ const BatchLecturers = React.memo(() => {
   const fetchBatchLecturers = useCallback(async () => {
     try {
       setLoading(true)
-      const lecturersData = await authRequest("get", `http://10.70.4.34:5003/api/batches/${id}/lecturers`)
+      const lecturersData = await authRequest("get", `http://10.70.4.34 :5003/api/batches/${id}/lecturers`)
       setLecturers(lecturersData || [])
       setError(null)
     } catch (err) {
@@ -104,7 +105,7 @@ const BatchLecturers = React.memo(() => {
 
       const response = await authRequest(
         "delete",
-        `http://10.70.4.34:5003/api/batches/${id}/lecturers/${lecturerToDelete.id}`,
+        `http://10.70.4.34 :5003/api/batches/${id}/lecturers/${lecturerToDelete.id}`,
       )
 
       if (response.success) {
@@ -139,7 +140,7 @@ const BatchLecturers = React.memo(() => {
 
       const response = await authRequest(
         "put",
-        `http://10.70.4.34:5003/api/batches/${id}/lecturers/${currentLecturer.id}`,
+        `http://10.70.4.34 :5003/api/batches/${id}/lecturers/${currentLecturer.id}`,
         { module: moduleValue },
       )
 
@@ -173,18 +174,7 @@ const BatchLecturers = React.memo(() => {
 
   // Render loading state
   if (loading && !lecturers.length) {
-    return (
-      <div
-        className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 ${sidebarCollapsed ? "ml-16" : "ml-64"} transition-all duration-300`}
-      >
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <FaSpinner className="animate-spin text-4xl text-blue-500" />
-            <p className="text-lg font-medium text-gray-600">Loading batch lecturers...</p>
-          </div>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="Loading batch lecturers..." />
   }
 
   return (

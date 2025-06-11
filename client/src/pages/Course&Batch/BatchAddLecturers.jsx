@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { FaArrowLeft, FaPlus, FaUserTie, FaSpinner, FaSearch } from "react-icons/fa"
 import { Users, GraduationCap, Calendar } from "lucide-react"
+import LoadingScreen from "../LoadingScreen/LoadingScreen"
 
 const BatchAddLecturers = React.memo(({ onLecturersAdded }) => {
   const { id: batchId } = useParams()
@@ -54,7 +55,7 @@ const BatchAddLecturers = React.memo(({ onLecturersAdded }) => {
   // Fetch batch data
   const fetchBatch = useCallback(async () => {
     try {
-      const batchData = await authRequest("get", `http://10.70.4.34:5003/api/batches/${batchId}`)
+      const batchData = await authRequest("get", `http://10.70.4.34 :5003/api/batches/${batchId}`)
       setBatch(batchData)
     } catch (err) {
       console.error("Error fetching batch:", err)
@@ -70,8 +71,8 @@ const BatchAddLecturers = React.memo(({ onLecturersAdded }) => {
     setError("")
 
     try {
-      const allLecturers = await authRequest("get", "http://10.70.4.34:5003/api/lecturer-registration")
-      const assigned = await authRequest("get", `http://10.70.4.34:5003/api/batches/${batchId}/lecturers`)
+      const allLecturers = await authRequest("get", "http://10.70.4.34 :5003/api/lecturer-registration")
+      const assigned = await authRequest("get", `http://10.70.4.34 :5003/api/batches/${batchId}/lecturers`)
 
       const assignedIds = assigned.map((l) => l.id)
       const filtered = allLecturers.filter((l) => {
@@ -126,7 +127,7 @@ const BatchAddLecturers = React.memo(({ onLecturersAdded }) => {
       setAdding(true)
       setError("")
 
-      await authRequest("post", `http://10.70.4.34:5003/api/batches/${batchId}/lecturers`, {
+      await authRequest("post", `http://10.70.4.34 :5003/api/batches/${batchId}/lecturers`, {
         lecturer_ids: selected,
       })
 
@@ -167,18 +168,7 @@ const BatchAddLecturers = React.memo(({ onLecturersAdded }) => {
   }, [])
 
   if (loading && !lecturers.length) {
-    return (
-      <div
-        className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 ${sidebarCollapsed ? "ml-16" : "ml-64"} transition-all duration-300`}
-      >
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <FaSpinner className="animate-spin text-4xl text-purple-500" />
-            <p className="text-lg font-medium text-gray-600">Loading available lecturers...</p>
-          </div>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="Loading available lecturers..." />
   }
 
   return (

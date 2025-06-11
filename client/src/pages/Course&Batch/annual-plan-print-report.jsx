@@ -22,6 +22,7 @@ import {
   Award,
   Building,
 } from "lucide-react"
+import LoadingScreen from "../LoadingScreen/LoadingScreen"
 
 const AnnualPlanPrintReport = () => {
   const [searchParams] = useSearchParams()
@@ -49,14 +50,14 @@ const AnnualPlanPrintReport = () => {
         setLoading(true)
 
         // Fetch course details
-        const coursesData = await authRequest("get", "http://10.70.4.34:5003/api/CourseRegistrationRoute")
+        const coursesData = await authRequest("get", "http://10.70.4.34 :5003/api/CourseRegistrationRoute")
         const selectedCourse = coursesData.find((c) => c.id.toString() === courseId)
         setCourse(selectedCourse)
 
         // Fetch batches
         const batchesData = await authRequest(
           "get",
-          `http://10.70.4.34:5003/api/batches?course_id=${courseId}&year=${year}`,
+          `http://10.70.4.34 :5003/api/batches?course_id=${courseId}&year=${year}`,
         )
 
         if (Array.isArray(batchesData)) {
@@ -66,9 +67,9 @@ const AnnualPlanPrintReport = () => {
           const detailsPromises = batchesData.map(async (batch) => {
             try {
               const [batchDetail, students, lecturers] = await Promise.all([
-                authRequest("get", `http://10.70.4.34:5003/api/batches/${batch.id}`),
-                authRequest("get", `http://10.70.4.34:5003/api/batches/${batch.id}/students`).catch(() => []),
-                authRequest("get", `http://10.70.4.34:5003/api/batches/${batch.id}/lecturers`).catch(() => []),
+                authRequest("get", `http://10.70.4.34 :5003/api/batches/${batch.id}`),
+                authRequest("get", `http://10.70.4.34 :5003/api/batches/${batch.id}/students`).catch(() => []),
+                authRequest("get", `http://10.70.4.34 :5003/api/batches/${batch.id}/lecturers`).catch(() => []),
               ])
 
               return {
@@ -155,14 +156,7 @@ const AnnualPlanPrintReport = () => {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-semibold">Loading report data...</p>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="Loading report data..." />
   }
 
   if (error) {

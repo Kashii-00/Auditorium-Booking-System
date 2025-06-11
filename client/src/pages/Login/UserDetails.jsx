@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useMemo } from "react"
+import { createPortal } from "react-dom"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import {
   FaSearch,
@@ -59,6 +60,7 @@ const UserDetails = () => {
   const [statusFilter, setStatusFilter] = useState("all")
   const [isLoading, setIsLoading] = useState(true)
   const [highlightedUserId, setHighlightedUserId] = useState(null)
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0, visible: false })
 
   const USERS_PER_PAGE = 4
   const currentUserId = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).id : null
@@ -121,7 +123,7 @@ const UserDetails = () => {
       setIsLoading(true)
       // Add minimum loading time to show the loading screen
       const [userData] = await Promise.all([
-        authRequest("get", "http://10.70.4.34:5003/api/users"),
+        authRequest("get", "http://10.70.4.34 :5003/api/users"),
         new Promise((resolve) => setTimeout(resolve, 1000)), // Minimum 1 second loading
       ])
       setUsers(userData)
@@ -205,7 +207,7 @@ const UserDetails = () => {
       }
 
       try {
-        await authRequest("delete", `http://10.70.4.34:5003/api/users/${id}`)
+        await authRequest("delete", `http://10.70.4.34 :5003/api/users/${id}`)
         await fetchUsers()
       } catch (err) {
         console.error("Error deleting user:", err)
@@ -255,12 +257,12 @@ const UserDetails = () => {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 transition-all duration-300"
+      className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 transition-all duration-300 overflow-x-hidden"
       style={{
         paddingLeft: sidebarCollapsed ? "50px" : "50px",
       }}
     >
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="p-4 lg:p-6 w-full">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -281,7 +283,7 @@ const UserDetails = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8 w-full">
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20">
             <div className="flex items-center justify-between">
               <div>
@@ -320,7 +322,7 @@ const UserDetails = () => {
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 mb-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 lg:p-6 shadow-lg border border-white/20 mb-4 lg:mb-6 w-full">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search */}
             <div className="flex-1">
@@ -373,7 +375,7 @@ const UserDetails = () => {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden w-full">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -453,27 +455,38 @@ const UserDetails = () => {
                         <td className="px-6 py-4 relative">
                           <span
                             className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold cursor-pointer transition-all duration-200 ${badge.color}`}
-                            onMouseEnter={() => setHoveredRoleIdx(idx)}
-                            onMouseLeave={() => setHoveredRoleIdx(null)}
+                            onMouseEnter={(e) => {
+                              if (accessLevels.length > 0) {
+                                const rect = e.currentTarget.getBoundingClientRect()
+                                const scrollY = window.scrollY
+                                const scrollX = window.scrollX
+
+                                // Calculate optimal position
+                                let x = rect.left + scrollX
+                                let y = rect.bottom + scrollY + 8
+
+                                // Adjust if tooltip would go off-screen
+                                const tooltipWidth = 256 // w-64 = 16rem = 256px
+                                const tooltipHeight = 120 // estimated height
+
+                                if (x + tooltipWidth > window.innerWidth) {
+                                  x = window.innerWidth - tooltipWidth - 16
+                                }
+
+                                if (y + tooltipHeight > window.innerHeight + scrollY) {
+                                  y = rect.top + scrollY - tooltipHeight - 8
+                                }
+
+                                setTooltipPosition({ x, y, visible: true, accessLevels, userIndex: idx })
+                              }
+                            }}
+                            onMouseLeave={() => {
+                              setTooltipPosition({ x: 0, y: 0, visible: false, accessLevels: [], userIndex: null })
+                            }}
                           >
                             <IconComponent className="text-sm" />
                             {badge.label}
                           </span>
-
-                          {/* Access Levels Tooltip */}
-                          {hoveredRoleIdx === idx && accessLevels.length > 0 && (
-                            <div className="absolute left-0 z-50 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-4 text-sm animate-fadeIn">
-                              <div className="font-semibold text-slate-800 mb-2">Access Levels</div>
-                              <div className="space-y-1">
-                                {accessLevels.map((level, i) => (
-                                  <div key={i} className="flex items-center gap-2 text-slate-600">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                    {level.replace("_access", "").replace("_", " ").toUpperCase()}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
                         </td>
                         <td className="px-6 py-4">
                           <span
@@ -569,20 +582,45 @@ const UserDetails = () => {
         </div>
       </div>
 
+      {/* Portal-based Access Levels Tooltip */}
+      {tooltipPosition.visible &&
+        tooltipPosition.accessLevels &&
+        tooltipPosition.accessLevels.length > 0 &&
+        createPortal(
+          <div
+            className="fixed z-[9999] w-64 bg-white border border-slate-200 rounded-xl shadow-2xl p-4 text-sm animate-fadeIn pointer-events-none"
+            style={{
+              left: `${tooltipPosition.x}px`,
+              top: `${tooltipPosition.y}px`,
+            }}
+          >
+            <div className="font-semibold text-slate-800 mb-2">Access Levels</div>
+            <div className="space-y-1">
+              {tooltipPosition.accessLevels.map((level, i) => (
+                <div key={i} className="flex items-center gap-2 text-slate-600">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  {level.replace("_access", "").replace("_", " ").toUpperCase()}
+                </div>
+              ))}
+            </div>
+          </div>,
+          document.body,
+        )}
+
       {/* Animations */}
       <style jsx>{`
         .animate-fadeIn {
           animation: fadeIn 0.2s ease-out;
         }
-        
+
         @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(-10px);
+            transform: translateY(-10px) scale(0.95);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
           }
         }
       `}</style>

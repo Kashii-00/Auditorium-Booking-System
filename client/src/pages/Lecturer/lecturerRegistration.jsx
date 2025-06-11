@@ -38,7 +38,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Award,
-  ArrowLeft,
   Settings,
   Sparkles,
   Star,
@@ -47,6 +46,8 @@ import {
 } from "lucide-react"
 import { authRequest } from "../../services/authService"
 import { useNavigate } from "react-router-dom"
+import LoadingScreen from "../LoadingScreen/LoadingScreen"
+import LecturerView from "./LecturerView"
 
 // Performance CSS with hardware acceleration
 const PERFORMANCE_CSS = `
@@ -216,316 +217,6 @@ const FocusInput = ({ name, value, onChange, error, icon: Icon, ...props }) => {
         } rounded-xl shadow-lg backdrop-blur-sm transition-all duration-300 font-medium`}
         {...props}
       />
-    </div>
-  )
-}
-
-// Enhanced Lecturer Detail View Component
-const LecturerDetailView = ({ lecturer, onBack, onEdit, onDelete, authRequest }) => {
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const [successMessage, setSuccessMessage] = useState("")
-
-  const handleDeleteLecturer = async () => {
-    setDeleteLoading(true)
-    try {
-      if (authRequest) {
-        await authRequest("delete", `http://10.70.4.34:5003/api/lecturer-registration/${lecturer.id}`)
-      }
-      setSuccessMessage("Lecturer deleted successfully")
-      setTimeout(() => {
-        onDelete(lecturer.id)
-        setDeleteLoading(false)
-        setShowDeleteConfirm(false)
-      }, 1500)
-    } catch (err) {
-      console.error("Failed to delete lecturer:", err)
-      alert("Failed to delete lecturer")
-      setDeleteLoading(false)
-    }
-  }
-
-  const academic = lecturer.academic_details || {}
-  const bank = lecturer.bank_details || {}
-  const courses = lecturer.courses || []
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
-      <div className="max-w-5xl mx-auto">
-        {/* Enhanced Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-6">
-            <Button
-              onClick={onBack}
-              variant="outline"
-              className="h-12 px-6 rounded-xl font-bold border-2 hover:bg-slate-50 shadow-lg backdrop-blur-sm bg-white/90"
-            >
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              Back to List
-            </Button>
-            <div>
-              <h1 className="text-4xl font-black bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
-                Lecturer Details
-              </h1>
-              <p className="text-slate-600 font-semibold text-lg mt-2">Complete lecturer information and management</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              onClick={() => onEdit(lecturer.id)}
-              className="h-12 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl shadow-xl font-bold transform hover:scale-105 transition-all duration-300"
-            >
-              <Edit className="h-5 w-5 mr-2" />
-              Edit Details
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="h-12 px-6 rounded-xl shadow-xl font-bold transform hover:scale-105 transition-all duration-300"
-            >
-              <Trash2 className="h-5 w-5 mr-2" />
-              Delete
-            </Button>
-          </div>
-        </div>
-
-        {/* Enhanced Lecturer Info Card */}
-        <Card className="mb-8 border-0 shadow-2xl bg-white/95 backdrop-blur-xl">
-          <CardHeader className="pb-6 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50 rounded-t-2xl border-b border-slate-100">
-            <div className="flex items-center gap-6">
-              <div className="relative">
-                <Avatar className="h-20 w-20 shadow-2xl border-4 border-white">
-                  <AvatarImage src="/placeholder.svg?height=80&width=80" />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-2xl font-black">
-                    {lecturer.full_name
-                      ?.split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-2 border-white"></div>
-              </div>
-              <div className="flex-1">
-                <h2 className="text-3xl font-black bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
-                  {lecturer.full_name}
-                </h2>
-                <p className="text-slate-600 font-semibold text-lg">Lecturer ID: #{lecturer.id}</p>
-                <div className="mt-3">
-                  <Badge
-                    className={`px-4 py-2 rounded-full font-bold text-sm ${
-                      lecturer.status === "Active"
-                        ? "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border-2 border-emerald-300"
-                        : "bg-gradient-to-r from-slate-100 to-gray-100 text-slate-800 border-2 border-slate-300"
-                    }`}
-                  >
-                    {lecturer.status}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="p-8 space-y-8">
-            {/* Contact Information */}
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-lg">
-                  <User className="h-6 w-6 text-blue-600" />
-                </div>
-                <h3 className="text-2xl font-black text-slate-800">Contact Information</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border-2 border-slate-200 shadow-lg">
-                    <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Email Address</Label>
-                    <p className="text-lg font-bold text-slate-900 mt-1">{lecturer.email}</p>
-                  </div>
-                  <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border-2 border-slate-200 shadow-lg">
-                    <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Phone Number</Label>
-                    <p className="text-lg font-bold text-slate-900 mt-1">{lecturer.phone}</p>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border-2 border-slate-200 shadow-lg">
-                    <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Address</Label>
-                    <p className="text-lg font-bold text-slate-900 mt-1">{lecturer.address}</p>
-                  </div>
-                  <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border-2 border-slate-200 shadow-lg">
-                    <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Join Date</Label>
-                    <p className="text-lg font-bold text-slate-900 mt-1">
-                      {lecturer.created_at ? new Date(lecturer.created_at).toLocaleDateString() : "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Separator className="border-slate-200" />
-
-            {/* Course Information */}
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-br from-purple-100 to-violet-100 rounded-xl shadow-lg">
-                  <GraduationCap className="h-6 w-6 text-purple-600" />
-                </div>
-                <h3 className="text-2xl font-black text-slate-800">Course Information</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border-2 border-purple-200 shadow-lg">
-                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Assigned Courses</Label>
-                  <p className="text-lg font-bold text-slate-900 mt-1">
-                    {courses.length > 0 ? courses.map((c) => c.courseName).join(", ") : "No courses assigned"}
-                  </p>
-                </div>
-                <div className="p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border-2 border-purple-200 shadow-lg">
-                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Stream</Label>
-                  <p className="text-lg font-bold text-slate-900 mt-1">{lecturer.stream || "N/A"}</p>
-                </div>
-                <div className="p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border-2 border-purple-200 shadow-lg">
-                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Module</Label>
-                  <p className="text-lg font-bold text-slate-900 mt-1">{lecturer.module || "N/A"}</p>
-                </div>
-              </div>
-            </div>
-
-            <Separator className="border-slate-200" />
-
-            {/* Academic Details */}
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-br from-emerald-100 to-green-100 rounded-xl shadow-lg">
-                  <Award className="h-6 w-6 text-emerald-600" />
-                </div>
-                <h3 className="text-2xl font-black text-slate-800">Academic Details</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 shadow-lg">
-                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">
-                    Highest Qualification
-                  </Label>
-                  <p className="text-lg font-bold text-slate-900 mt-1">{academic.highest_qualification || "N/A"}</p>
-                </div>
-                <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 shadow-lg">
-                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">
-                    Other Qualifications
-                  </Label>
-                  <p className="text-lg font-bold text-slate-900 mt-1">{academic.other_qualifications || "N/A"}</p>
-                </div>
-              </div>
-
-              {lecturer.experience && lecturer.experience.length > 0 && (
-                <div className="mt-6">
-                  <Label className="text-lg font-black text-slate-700 mb-4 block">Professional Experience</Label>
-                  <div className="space-y-4">
-                    {lecturer.experience.map((exp, i) => (
-                      <div
-                        key={i}
-                        className="p-6 bg-gradient-to-r from-slate-50 to-blue-50 rounded-2xl border-2 border-slate-200 shadow-xl"
-                      >
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-xl font-black text-slate-900">{exp.institution}</p>
-                            <p className="text-lg font-semibold text-blue-700">{exp.designation}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-slate-600">
-                              {exp.start} - {exp.end} ({exp.years} years)
-                            </p>
-                            <p className="text-sm font-semibold text-slate-700 mt-1">{exp.nature}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <Separator className="border-slate-200" />
-
-            {/* Bank Details */}
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-br from-amber-100 to-orange-100 rounded-xl shadow-lg">
-                  <CreditCard className="h-6 w-6 text-amber-600" />
-                </div>
-                <h3 className="text-2xl font-black text-slate-800">Bank Details</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 shadow-lg">
-                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Bank Name</Label>
-                  <p className="text-lg font-bold text-slate-900 mt-1">{bank.bank_name || "N/A"}</p>
-                </div>
-                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 shadow-lg">
-                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Branch</Label>
-                  <p className="text-lg font-bold text-slate-900 mt-1">{bank.branch_name || "N/A"}</p>
-                </div>
-                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 shadow-lg">
-                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Account Number</Label>
-                  <p className="text-lg font-bold text-slate-900 mt-1">{bank.account_number || "N/A"}</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Enhanced Delete Confirmation Modal */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
-            <Card className="w-full max-w-md mx-4 border-0 shadow-2xl bg-white/95 backdrop-blur-xl">
-              <CardHeader className="bg-gradient-to-r from-red-50 to-rose-50 rounded-t-2xl border-b border-red-200">
-                <CardTitle className="text-2xl font-black text-red-700 flex items-center gap-3">
-                  <div className="p-2 bg-red-100 rounded-xl">
-                    <AlertCircle className="h-6 w-6 text-red-600" />
-                  </div>
-                  Confirm Deletion
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <p className="text-slate-700 font-semibold text-lg mb-6">
-                  Are you sure you want to delete <strong className="text-slate-900">{lecturer.full_name}</strong>? This
-                  action cannot be undone.
-                </p>
-                <div className="flex gap-4">
-                  <Button
-                    onClick={handleDeleteLecturer}
-                    disabled={deleteLoading}
-                    variant="destructive"
-                    className="flex-1 h-12 rounded-xl font-bold shadow-xl"
-                  >
-                    {deleteLoading ? (
-                      <>
-                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                        Deleting...
-                      </>
-                    ) : (
-                      "Yes, Delete"
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    variant="outline"
-                    className="flex-1 h-12 rounded-xl font-bold border-2 shadow-lg"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Success Message */}
-        {successMessage && (
-          <div className="fixed bottom-6 right-6 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 animate-in slide-in-from-bottom-4 duration-300">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5" />
-              <span className="font-bold">{successMessage}</span>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   )
 }
@@ -1128,16 +819,7 @@ const RegistrationForm = memo(
         </div>
 
         <form onSubmit={handleSubmit}>
-          {isLoading && step === 0 && id && (
-            <div className="flex items-center justify-center py-16">
-              <div className="text-center">
-                <div className="p-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl shadow-xl mb-6 inline-block">
-                  <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-                </div>
-                <span className="text-slate-700 font-semibold text-lg">Loading lecturer data...</span>
-              </div>
-            </div>
-          )}
+          {isLoading && step === 0 && id && <LoadingScreen message="Loading lecturer data..." />}
 
           {renderStep()}
 
@@ -1199,7 +881,7 @@ export default function LecturerManagementFull() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditMode, setIsEditMode] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(isAddDialogOpen)
   const [step, setStep] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -1267,7 +949,7 @@ export default function LecturerManagementFull() {
   const fetchLecturers = async () => {
     try {
       setLoadingLecturers(true)
-      const response = await authRequest("get", "http://10.70.4.34:5003/api/lecturer-registration")
+      const response = await authRequest("get", "http://10.70.4.34 :5003/api/lecturer-registration")
       if (Array.isArray(response)) {
         setLecturers(response)
       }
@@ -1281,7 +963,7 @@ export default function LecturerManagementFull() {
   // Fetch courses
   const fetchCourses = async () => {
     try {
-      const response = await authRequest("get", "http://10.70.4.34:5003/api/lecturer-registration/courses")
+      const response = await authRequest("get", "http://10.70.4.34 :5003/api/lecturer-registration/courses")
       if (Array.isArray(response)) {
         setCourses(response)
       }
@@ -1302,7 +984,7 @@ export default function LecturerManagementFull() {
       const fetchLecturerData = async () => {
         try {
           setIsLoading(true)
-          const lecturerData = await authRequest("get", `http://10.70.4.34:5003/api/lecturer-registration/${id}`)
+          const lecturerData = await authRequest("get", `http://10.70.4.34 :5003/api/lecturer-registration/${id}`)
 
           if (lecturerData) {
             // Parse experience from academic_details if present
@@ -1612,7 +1294,7 @@ export default function LecturerManagementFull() {
     async (lecturerId) => {
       if (window.confirm("Are you sure you want to delete this lecturer?")) {
         try {
-          await authRequest("delete", `http://10.70.4.34:5003/api/lecturer-registration/${lecturerId}`)
+          await authRequest("delete", `http://10.70.4.34 :5003/api/lecturer-registration/${lecturerId}`)
           setLecturers((prev) => prev.filter((l) => l.id !== lecturerId))
           setViewMode("list")
           setSelectedLecturer(null)
@@ -1705,8 +1387,8 @@ export default function LecturerManagementFull() {
 
     try {
       const url = isEditMode
-        ? `http://10.70.4.34:5003/api/lecturer-registration/${editingLecturer}`
-        : "http://10.70.4.34:5003/api/lecturer-registration/"
+        ? `http://10.70.4.34 :5003/api/lecturer-registration/${editingLecturer}`
+        : "http://10.70.4.34 :5003/api/lecturer-registration/"
 
       const method = isEditMode ? "put" : "post"
 
@@ -1805,34 +1487,20 @@ export default function LecturerManagementFull() {
   }
 
   // Show detail view if a lecturer is selected
-  const showDetailView = useCallback(() => {
-    if (viewMode === "detail" && selectedLecturer) {
-      return (
-        <LecturerDetailView
-          lecturer={selectedLecturer}
-          onBack={() => {
-            setViewMode("list")
-            setSelectedLecturer(null)
-          }}
-          onEdit={handleEditLecturer}
-          onDelete={handleDeleteLecturer}
-          authRequest={authRequest}
-        />
-      )
-    }
-    return null
-  }, [viewMode, selectedLecturer, handleEditLecturer, handleDeleteLecturer, authRequest])
+  if (viewMode === "detail" && selectedLecturer) {
+    return <LecturerView />
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-x-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-30 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/50 to-purple-50/50"></div>
       </div>
 
-      <div className="relative z-10 p-6 max-w-7xl mx-auto">
+      <div className="relative z-10 w-full h-full p-4 lg:p-6">
         {/* Enhanced Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-6 w-full">
           <div className="flex items-center gap-6">
             <div className="relative">
               <div className="p-4 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700 rounded-2xl shadow-2xl">
@@ -1849,11 +1517,11 @@ export default function LecturerManagementFull() {
           </div>
           <Dialog open={isAddDialogOpen} onOpenChange={handleDialogOpenChange}>
             <DialogTrigger asChild>
-              <Button className="h-14 px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-800 rounded-2xl shadow-xl font-bold transition-all duration-300 transform hover:scale-105">
-                <Plus className="h-5 w-5 mr-2" />
-                <Sparkles className="h-4 w-4 mr-2" />
+              <button className="h-14 px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-800 rounded-2xl shadow-xl font-bold transition-all duration-300 transform hover:scale-105 text-white flex items-center gap-2">
+                <Plus className="h-5 w-5" />
+                <Sparkles className="h-4 w-4" />
                 Add Lecturer
-              </Button>
+              </button>
             </DialogTrigger>
             <DialogContent className="w-full max-w-5xl max-h-[70vh] overflow-y-auto border-0 shadow-2xl bg-white/95 backdrop-blur-xl mt-10">
               <DialogHeader className="border-b border-slate-200 pb-4">
@@ -1890,7 +1558,7 @@ export default function LecturerManagementFull() {
         </div>
 
         {/* Enhanced Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 fade-in-stagger">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 fade-in-stagger w-full">
           <StatCard
             title="Total Lecturers"
             value={lecturers.length}
@@ -1934,7 +1602,7 @@ export default function LecturerManagementFull() {
         </div>
 
         {/* Enhanced Lecturers Table */}
-        <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-xl">
+        <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-xl w-full">
           <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50 rounded-t-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -1993,12 +1661,7 @@ export default function LecturerManagementFull() {
 
             {/* Enhanced Table */}
             {loadingLecturers ? (
-              <div className="text-center py-16">
-                <div className="p-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl shadow-xl mb-6 inline-block">
-                  <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-                </div>
-                <p className="text-slate-700 font-semibold text-lg">Loading lecturers...</p>
-              </div>
+              <LoadingScreen message="Loading lecturers..." />
             ) : (
               <div className="rounded-2xl border-2 border-slate-200 overflow-hidden shadow-xl bg-white/50 backdrop-blur-sm">
                 <div className="overflow-x-auto">
@@ -2062,10 +1725,11 @@ export default function LecturerManagementFull() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => {
-                                    setSelectedLecturer(lecturer)
-                                    setViewMode("detail")
+                                    console.log("View button clicked for lecturer:", lecturer.id)
+                                    navigate(`/lecturer/${lecturer.id}`)
                                   }}
-                                  className="h-8 w-8 p-0 rounded-xl hover:bg-blue-100 text-blue-600"
+                                  className="h-8 w-8 p-0 rounded-xl hover:bg-blue-100 text-blue-600 transition-all duration-200"
+                                  title="View Details"
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
@@ -2073,7 +1737,8 @@ export default function LecturerManagementFull() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleEditLecturer(lecturer.id)}
-                                  className="h-8 w-8 p-0 rounded-xl hover:bg-emerald-100 text-emerald-600"
+                                  className="h-8 w-8 p-0 rounded-xl hover:bg-emerald-100 text-emerald-600 transition-all duration-200"
+                                  title="Edit Lecturer"
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -2081,7 +1746,8 @@ export default function LecturerManagementFull() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleDeleteLecturer(lecturer.id)}
-                                  className="h-8 w-8 p-0 rounded-xl hover:bg-red-100 text-red-600"
+                                  className="h-8 w-8 p-0 rounded-xl hover:bg-red-100 text-red-600 transition-all duration-200"
+                                  title="Delete Lecturer"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -2109,7 +1775,6 @@ export default function LecturerManagementFull() {
             )}
           </CardContent>
         </Card>
-        {showDetailView()}
       </div>
     </div>
   )

@@ -7,13 +7,27 @@ import List from "../styles/Order.png";
 import Bus from "../styles/bus.png";
 import admin2 from "../styles/Admin1.png";
 import miniLogo from "../styles/MPMA.svg";
-import courseIcon from "../styles/kanban.png";
-import batchIcon from "../styles/List.png";
+import courseIcon from "../styles/Course.png";
+import batchIcon from "../styles/Batch.png";
+import Student from "../styles/Srudent.png";
+import Lecturers from "../styles/Lecturer.png";
 import { FaChevronLeft, FaSignOutAlt, FaCalendarAlt } from 'react-icons/fa';
 
 const Sidebar = ({ user, onLogout }) => {
   // State variables
-  const [selectedSection, setSelectedSection] = useState('audi');
+const getSectionFromPath = (pathname) => {
+  if (pathname.startsWith('/calendar') || pathname.startsWith('/bookings')) return 'audi';
+  if (pathname.startsWith('/bus') || pathname.startsWith('/busbookings')) return 'bus';
+  if (pathname.startsWith('/courseregistration') || pathname.startsWith('/student-registration') || pathname.startsWith('/BatchRegistration') || pathname.startsWith('/annual-plan')) return 'Course';
+  if (pathname.startsWith('/lecturer-registration') || pathname.startsWith('/LMmain') || pathname.startsWith('/LRegistration')) return 'Lecturers';
+  if (pathname.startsWith('/ClassBooking')) return 'ClassRoom';
+  if (pathname.startsWith('/users')) return 'users';
+  return 'audi'; // default
+};
+
+const location = useLocation();
+const [selectedSection, setSelectedSection] = useState(getSectionFromPath(location.pathname));
+
   // Always initialize sidebar state from localStorage (default: expanded/open)
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const stored = localStorage.getItem('sidebarState');
@@ -23,7 +37,7 @@ const Sidebar = ({ user, onLogout }) => {
   const [isPinned, setIsPinned] = useState(false);
   
   const navigate = useNavigate();
-  const location = useLocation();
+
   const TIMEOUT_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
   // Function to determine the default section and navigate to the first accessible page
@@ -54,12 +68,12 @@ const Sidebar = ({ user, onLogout }) => {
   };
 
   // Set the default section and navigate to the first accessible page
-  useEffect(() => {
-    if (user?.role && user.role.length > 0) {
-      const defaultSection = getDefaultSectionAndNavigate();
-      setSelectedSection(defaultSection);
-    }
-  }, [user]);
+    useEffect(() => {
+      // Sync section based on location path on initial load or route change
+      const section = getSectionFromPath(location.pathname);
+      setSelectedSection(section);
+    }, [location.pathname]);
+
 
   // Click outside to collapse the sidebar when not pinned
   useEffect(() => {
@@ -325,6 +339,8 @@ const Sidebar = ({ user, onLogout }) => {
     }
   };
 
+  
+
   // Render navigation links with dropdown
   const renderDropdownNavigation = () => {
     const dropdownOptions = [
@@ -379,6 +395,8 @@ const Sidebar = ({ user, onLogout }) => {
               )}
             </>
           )}
+
+          
           {selectedSection === 'bus' && (
             <>
               {(hasRole('bus_access') || hasRole('SuperAdmin')) && (
@@ -428,7 +446,7 @@ const Sidebar = ({ user, onLogout }) => {
                   to="/student-registration"
                   className={`sidebar-link ${location.pathname === '/student-registration' ? 'active' : ''}`}
                 >
-                  <img src={batchIcon} alt="Student Registration" className="sidebar-icon" />
+                  <img src={Student} alt="Student Registration" className="sidebar-icon" />
                   <span className="sidebar-text">Student Registration</span>
                 </Link>
               )}
@@ -460,6 +478,7 @@ const Sidebar = ({ user, onLogout }) => {
                 to="/lecturer-registration"
                 className={`sidebar-link ${location.pathname === '/lecturer-registration' || location.pathname.includes('/LRegistration/edit/') ? 'active' : ''}`}
               >
+                <img src={Lecturers} alt="Student Registration" className="sidebar-icon" />
                 <span className="sidebar-text">ʟᴇᴄᴛᴜʀᴇʀ ʀᴇɡɪꜱᴛʀᴀᴛɪᴏɴ</span>
               </Link>
             </>

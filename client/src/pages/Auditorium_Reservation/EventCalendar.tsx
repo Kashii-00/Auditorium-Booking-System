@@ -620,7 +620,7 @@ function EventCalendarFullInner({
       const token = localStorage.getItem("token")
 
       const [response] = await Promise.all([
-        axios.get<Event[]>("http://10.70.4.34:5003/api/bookings", {
+        axios.get<Event[]>("http://10.70.4.34 :5003/api/bookings", {
           headers: { Authorization: `Bearer ${token}` },
           timeout: 10000,
         }),
@@ -1160,7 +1160,7 @@ function EventCalendarFullInner({
 
         const token = localStorage.getItem("token")
         await axios.post(
-          "http://10.70.4.34:5003/api/bookings",
+          "http://10.70.4.34 :5003/api/bookings",
           {
             user_id: user.id,
             description,

@@ -83,7 +83,7 @@ export default function StudentView() {
         setLoading(true)
         setError(null)
 
-        const studentData = await authRequest("get", `http://10.70.4.34:5003/api/students/${id}`)
+        const studentData = await authRequest("get", `http://10.70.4.34 :5003/api/students/${id}`)
 
         if (!studentData || !studentData.id) {
           throw new Error("Student not found")
@@ -106,7 +106,7 @@ export default function StudentView() {
     try {
       setDeleteLoading(true)
 
-      await authRequest("delete", `http://10.70.4.34:5003/api/students/${id}`)
+      await authRequest("delete", `http://10.70.4.34 :5003/api/students/${id}`)
 
       setSuccessMessage("Student deleted successfully!")
 
@@ -249,7 +249,7 @@ export default function StudentView() {
             <div className="flex-shrink-0">
               <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
                 {student.photo_path ? (
-                  <AvatarImage src={`http://10.70.4.34:5003/${student.photo_path}`} />
+                  <AvatarImage src={`http://10.70.4.34 :5003/${student.photo_path}`} />
                 ) : (
                   <AvatarImage src="/placeholder.svg?height=96&width=96" />
                 )}
@@ -573,7 +573,7 @@ export default function StudentView() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {student.nic_document_path && (
                     <a
-                      href={`http://10.70.4.34:5003/${student.nic_document_path}`}
+                      href={`http://10.70.4.34 :5003/${student.nic_document_path}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3 hover:bg-gray-100 transition-colors"
@@ -590,7 +590,7 @@ export default function StudentView() {
 
                   {student.passport_document_path && (
                     <a
-                      href={`http://10.70.4.34:5003/${student.passport_document_path}`}
+                      href={`http://10.70.4.34 :5003/${student.passport_document_path}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3 hover:bg-gray-100 transition-colors"
@@ -607,7 +607,7 @@ export default function StudentView() {
 
                   {student.photo_path && (
                     <a
-                      href={`http://10.70.4.34:5003/${student.photo_path}`}
+                      href={`http://10.70.4.34 :5003/${student.photo_path}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3 hover:bg-gray-100 transition-colors"

@@ -280,7 +280,7 @@ export default function EventBookingFull() {
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true)
-      const bookingsData = await authRequest("get", "http://10.70.4.34:5003/api/bookings")
+      const bookingsData = await authRequest("get", "http://10.70.4.34 :5003/api/bookings")
       setBookings(bookingsData)
       setError(null)
     } catch (err) {
@@ -315,7 +315,7 @@ export default function EventBookingFull() {
   const updateStatus = useCallback(
     async (id, status) => {
       try {
-        await authRequest("put", `http://10.70.4.34:5003/api/bookings/${id}`, { status })
+        await authRequest("put", `http://10.70.4.34 :5003/api/bookings/${id}`, { status })
 
         // Optimistic update for better UX
         setBookings((prev) => prev.map((booking) => (booking.id === id ? { ...booking, status } : booking)))
@@ -338,7 +338,7 @@ export default function EventBookingFull() {
   const deleteBooking = useCallback(
     async (id) => {
       try {
-        await authRequest("delete", `http://10.70.4.34:5003/api/bookings/${id}`)
+        await authRequest("delete", `http://10.70.4.34 :5003/api/bookings/${id}`)
 
         // Optimistic update
         setBookings((prev) => prev.filter((booking) => booking.id !== id))
@@ -373,11 +373,11 @@ export default function EventBookingFull() {
         const promises = selectedBookings.map((id) => {
           switch (action) {
             case "approve":
-              return authRequest("put", `http://10.70.4.34:5003/api/bookings/${id}`, { status: "APPROVED" })
+              return authRequest("put", `http://10.70.4.34 :5003/api/bookings/${id}`, { status: "APPROVED" })
             case "reject":
-              return authRequest("put", `http://10.70.4.34:5003/api/bookings/${id}`, { status: "DENIED" })
+              return authRequest("put", `http://10.70.4.34 :5003/api/bookings/${id}`, { status: "DENIED" })
             case "delete":
-              return authRequest("delete", `http://10.70.4.34:5003/api/bookings/${id}`)
+              return authRequest("delete", `http://10.70.4.34 :5003/api/bookings/${id}`)
             default:
               return Promise.resolve()
           }
@@ -686,7 +686,7 @@ export default function EventBookingFull() {
             {/* Other 3 cards - slide and center when sidebar opens */}
             <div
               className={`col-span-3 grid grid-cols-3 gap-4 xl:gap-6 transition-all duration-500 ease-in-out ${
-                sidebarCollapsed ? "translate-x-0" : "translate-x-[-18%] scale-105"
+                sidebarCollapsed ? "translate-x-0" : "translate-x-[-25%] scale-105"
               }`}
             >
               <div className="transition-all duration-300 ease-in-out hover:scale-105">
@@ -1008,26 +1008,22 @@ export default function EventBookingFull() {
         </Card>
       </div>
 
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-          .highlight-pulse {
-            animation: highlightPulse 2s ease-in-out;
+      <style jsx global>{`
+        .highlight-pulse {
+          animation: highlightPulse 2s ease-in-out;
+        }
+        
+        @keyframes highlightPulse {
+          0%, 100% { 
+            background-color: rgb(219 234 254); 
+            border-color: rgb(147 197 253);
           }
-          
-          @keyframes highlightPulse {
-            0%, 100% { 
-              background-color: rgb(219 234 254); 
-              border-color: rgb(147 197 253);
-            }
-            50% { 
-              background-color: rgb(191 219 254); 
-              border-color: rgb(59 130 246);
-            }
+          50% { 
+            background-color: rgb(191 219 254); 
+            border-color: rgb(59 130 246);
           }
-        `,
-        }}
-      />
+        }
+      `}</style>
     </div>
   )
 }

@@ -6556,3 +6556,96 @@
 [2025-06-11T03:40:10.067Z] ERROR: Error creating database tables: ER_ACCESS_DENIED_ERROR: Access denied for user 'root'@'10.105.12.226' (using password: YES)
 [2025-06-11T03:40:11.553Z] ERROR: Error creating database tables: ER_ACCESS_DENIED_ERROR: Access denied for user 'root'@'10.105.12.226' (using password: YES)
 [2025-06-11T03:40:17.415Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-11T04:49:55.187Z] INFO: Connected to MySQL database
+[2025-06-11T04:49:55.188Z] INFO: DB HOST: localhost
+[2025-06-11T04:49:55.188Z] INFO: DB: event_management
+[2025-06-11T04:49:55.189Z] INFO: Courses table ready
+[2025-06-11T04:49:55.190Z] INFO: Batches table ready
+[2025-06-11T04:49:55.191Z] INFO: Students table ready
+[2025-06-11T04:49:55.192Z] INFO: Student courses table ready
+[2025-06-11T04:49:55.193Z] INFO: Student batches table ready
+[2025-06-11T04:49:55.193Z] INFO: Course payments table ready
+[2025-06-11T04:49:55.194Z] INFO: Lecturers table ready
+[2025-06-11T04:49:55.194Z] INFO: Lecturer courses table ready
+[2025-06-11T04:49:55.195Z] INFO: Lecturer academic details table ready
+[2025-06-11T04:49:55.195Z] INFO: Lecturer bank details table ready
+[2025-06-11T04:49:55.195Z] INFO: Lecturer batches table ready
+[2025-06-11T04:49:55.195Z] INFO: All database tables created successfully
+[2025-06-11T04:49:55.204Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-11T04:50:13.025Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 10:20:13
+[2025-06-11T05:03:07.756Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 10:33:07
+[2025-06-11T05:25:44.905Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 10:55:44
+[2025-06-11T05:25:56.122Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 10:55:56
+[2025-06-11T05:49:55.059Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-11T05:58:23.939Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 11:28:23
+[2025-06-11T06:21:50.330Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 11:51:50
+[2025-06-11T06:46:02.822Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 12:16:02
+[2025-06-11T06:49:55.245Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-11T07:03:01.530Z] INFO: Connected to MySQL database
+[2025-06-11T07:03:01.715Z] INFO: DB HOST: localhost
+[2025-06-11T07:03:01.715Z] INFO: DB: event_management
+[2025-06-11T07:03:01.715Z] INFO: Courses table ready
+[2025-06-11T07:03:01.740Z] INFO: Batches table ready
+[2025-06-11T07:03:01.758Z] INFO: Students table ready
+[2025-06-11T07:03:01.777Z] INFO: Student courses table ready
+[2025-06-11T07:03:01.801Z] INFO: Student batches table ready
+[2025-06-11T07:03:01.810Z] INFO: Course payments table ready
+[2025-06-11T07:03:01.836Z] INFO: Lecturers table ready
+[2025-06-11T07:03:01.862Z] INFO: Lecturer courses table ready
+[2025-06-11T07:03:01.872Z] INFO: Lecturer academic details table ready
+[2025-06-11T07:03:01.889Z] INFO: Lecturer bank details table ready
+[2025-06-11T07:03:01.898Z] INFO: Lecturer batches table ready
+[2025-06-11T07:03:01.898Z] INFO: All database tables created successfully
+[2025-06-11T07:03:02.340Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-11T07:03:25.697Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 12:33:25
+[2025-06-11T07:42:04.941Z] INFO: Courses table ready
+[2025-06-11T07:42:04.942Z] INFO: Connected to MySQL database
+[2025-06-11T07:42:04.942Z] INFO: DB HOST: localhost
+[2025-06-11T07:42:04.943Z] INFO: DB: event_management
+[2025-06-11T07:42:04.944Z] INFO: Batches table ready
+[2025-06-11T07:42:04.945Z] INFO: Students table ready
+[2025-06-11T07:42:04.947Z] INFO: Student courses table ready
+[2025-06-11T07:42:04.948Z] INFO: Student batches table ready
+[2025-06-11T07:42:04.949Z] INFO: Course payments table ready
+[2025-06-11T07:42:04.950Z] INFO: Lecturers table ready
+[2025-06-11T07:42:04.951Z] INFO: Lecturer courses table ready
+[2025-06-11T07:42:04.951Z] INFO: Lecturer academic details table ready
+[2025-06-11T07:42:04.952Z] INFO: Lecturer bank details table ready
+[2025-06-11T07:42:04.952Z] INFO: Lecturer batches table ready
+[2025-06-11T07:42:04.952Z] INFO: All database tables created successfully
+[2025-06-11T07:42:04.963Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-11T08:09:48.580Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 13:39:48
+[2025-06-11T08:41:51.820Z] INFO: User Created Successfully at: 2025-06-11 14:11:51 by: SuperAdmin1
+[2025-06-11T08:42:05.010Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-11T08:42:11.852Z] INFO: User 69 Deleted Successfully at: 2025-06-11 14:12:11 by : SuperAdmin1
+[2025-06-11T08:42:16.428Z] INFO: User 77 Deleted Successfully at: 2025-06-11 14:12:16 by : SuperAdmin1
+[2025-06-11T08:42:39.171Z] INFO: User 1 Deleted Successfully at: 2025-06-11 14:12:39 by : SuperAdmin1
+[2025-06-11T08:42:51.259Z] INFO: User 74 Deleted Successfully at: 2025-06-11 14:12:51 by : SuperAdmin1
+[2025-06-11T08:42:59.213Z] INFO: User 70 Deleted Successfully at: 2025-06-11 14:12:59 by : SuperAdmin1
+[2025-06-11T08:43:06.563Z] INFO: User 71 Deleted Successfully at: 2025-06-11 14:13:06 by : SuperAdmin1
+[2025-06-11T08:43:14.599Z] INFO: User 76 Deleted Successfully at: 2025-06-11 14:13:14 by : SuperAdmin1
+[2025-06-11T08:43:29.000Z] INFO: User 72 Deleted Successfully at: 2025-06-11 14:13:29 by : SuperAdmin1
+[2025-06-11T08:43:44.916Z] INFO: User 52 Updated Successfully at: 2025-06-11 14:13:44 by: SuperAdmin1
+[2025-06-11T08:45:26.415Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 14:15:26
+[2025-06-11T08:46:23.798Z] INFO: User Test logged in at: 2025-06-11 14:16:23
+[2025-06-11T08:46:43.730Z] INFO: Booking created successfully at: 2025-06-11 14:16:43 by user: Test
+[2025-06-11T08:47:05.963Z] INFO: User AccessTokenAdmin logged in at: 2025-06-11 14:17:05
+[2025-06-11T08:47:28.721Z] INFO: User 65 Deleted Successfully at: 2025-06-11 14:17:28 by : AccessTokenAdmin
+[2025-06-11T08:47:44.417Z] INFO: User 52 Updated Successfully at: 2025-06-11 14:17:44 by: AccessTokenAdmin
+[2025-06-11T08:47:54.218Z] INFO: User Test logged in at: 2025-06-11 14:17:54
+[2025-06-11T08:48:25.189Z] INFO: Updated booking status to: DENIED at: 2025-06-11 14:18:25 by: Test
+[2025-06-11T08:48:25.189Z] INFO: Updated booking ID: 184
+[2025-06-11T08:48:44.472Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 14:18:44
+[2025-06-11T08:48:55.263Z] INFO: User 52 Updated Successfully at: 2025-06-11 14:18:55 by: SuperAdmin1
+[2025-06-11T08:49:08.090Z] INFO: User Test logged in at: 2025-06-11 14:19:08
+[2025-06-11T08:49:44.171Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 14:19:44
+[2025-06-11T08:50:12.881Z] INFO: User 52 Updated Successfully at: 2025-06-11 14:20:12 by: SuperAdmin1
+[2025-06-11T08:50:23.724Z] INFO: User Test logged in at: 2025-06-11 14:20:23
+[2025-06-11T08:50:58.776Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 14:20:58
+[2025-06-11T08:51:18.675Z] INFO: User 52 Updated Successfully at: 2025-06-11 14:21:18 by: SuperAdmin1
+[2025-06-11T08:51:27.601Z] INFO: User Test logged in at: 2025-06-11 14:21:27
+[2025-06-11T08:51:57.488Z] INFO: User Test logged in at: 2025-06-11 14:21:57
+[2025-06-11T08:52:04.976Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 14:22:04
+[2025-06-11T09:05:11.705Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-11T09:05:11.707Z] INFO: HTTP server closed
+[2025-06-11T09:05:11.715Z] INFO: Database connection closed

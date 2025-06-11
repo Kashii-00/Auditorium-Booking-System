@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react"
 import { useParams, Link } from "react-router-dom"
-import { FaArrowLeft, FaPlus, FaUserGraduate, FaSearch, FaSpinner } from "react-icons/fa"
+import { FaArrowLeft, FaPlus, FaUserGraduate, FaSearch } from "react-icons/fa"
 import { authRequest } from "../../services/authService"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Trash2, Users, GraduationCap, Calendar, Download } from "lucide-react"
+import LoadingScreen from "../LoadingScreen/LoadingScreen"
 
 const BatchStudents = React.memo(() => {
   const { id: batchId } = useParams()
@@ -59,7 +60,7 @@ const BatchStudents = React.memo(() => {
     }
 
     try {
-      const batchData = await authRequest("get", `http://10.70.4.34:5003/api/batches/${batchId}`)
+      const batchData = await authRequest("get", `http://10.70.4.34 :5003/api/batches/${batchId}`)
       setBatch(batchData)
     } catch (err) {
       console.error("Error fetching batch data:", err)
@@ -78,7 +79,7 @@ const BatchStudents = React.memo(() => {
     setError(null)
 
     try {
-      const studentsData = await authRequest("get", `http://10.70.4.34:5003/api/batches/${batchId}/students`)
+      const studentsData = await authRequest("get", `http://10.70.4.34 :5003/api/batches/${batchId}/students`)
       setStudents(Array.isArray(studentsData) ? studentsData : [])
     } catch (err) {
       console.error("Error fetching students:", err)
@@ -100,7 +101,7 @@ const BatchStudents = React.memo(() => {
       if (!window.confirm("Remove this student from the batch?")) return
 
       try {
-        await authRequest("delete", `http://10.70.4.34:5003/api/batches/${batchId}/students/${studentId}`)
+        await authRequest("delete", `http://10.70.4.34 :5003/api/batches/${batchId}/students/${studentId}`)
         setStudents((prev) => prev.filter((s) => s.id !== studentId))
       } catch (err) {
         console.error("Error removing student:", err)
@@ -190,18 +191,7 @@ const BatchStudents = React.memo(() => {
 
   // Loading state
   if (loading && !students.length && !batch) {
-    return (
-      <div
-        className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 ${sidebarCollapsed ? "ml-16" : "ml-64"} transition-all duration-300`}
-      >
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <FaSpinner className="animate-spin text-4xl text-blue-500" />
-            <p className="text-lg font-medium text-gray-600">Loading batch students...</p>
-          </div>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="Loading batch students..." />
   }
 
   return (

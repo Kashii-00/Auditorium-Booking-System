@@ -283,7 +283,7 @@ export default function BusBookingFull() {
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true)
-      const bookingsData = await authRequest("get", "http://10.70.4.34:5003/api/busBookings")
+      const bookingsData = await authRequest("get", "http://10.70.4.34 :5003/api/busBookings")
       setBookings(bookingsData)
       setError(null)
     } catch (err) {
@@ -309,7 +309,7 @@ export default function BusBookingFull() {
   const updateStatus = useCallback(
     async (id, status) => {
       try {
-        await authRequest("put", `http://10.70.4.34:5003/api/busBookings/${id}`, { status })
+        await authRequest("put", `http://10.70.4.34 :5003/api/busBookings/${id}`, { status })
 
         // Optimistic update for better UX
         setBookings((prev) => prev.map((booking) => (booking.id === id ? { ...booking, status } : booking)))
@@ -332,7 +332,7 @@ export default function BusBookingFull() {
   const deleteBooking = useCallback(
     async (id) => {
       try {
-        await authRequest("delete", `http://10.70.4.34:5003/api/busBookings/${id}`)
+        await authRequest("delete", `http://10.70.4.34 :5003/api/busBookings/${id}`)
 
         // Optimistic update
         setBookings((prev) => prev.filter((booking) => booking.id !== id))
@@ -367,11 +367,11 @@ export default function BusBookingFull() {
         const promises = selectedBookings.map((id) => {
           switch (action) {
             case "approve":
-              return authRequest("put", `http://10.70.4.34:5003/api/busBookings/${id}`, { status: "APPROVED" })
+              return authRequest("put", `http://10.70.4.34 :5003/api/busBookings/${id}`, { status: "APPROVED" })
             case "reject":
-              return authRequest("put", `http://10.70.4.34:5003/api/busBookings/${id}`, { status: "DENIED" })
+              return authRequest("put", `http://10.70.4.34 :5003/api/busBookings/${id}`, { status: "DENIED" })
             case "delete":
-              return authRequest("delete", `http://10.70.4.34:5003/api/busBookings/${id}`)
+              return authRequest("delete", `http://10.70.4.34 :5003/api/busBookings/${id}`)
             default:
               return Promise.resolve()
           }

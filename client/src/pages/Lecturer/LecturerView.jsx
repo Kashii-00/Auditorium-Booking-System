@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
@@ -27,6 +29,7 @@ import {
   FileText,
 } from "lucide-react"
 import { authRequest } from "../../services/authService"
+import LoadingScreen from "../LoadingScreen/LoadingScreen"
 
 export default function LecturerView() {
   const { id } = useParams()
@@ -43,7 +46,7 @@ export default function LecturerView() {
       setLoading(true)
       setError(null)
       try {
-        const data = await authRequest("get", `http://10.70.4.34:5003/api/lecturer-registration/${id}`)
+        const data = await authRequest("get", `http://10.70.4.34 :5003/api/lecturer-registration/${id}`)
         setLecturer(data)
       } catch (err) {
         setError("Failed to load lecturer details")
@@ -57,7 +60,7 @@ export default function LecturerView() {
   const handleDeleteLecturer = async () => {
     setDeleteLoading(true)
     try {
-      await authRequest("delete", `http://10.70.4.34:5003/api/lecturer-registration/${id}`)
+      await authRequest("delete", `http://10.70.4.34 :5003/api/lecturer-registration/${id}`)
       setSuccessMessage("Lecturer deleted successfully")
       setTimeout(() => navigate("/lecturer-registration"), 1500)
     } catch (err) {
@@ -67,14 +70,7 @@ export default function LecturerView() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-600" />
-          <span className="text-lg text-gray-600">Loading lecturer details...</span>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="Loading lecturer details..." />
   }
 
   if (error) {

@@ -89,7 +89,7 @@ const BusCalendarFull = ({ user = { id: 1, name: "Demo User" } }) => {
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await authRequest("get", "http://10.70.4.34:5003/api/busBookings")
+      const response = await authRequest("get", "http://10.70.4.34 :5003/api/busBookings")
       setBookings(response || [])
     } catch (error) {
       console.error("Error fetching bookings:", error)
@@ -291,7 +291,7 @@ const BusCalendarFull = ({ user = { id: 1, name: "Demo User" } }) => {
     try {
       const { travelDate, returnDate, fromPlace, toPlace, forWho, ContactNo } = formState
 
-      const response = await authRequest("post", "http://10.70.4.34:5003/api/busBookings", {
+      const response = await authRequest("post", "http://10.70.4.34 :5003/api/busBookings", {
         user_id: user.id,
         fromPlace: fromPlace.trim(),
         toPlace: toPlace.trim(),
@@ -750,34 +750,7 @@ const BusCalendarFull = ({ user = { id: 1, name: "Demo User" } }) => {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-6 p-2">
-            {/* Weekend notification */}
-            {formState.travelDate && !isWeekend(formState.travelDate) && (
-              <Alert className="border-blue-200 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 shadow-xl backdrop-blur-xl">
-                <AlertCircle className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800 font-semibold">
-                  Bus service is available only on weekends
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Enhanced User info */}
-            <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50 rounded-2xl border-2 border-slate-200/50 shadow-lg">
-              <img
-                src={user?.photo || defaultUserImage}
-                alt="User"
-                className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-lg"
-              />
-              <div>
-                <div className="flex items-center gap-2 text-sm font-bold">
-                  <User className="w-4 h-4 text-blue-600" />
-                  <span className="text-slate-900">{user?.name || "User"}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-slate-600 font-semibold">
-                  <Phone className="w-4 h-4 text-blue-600" />
-                  <span>{user?.phone || "No phone provided"}</span>
-                </div>
-              </div>
-            </div>
+    
 
             <div>
               <Label htmlFor="passenger" className="text-sm font-black text-slate-700">

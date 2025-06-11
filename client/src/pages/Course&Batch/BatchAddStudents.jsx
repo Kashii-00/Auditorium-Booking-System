@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Users, GraduationCap, Calendar } from "lucide-react"
+import LoadingScreen from "../LoadingScreen/LoadingScreen"
 
 const BatchAddStudents = React.memo(() => {
   const { id } = useParams()
@@ -56,7 +57,7 @@ const BatchAddStudents = React.memo(() => {
   // Fetch batch details
   const fetchBatch = useCallback(async () => {
     try {
-      const batchData = await authRequest("get", `http://10.70.4.34:5003/api/batches/${id}`)
+      const batchData = await authRequest("get", `http://10.70.4.34 :5003/api/batches/${id}`)
       setBatch(batchData)
     } catch (err) {
       console.error("Error fetching batch data:", err)
@@ -75,7 +76,7 @@ const BatchAddStudents = React.memo(() => {
         return
       }
 
-      const availableStudents = await authRequest("get", `http://10.70.4.34:5003/api/batches/${id}/available-students`)
+      const availableStudents = await authRequest("get", `http://10.70.4.34 :5003/api/batches/${id}/available-students`)
       setStudents(Array.isArray(availableStudents) ? availableStudents : [])
     } catch (err) {
       console.error("Error fetching available students:", err)
@@ -154,7 +155,7 @@ const BatchAddStudents = React.memo(() => {
       setAdding(true)
       setError("")
 
-      const response = await authRequest("post", `http://10.70.4.34:5003/api/batches/${id}/students`, {
+      const response = await authRequest("post", `http://10.70.4.34 :5003/api/batches/${id}/students`, {
         student_ids: selectedStudents,
       })
 
@@ -176,18 +177,7 @@ const BatchAddStudents = React.memo(() => {
   }, [selectedStudents, batch, id, fetchAvailableStudents, fetchBatch])
 
   if (loading && !students.length && !batch) {
-    return (
-      <div
-        className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 ${sidebarCollapsed ? "ml-16" : "ml-64"} transition-all duration-300`}
-      >
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center space-y-4">
-            <FaSpinner className="animate-spin text-4xl text-blue-500" />
-            <p className="text-lg font-medium text-gray-600">Loading available students...</p>
-          </div>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="Loading available students..." />
   }
 
   return (

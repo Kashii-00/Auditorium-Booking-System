@@ -17,7 +17,6 @@ import {
   Users,
   UserCheck,
   AlertCircle,
-  Loader2,
   TrendingUp,
   Clock,
   BookOpen,
@@ -27,6 +26,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import BatchDetailsPopup from "./BatchDetailsPopup"
+import LoadingScreen from "../LoadingScreen/LoadingScreen"
 
 // Performance CSS for hardware acceleration
 const PERFORMANCE_CSS = `
@@ -349,7 +349,7 @@ const AnnualPlan = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const coursesData = await authRequest("get", "http://10.70.4.34:5003/api/CourseRegistrationRoute")
+        const coursesData = await authRequest("get", "http://10.70.4.34 :5003/api/CourseRegistrationRoute")
         setCourses(coursesData)
         if (coursesData.length > 0) {
           setSelectedCourse(coursesData[0].id.toString())
@@ -371,7 +371,7 @@ const AnnualPlan = () => {
       try {
         const response = await authRequest(
           "get",
-          `http://10.70.4.34:5003/api/batches?course_id=${selectedCourse}&year=${selectedYear}`,
+          `http://10.70.4.34 :5003/api/batches?course_id=${selectedCourse}&year=${selectedYear}`,
         )
 
         if (Array.isArray(response)) {
@@ -385,7 +385,7 @@ const AnnualPlan = () => {
             const batchesWithCounts = await Promise.all(
               response.map(async (batch) => {
                 try {
-                  const batchDetails = await authRequest("get", `http://10.70.4.34:5003/api/batches/${batch.id}`)
+                  const batchDetails = await authRequest("get", `http://10.70.4.34 :5003/api/batches/${batch.id}`)
                   return {
                     ...batch,
                     student_count: batchDetails.student_count || 0,
@@ -544,6 +544,10 @@ const AnnualPlan = () => {
     return Math.round(totalWeeks / batches.length)
   }, [batches, getDurationInWeeks])
 
+  if (loading && !batches.length && !selectedBatch) {
+    return <LoadingScreen message="Loading annual plan data..." />
+  }
+
   return (
     <div
       className="hardware-accelerated min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative"
@@ -679,16 +683,7 @@ const AnnualPlan = () => {
         )}
 
         {/* Loading State */}
-        {loading && (
-          <Card className="animate-fade-in border-0 shadow-2xl bg-white/95 backdrop-blur-xl">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-center gap-3 py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                <p className="text-slate-600 font-semibold text-lg">Loading annual plan...</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {loading && <LoadingScreen message="Loading annual plan..." />}
 
         {/* Main Content */}
         {!loading && (
