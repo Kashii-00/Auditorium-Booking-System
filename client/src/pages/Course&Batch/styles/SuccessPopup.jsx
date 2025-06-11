@@ -1,28 +1,33 @@
-import React, { useEffect } from 'react';
-import { FaCheckCircle } from 'react-icons/fa';
-import './SuccessPopup.css';
+"use client"
 
-const SuccessPopup = ({ message, onClose }) => {
+import { useEffect } from "react"
+import { CheckCircle, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+
+const SuccessPopup = ({ message, onClose, autoClose = true, duration = 3000 }) => {
   useEffect(() => {
-    // Auto close after 3 seconds
-    const timer = setTimeout(() => {
-      if (onClose) onClose();
-    }, 3000);
-    
-    return () => clearTimeout(timer);
-  }, [onClose]);
+    if (autoClose) {
+      const timer = setTimeout(() => {
+        onClose()
+      }, duration)
+
+      return () => clearTimeout(timer)
+    }
+  }, [autoClose, duration, onClose])
 
   return (
-    <div className="popup-overlay" onClick={onClose}>
-      <div className="popup-content" onClick={e => e.stopPropagation()}>
-        <div className="success-icon">
-          <FaCheckCircle size={30} color="#ffffff" />
+    <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-full">
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg max-w-md">
+        <div className="flex items-center gap-3">
+          <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+          <span className="text-green-800 font-medium flex-1">{message}</span>
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0 text-green-600">
+            <X className="h-4 w-4" />
+          </Button>
         </div>
-        <h3>Success!</h3>
-        <p>{message}</p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SuccessPopup;
+export default SuccessPopup

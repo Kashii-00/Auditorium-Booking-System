@@ -1,4 +1,6 @@
-import { useState, useEffect, useRef, useCallback, memo } from "react"
+"use client"
+
+import { useState, useEffect, useRef, useCallback, memo, useLayoutEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -38,9 +40,62 @@ import {
   Award,
   ArrowLeft,
   Settings,
+  Sparkles,
+  Star,
+  UserCheck,
+  GraduationCap,
 } from "lucide-react"
 import { authRequest } from "../../services/authService"
 import { useNavigate } from "react-router-dom"
+
+// Performance CSS with hardware acceleration
+const PERFORMANCE_CSS = `
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  
+  .lecturer-card {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+  }
+  
+  .lecturer-card:hover {
+    transform: translateY(-4px) translateZ(0);
+  }
+  
+  .fade-in-stagger > * {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  .fade-in-stagger > *:nth-child(1) { animation-delay: 0.1s; }
+  .fade-in-stagger > *:nth-child(2) { animation-delay: 0.2s; }
+  .fade-in-stagger > *:nth-child(3) { animation-delay: 0.3s; }
+  .fade-in-stagger > *:nth-child(4) { animation-delay: 0.4s; }
+  
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .gradient-text {
+    background: linear-gradient(135deg, #1e40af, #3b82f6, #6366f1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+`
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 
@@ -51,36 +106,80 @@ const steps = [
   { id: 3, title: "Course & Documents", icon: FileText, description: "Course assignment & files" },
 ]
 
+// Enhanced Stat Card Component
+const StatCard = memo(({ title, value, subtext, icon: Icon, color = "blue", progress = 0 }) => {
+  const colorClasses = {
+    blue: "bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 text-blue-700 border-blue-300 shadow-blue-200/50",
+    green:
+      "bg-gradient-to-br from-emerald-100 via-green-100 to-teal-100 text-emerald-700 border-emerald-300 shadow-emerald-200/50",
+    yellow:
+      "bg-gradient-to-br from-amber-100 via-yellow-100 to-orange-100 text-amber-700 border-amber-300 shadow-amber-200/50",
+    purple:
+      "bg-gradient-to-br from-purple-100 via-violet-100 to-indigo-100 text-purple-700 border-purple-300 shadow-purple-200/50",
+  }
+
+  return (
+    <Card className="border-0 shadow-2xl hover:shadow-3xl transition-all duration-300 bg-white/95 backdrop-blur-xl transform hover:-translate-y-1 lecturer-card">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <p className="text-sm font-black text-slate-600 mb-2 uppercase tracking-wide">{title}</p>
+            <p className="text-3xl font-black bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
+              {value}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">{subtext}</p>
+          </div>
+          <div
+            className={`p-4 rounded-2xl shadow-xl border-2 ${colorClasses[color]} flex-shrink-0 transition-all duration-300 hover:scale-110`}
+          >
+            <Icon className="h-7 w-7 transition-transform duration-300" />
+          </div>
+        </div>
+        <div className="mt-4">
+          <Progress value={progress} className="h-2 bg-slate-200 transition-all duration-500" />
+        </div>
+      </CardContent>
+    </Card>
+  )
+})
+
+StatCard.displayName = "StatCard"
+
 // Enhanced File Upload Component
 const FileUpload = memo(({ name, label, required = false, form, errors, handleChange }) => (
-  <div className="space-y-2">
-    <Label htmlFor={name} className="text-sm font-medium text-gray-700">
+  <div className="space-y-3">
+    <Label htmlFor={name} className="text-sm font-black text-slate-700">
       {label} {required && <span className="text-red-500">*</span>}
     </Label>
-    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
-      <div className="flex flex-col items-center space-y-2">
-        <Upload className="h-8 w-8 text-gray-400" />
+    <div className="border-2 border-dashed border-blue-200 rounded-2xl p-6 text-center hover:border-blue-400 transition-all duration-300 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 backdrop-blur-sm">
+      <div className="flex flex-col items-center space-y-3">
+        <div className="p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl">
+          <Upload className="h-8 w-8 text-white" />
+        </div>
         <div>
-          <Label htmlFor={name} className="cursor-pointer text-sm text-gray-600 hover:text-gray-800">
+          <Label
+            htmlFor={name}
+            className="cursor-pointer text-sm font-semibold text-slate-700 hover:text-blue-700 transition-colors"
+          >
             Click to upload or drag and drop
           </Label>
-          <p className="text-xs text-gray-400 mt-1">PDF, JPG, PNG up to 10MB</p>
+          <p className="text-xs text-slate-500 mt-1 font-medium">PDF, JPG, PNG up to 10MB</p>
           <Input id={name} name={name} type="file" className="hidden" onChange={handleChange} />
         </div>
       </div>
       {form[name] && (
-        <div className="mt-3 p-2 bg-green-50 rounded border border-green-200">
+        <div className="mt-4 p-3 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 shadow-lg">
           <div className="flex items-center justify-center gap-2">
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <p className="text-sm text-green-700">File selected: {form[name]?.name}</p>
+            <CheckCircle className="h-5 w-5 text-emerald-600" />
+            <p className="text-sm font-semibold text-emerald-700">File selected: {form[name]?.name}</p>
           </div>
         </div>
       )}
     </div>
     {errors[name] && (
-      <div className="flex items-center gap-2 p-2 bg-red-50 rounded border border-red-200">
-        <AlertCircle className="h-4 w-4 text-red-500" />
-        <p className="text-sm text-red-600">{errors[name]}</p>
+      <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-red-50 to-rose-50 rounded-xl border-2 border-red-200 shadow-lg">
+        <AlertCircle className="h-5 w-5 text-red-600" />
+        <p className="text-sm font-semibold text-red-700">{errors[name]}</p>
       </div>
     )}
   </div>
@@ -88,7 +187,7 @@ const FileUpload = memo(({ name, label, required = false, form, errors, handleCh
 
 FileUpload.displayName = "FileUpload"
 
-// Focus-preserving input component
+// Enhanced Focus-preserving input component
 const FocusInput = ({ name, value, onChange, error, icon: Icon, ...props }) => {
   const inputRef = useRef(null)
 
@@ -104,20 +203,24 @@ const FocusInput = ({ name, value, onChange, error, icon: Icon, ...props }) => {
 
   return (
     <div className="relative">
-      {Icon && <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />}
+      {Icon && <Icon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />}
       <Input
         ref={inputRef}
         name={name}
         value={value}
         onChange={onChange}
-        className={`${Icon ? "pl-10" : ""} ${error ? "border-red-500 focus:border-red-500" : "focus:border-blue-500"} transition-colors`}
+        className={`${Icon ? "pl-12" : ""} h-12 border-2 ${
+          error
+            ? "border-red-300 focus:border-red-500 bg-red-50/50"
+            : "border-slate-200 focus:border-blue-500 bg-white/90"
+        } rounded-xl shadow-lg backdrop-blur-sm transition-all duration-300 font-medium`}
         {...props}
       />
     </div>
   )
 }
 
-// Lecturer Detail View Component
+// Enhanced Lecturer Detail View Component
 const LecturerDetailView = ({ lecturer, onBack, onEdit, onDelete, authRequest }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
@@ -127,7 +230,7 @@ const LecturerDetailView = ({ lecturer, onBack, onEdit, onDelete, authRequest })
     setDeleteLoading(true)
     try {
       if (authRequest) {
-        await authRequest("delete", `http://localhost:5003/api/lecturer-registration/${lecturer.id}`)
+        await authRequest("delete", `http://10.70.4.34:5003/api/lecturer-registration/${lecturer.id}`)
       }
       setSuccessMessage("Lecturer deleted successfully")
       setTimeout(() => {
@@ -147,219 +250,287 @@ const LecturerDetailView = ({ lecturer, onBack, onEdit, onDelete, authRequest })
   const courses = lecturer.courses || []
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Button onClick={onBack} variant="outline" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Lecturer Details</h1>
-            <p className="text-gray-600">View and manage lecturer information</p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={() => onEdit(lecturer.id)} size="sm">
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-          <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)} size="sm">
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
-          </Button>
-        </div>
-      </div>
-
-      {/* Lecturer Info Card */}
-      <Card className="mb-6">
-        <CardHeader className="pb-4">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src="/placeholder.svg?height=64&width=64" />
-              <AvatarFallback className="bg-blue-500 text-white text-xl font-bold">
-                {lecturer.full_name
-                  ?.split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+      <div className="max-w-5xl mx-auto">
+        {/* Enhanced Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-6">
+            <Button
+              onClick={onBack}
+              variant="outline"
+              className="h-12 px-6 rounded-xl font-bold border-2 hover:bg-slate-50 shadow-lg backdrop-blur-sm bg-white/90"
+            >
+              <ArrowLeft className="h-5 w-5 mr-2" />
+              Back to List
+            </Button>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">{lecturer.full_name}</h2>
-              <p className="text-gray-600">ID: #{lecturer.id}</p>
-              <Badge variant={lecturer.status === "Active" ? "default" : "secondary"} className="mt-1">
-                {lecturer.status}
-              </Badge>
+              <h1 className="text-4xl font-black bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
+                Lecturer Details
+              </h1>
+              <p className="text-slate-600 font-semibold text-lg mt-2">Complete lecturer information and management</p>
             </div>
           </div>
-        </CardHeader>
+          <div className="flex gap-3">
+            <Button
+              onClick={() => onEdit(lecturer.id)}
+              className="h-12 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl shadow-xl font-bold transform hover:scale-105 transition-all duration-300"
+            >
+              <Edit className="h-5 w-5 mr-2" />
+              Edit Details
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="h-12 px-6 rounded-xl shadow-xl font-bold transform hover:scale-105 transition-all duration-300"
+            >
+              <Trash2 className="h-5 w-5 mr-2" />
+              Delete
+            </Button>
+          </div>
+        </div>
 
-        <CardContent className="space-y-6">
-          {/* Contact Information */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Contact Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-sm text-gray-600">Email</Label>
-                  <p className="text-gray-900">{lecturer.email}</p>
-                </div>
-                <div>
-                  <Label className="text-sm text-gray-600">Phone</Label>
-                  <p className="text-gray-900">{lecturer.phone}</p>
+        {/* Enhanced Lecturer Info Card */}
+        <Card className="mb-8 border-0 shadow-2xl bg-white/95 backdrop-blur-xl">
+          <CardHeader className="pb-6 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50 rounded-t-2xl border-b border-slate-100">
+            <div className="flex items-center gap-6">
+              <div className="relative">
+                <Avatar className="h-20 w-20 shadow-2xl border-4 border-white">
+                  <AvatarImage src="/placeholder.svg?height=80&width=80" />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-2xl font-black">
+                    {lecturer.full_name
+                      ?.split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-2 border-white"></div>
+              </div>
+              <div className="flex-1">
+                <h2 className="text-3xl font-black bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
+                  {lecturer.full_name}
+                </h2>
+                <p className="text-slate-600 font-semibold text-lg">Lecturer ID: #{lecturer.id}</p>
+                <div className="mt-3">
+                  <Badge
+                    className={`px-4 py-2 rounded-full font-bold text-sm ${
+                      lecturer.status === "Active"
+                        ? "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border-2 border-emerald-300"
+                        : "bg-gradient-to-r from-slate-100 to-gray-100 text-slate-800 border-2 border-slate-300"
+                    }`}
+                  >
+                    {lecturer.status}
+                  </Badge>
                 </div>
               </div>
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-sm text-gray-600">Address</Label>
-                  <p className="text-gray-900">{lecturer.address}</p>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-8 space-y-8">
+            {/* Contact Information */}
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-lg">
+                  <User className="h-6 w-6 text-blue-600" />
                 </div>
-                <div>
-                  <Label className="text-sm text-gray-600">Join Date</Label>
-                  <p className="text-gray-900">
-                    {lecturer.created_at ? new Date(lecturer.created_at).toLocaleDateString() : "N/A"}
+                <h3 className="text-2xl font-black text-slate-800">Contact Information</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border-2 border-slate-200 shadow-lg">
+                    <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Email Address</Label>
+                    <p className="text-lg font-bold text-slate-900 mt-1">{lecturer.email}</p>
+                  </div>
+                  <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border-2 border-slate-200 shadow-lg">
+                    <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Phone Number</Label>
+                    <p className="text-lg font-bold text-slate-900 mt-1">{lecturer.phone}</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border-2 border-slate-200 shadow-lg">
+                    <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Address</Label>
+                    <p className="text-lg font-bold text-slate-900 mt-1">{lecturer.address}</p>
+                  </div>
+                  <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border-2 border-slate-200 shadow-lg">
+                    <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Join Date</Label>
+                    <p className="text-lg font-bold text-slate-900 mt-1">
+                      {lecturer.created_at ? new Date(lecturer.created_at).toLocaleDateString() : "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Separator className="border-slate-200" />
+
+            {/* Course Information */}
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-gradient-to-br from-purple-100 to-violet-100 rounded-xl shadow-lg">
+                  <GraduationCap className="h-6 w-6 text-purple-600" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-800">Course Information</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border-2 border-purple-200 shadow-lg">
+                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Assigned Courses</Label>
+                  <p className="text-lg font-bold text-slate-900 mt-1">
+                    {courses.length > 0 ? courses.map((c) => c.courseName).join(", ") : "No courses assigned"}
                   </p>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Course Information */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Course Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label className="text-sm text-gray-600">Courses</Label>
-                <p className="text-gray-900">
-                  {courses.length > 0 ? courses.map((c) => c.courseName).join(", ") : "No courses assigned"}
-                </p>
-              </div>
-              <div>
-                <Label className="text-sm text-gray-600">Stream</Label>
-                <p className="text-gray-900">{lecturer.stream || "N/A"}</p>
-              </div>
-              <div>
-                <Label className="text-sm text-gray-600">Module</Label>
-                <p className="text-gray-900">{lecturer.module || "N/A"}</p>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Academic Details */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Academic Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm text-gray-600">Highest Qualification</Label>
-                <p className="text-gray-900">{academic.highest_qualification || "N/A"}</p>
-              </div>
-              <div>
-                <Label className="text-sm text-gray-600">Other Qualifications</Label>
-                <p className="text-gray-900">{academic.other_qualifications || "N/A"}</p>
-              </div>
-            </div>
-
-            {lecturer.experience && lecturer.experience.length > 0 && (
-              <div className="mt-4">
-                <Label className="text-sm text-gray-600">Experience</Label>
-                <div className="mt-2 space-y-2">
-                  {lecturer.experience.map((exp, i) => (
-                    <div key={i} className="p-3 bg-gray-50 rounded border">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <div>
-                          <p className="font-medium text-gray-900">{exp.institution}</p>
-                          <p className="text-sm text-gray-600">{exp.designation}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-600">
-                            {exp.start} - {exp.end} ({exp.years} years)
-                          </p>
-                          <p className="text-sm text-gray-600">{exp.nature}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border-2 border-purple-200 shadow-lg">
+                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Stream</Label>
+                  <p className="text-lg font-bold text-slate-900 mt-1">{lecturer.stream || "N/A"}</p>
+                </div>
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border-2 border-purple-200 shadow-lg">
+                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Module</Label>
+                  <p className="text-lg font-bold text-slate-900 mt-1">{lecturer.module || "N/A"}</p>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
 
-          <Separator />
+            <Separator className="border-slate-200" />
 
-          {/* Bank Details */}
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Bank Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label className="text-sm text-gray-600">Bank Name</Label>
-                <p className="text-gray-900">{bank.bank_name || "N/A"}</p>
+            {/* Academic Details */}
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-gradient-to-br from-emerald-100 to-green-100 rounded-xl shadow-lg">
+                  <Award className="h-6 w-6 text-emerald-600" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-800">Academic Details</h3>
               </div>
-              <div>
-                <Label className="text-sm text-gray-600">Branch</Label>
-                <p className="text-gray-900">{bank.branch_name || "N/A"}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 shadow-lg">
+                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">
+                    Highest Qualification
+                  </Label>
+                  <p className="text-lg font-bold text-slate-900 mt-1">{academic.highest_qualification || "N/A"}</p>
+                </div>
+                <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 shadow-lg">
+                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">
+                    Other Qualifications
+                  </Label>
+                  <p className="text-lg font-bold text-slate-900 mt-1">{academic.other_qualifications || "N/A"}</p>
+                </div>
               </div>
-              <div>
-                <Label className="text-sm text-gray-600">Account Number</Label>
-                <p className="text-gray-900">{bank.account_number || "N/A"}</p>
+
+              {lecturer.experience && lecturer.experience.length > 0 && (
+                <div className="mt-6">
+                  <Label className="text-lg font-black text-slate-700 mb-4 block">Professional Experience</Label>
+                  <div className="space-y-4">
+                    {lecturer.experience.map((exp, i) => (
+                      <div
+                        key={i}
+                        className="p-6 bg-gradient-to-r from-slate-50 to-blue-50 rounded-2xl border-2 border-slate-200 shadow-xl"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-xl font-black text-slate-900">{exp.institution}</p>
+                            <p className="text-lg font-semibold text-blue-700">{exp.designation}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-600">
+                              {exp.start} - {exp.end} ({exp.years} years)
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700 mt-1">{exp.nature}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Separator className="border-slate-200" />
+
+            {/* Bank Details */}
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-gradient-to-br from-amber-100 to-orange-100 rounded-xl shadow-lg">
+                  <CreditCard className="h-6 w-6 text-amber-600" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-800">Bank Details</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 shadow-lg">
+                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Bank Name</Label>
+                  <p className="text-lg font-bold text-slate-900 mt-1">{bank.bank_name || "N/A"}</p>
+                </div>
+                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 shadow-lg">
+                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Branch</Label>
+                  <p className="text-lg font-bold text-slate-900 mt-1">{bank.branch_name || "N/A"}</p>
+                </div>
+                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border-2 border-amber-200 shadow-lg">
+                  <Label className="text-sm font-black text-slate-600 uppercase tracking-wide">Account Number</Label>
+                  <p className="text-lg font-bold text-slate-900 mt-1">{bank.account_number || "N/A"}</p>
+                </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Enhanced Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+            <Card className="w-full max-w-md mx-4 border-0 shadow-2xl bg-white/95 backdrop-blur-xl">
+              <CardHeader className="bg-gradient-to-r from-red-50 to-rose-50 rounded-t-2xl border-b border-red-200">
+                <CardTitle className="text-2xl font-black text-red-700 flex items-center gap-3">
+                  <div className="p-2 bg-red-100 rounded-xl">
+                    <AlertCircle className="h-6 w-6 text-red-600" />
+                  </div>
+                  Confirm Deletion
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <p className="text-slate-700 font-semibold text-lg mb-6">
+                  Are you sure you want to delete <strong className="text-slate-900">{lecturer.full_name}</strong>? This
+                  action cannot be undone.
+                </p>
+                <div className="flex gap-4">
+                  <Button
+                    onClick={handleDeleteLecturer}
+                    disabled={deleteLoading}
+                    variant="destructive"
+                    className="flex-1 h-12 rounded-xl font-bold shadow-xl"
+                  >
+                    {deleteLoading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                        Deleting...
+                      </>
+                    ) : (
+                      "Yes, Delete"
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    variant="outline"
+                    className="flex-1 h-12 rounded-xl font-bold border-2 shadow-lg"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+        )}
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <Card className="w-full max-w-md mx-4">
-            <CardHeader>
-              <CardTitle className="text-red-600">Confirm Deletion</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 mb-6">
-                Are you sure you want to delete <strong>{lecturer.full_name}</strong>? This action cannot be undone.
-              </p>
-              <div className="flex gap-4">
-                <Button
-                  onClick={handleDeleteLecturer}
-                  disabled={deleteLoading}
-                  variant="destructive"
-                  className="flex-1"
-                >
-                  {deleteLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Deleting...
-                    </>
-                  ) : (
-                    "Yes, Delete"
-                  )}
-                </Button>
-                <Button onClick={() => setShowDeleteConfirm(false)} variant="outline" className="flex-1">
-                  Cancel
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Success Message */}
-      {successMessage && (
-        <div className="fixed bottom-4 right-4 bg-green-100 text-green-800 px-4 py-2 rounded shadow-lg">
-          {successMessage}
-        </div>
-      )}
+        {/* Success Message */}
+        {successMessage && (
+          <div className="fixed bottom-6 right-6 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 animate-in slide-in-from-bottom-4 duration-300">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-bold">{successMessage}</span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
-// Registration Form Component with all logic
+// Enhanced Registration Form Component
 const RegistrationForm = memo(
   ({
     step,
@@ -386,10 +557,12 @@ const RegistrationForm = memo(
       switch (step) {
         case 0:
           return (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-6 animate-in fade-in-50 duration-300">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="fullName">Full Name *</Label>
+                  <Label htmlFor="fullName" className="text-sm font-black text-slate-700 mb-2 block">
+                    Full Name *
+                  </Label>
                   <FocusInput
                     id="fullName"
                     name="fullName"
@@ -397,26 +570,31 @@ const RegistrationForm = memo(
                     value={form.fullName}
                     onChange={handleChange}
                     error={errors.fullName}
+                    icon={User}
                   />
-                  {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
+                  {errors.fullName && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.fullName}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="email">Email *</Label>
+                  <Label htmlFor="email" className="text-sm font-black text-slate-700 mb-2 block">
+                    Email *
+                  </Label>
                   <FocusInput
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="Enter email"
+                    placeholder="Enter email address"
                     value={form.email}
                     onChange={handleChange}
                     error={errors.email}
                   />
-                  {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                  {errors.email && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.email}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="nicNumber">NIC Number *</Label>
+                  <Label htmlFor="nicNumber" className="text-sm font-black text-slate-700 mb-2 block">
+                    NIC Number *
+                  </Label>
                   <FocusInput
                     id="nicNumber"
                     name="nicNumber"
@@ -425,11 +603,13 @@ const RegistrationForm = memo(
                     onChange={handleChange}
                     error={errors.nicNumber}
                   />
-                  {errors.nicNumber && <p className="text-red-500 text-sm mt-1">{errors.nicNumber}</p>}
+                  {errors.nicNumber && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.nicNumber}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="dob">Date of Birth *</Label>
+                  <Label htmlFor="dob" className="text-sm font-black text-slate-700 mb-2 block">
+                    Date of Birth *
+                  </Label>
                   <FocusInput
                     id="dob"
                     name="dob"
@@ -438,25 +618,33 @@ const RegistrationForm = memo(
                     onChange={handleChange}
                     error={errors.dob}
                   />
-                  {errors.dob && <p className="text-red-500 text-sm mt-1">{errors.dob}</p>}
+                  {errors.dob && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.dob}</p>}
                 </div>
 
                 <div className="md:col-span-2">
-                  <Label htmlFor="address">Address *</Label>
+                  <Label htmlFor="address" className="text-sm font-black text-slate-700 mb-2 block">
+                    Address *
+                  </Label>
                   <Textarea
                     id="address"
                     name="address"
                     placeholder="Enter complete address"
                     value={form.address}
                     onChange={handleChange}
-                    className={`${errors.address ? "border-red-500" : "focus:border-blue-500"} transition-colors`}
+                    className={`h-24 border-2 ${
+                      errors.address
+                        ? "border-red-300 focus:border-red-500 bg-red-50/50"
+                        : "border-slate-200 focus:border-blue-500 bg-white/90"
+                    } rounded-xl shadow-lg backdrop-blur-sm transition-all duration-300 font-medium`}
                     rows={3}
                   />
-                  {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
+                  {errors.address && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.address}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Label htmlFor="phone" className="text-sm font-black text-slate-700 mb-2 block">
+                    Phone Number *
+                  </Label>
                   <FocusInput
                     id="phone"
                     name="phone"
@@ -465,11 +653,13 @@ const RegistrationForm = memo(
                     onChange={handleChange}
                     error={errors.phone}
                   />
-                  {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                  {errors.phone && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.phone}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="cdcNumber">CDC Number</Label>
+                  <Label htmlFor="cdcNumber" className="text-sm font-black text-slate-700 mb-2 block">
+                    CDC Number
+                  </Label>
                   <FocusInput
                     id="cdcNumber"
                     name="cdcNumber"
@@ -478,17 +668,23 @@ const RegistrationForm = memo(
                     onChange={handleChange}
                     error={errors.cdcNumber}
                   />
-                  {errors.cdcNumber && <p className="text-red-500 text-sm mt-1">{errors.cdcNumber}</p>}
+                  {errors.cdcNumber && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.cdcNumber}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="category">Lecturer Category *</Label>
+                  <Label htmlFor="category" className="text-sm font-black text-slate-700 mb-2 block">
+                    Lecturer Category *
+                  </Label>
                   <Select
                     value={form.category || undefined}
                     onValueChange={(value) => handleSelectChange("category", value)}
                   >
                     <SelectTrigger
-                      className={`${errors.category ? "border-red-500" : "focus:border-blue-500"} transition-colors`}
+                      className={`h-12 border-2 ${
+                        errors.category
+                          ? "border-red-300 focus:border-red-500 bg-red-50/50"
+                          : "border-slate-200 focus:border-blue-500 bg-white/90"
+                      } rounded-xl shadow-lg backdrop-blur-sm transition-all duration-300 font-medium`}
                     >
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -498,32 +694,38 @@ const RegistrationForm = memo(
                       <SelectItem value="C">Category C</SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
+                  {errors.category && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.category}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="status">Lecturer Status *</Label>
+                  <Label htmlFor="status" className="text-sm font-black text-slate-700 mb-2 block">
+                    Lecturer Status *
+                  </Label>
                   <Select
                     value={form.status || "Active"}
                     onValueChange={(value) => handleSelectChange("status", value)}
                   >
                     <SelectTrigger
-                      className={`${errors.status ? "border-red-500" : "focus:border-blue-500"} transition-colors`}
+                      className={`h-12 border-2 ${
+                        errors.status
+                          ? "border-red-300 focus:border-red-500 bg-red-50/50"
+                          : "border-slate-200 focus:border-blue-500 bg-white/90"
+                      } rounded-xl shadow-lg backdrop-blur-sm transition-all duration-300 font-medium`}
                     >
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Active">Active</SelectItem>
                       <SelectItem value="Inactive">Inactive</SelectItem>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="Completed">Completed</SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.status && <p className="text-red-500 text-sm mt-1">{errors.status}</p>}
+                  {errors.status && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.status}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="vehicleNumber">Vehicle License Number</Label>
+                  <Label htmlFor="vehicleNumber" className="text-sm font-black text-slate-700 mb-2 block">
+                    Vehicle License Number
+                  </Label>
                   <FocusInput
                     id="vehicleNumber"
                     name="vehicleNumber"
@@ -532,7 +734,9 @@ const RegistrationForm = memo(
                     onChange={handleChange}
                     error={errors.vehicleNumber}
                   />
-                  {errors.vehicleNumber && <p className="text-red-500 text-sm mt-1">{errors.vehicleNumber}</p>}
+                  {errors.vehicleNumber && (
+                    <p className="text-red-500 text-sm mt-2 font-semibold">{errors.vehicleNumber}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -540,16 +744,22 @@ const RegistrationForm = memo(
 
         case 1:
           return (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-6 animate-in fade-in-50 duration-300">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="bankName">Bank Name *</Label>
+                  <Label htmlFor="bankName" className="text-sm font-black text-slate-700 mb-2 block">
+                    Bank Name *
+                  </Label>
                   <Select
                     value={form.bankName || undefined}
                     onValueChange={(value) => handleSelectChange("bankName", value)}
                   >
                     <SelectTrigger
-                      className={`${errors.bankName ? "border-red-500" : "focus:border-blue-500"} transition-colors`}
+                      className={`h-12 border-2 ${
+                        errors.bankName
+                          ? "border-red-300 focus:border-red-500 bg-red-50/50"
+                          : "border-slate-200 focus:border-blue-500 bg-white/90"
+                      } rounded-xl shadow-lg backdrop-blur-sm transition-all duration-300 font-medium`}
                     >
                       <SelectValue placeholder="Select your bank" />
                     </SelectTrigger>
@@ -562,11 +772,13 @@ const RegistrationForm = memo(
                       <SelectItem value="Nations Trust Bank">Nations Trust Bank</SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.bankName && <p className="text-red-500 text-sm mt-1">{errors.bankName}</p>}
+                  {errors.bankName && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.bankName}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="branchName">Branch Name *</Label>
+                  <Label htmlFor="branchName" className="text-sm font-black text-slate-700 mb-2 block">
+                    Branch Name *
+                  </Label>
                   <FocusInput
                     id="branchName"
                     name="branchName"
@@ -574,12 +786,15 @@ const RegistrationForm = memo(
                     value={form.branchName}
                     onChange={handleChange}
                     error={errors.branchName}
+                    icon={CreditCard}
                   />
-                  {errors.branchName && <p className="text-red-500 text-sm mt-1">{errors.branchName}</p>}
+                  {errors.branchName && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.branchName}</p>}
                 </div>
 
                 <div className="md:col-span-2">
-                  <Label htmlFor="accountNumber">Account Number *</Label>
+                  <Label htmlFor="accountNumber" className="text-sm font-black text-slate-700 mb-2 block">
+                    Account Number *
+                  </Label>
                   <FocusInput
                     id="accountNumber"
                     name="accountNumber"
@@ -588,7 +803,9 @@ const RegistrationForm = memo(
                     onChange={handleChange}
                     error={errors.accountNumber}
                   />
-                  {errors.accountNumber && <p className="text-red-500 text-sm mt-1">{errors.accountNumber}</p>}
+                  {errors.accountNumber && (
+                    <p className="text-red-500 text-sm mt-2 font-semibold">{errors.accountNumber}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -596,30 +813,46 @@ const RegistrationForm = memo(
 
         case 2:
           return (
-            <div className="space-y-4">
+            <div className="space-y-8 animate-in fade-in-50 duration-300">
               <div>
-                <div className="flex justify-between items-center mb-4">
-                  <Label>Working Experience</Label>
-                  <Button type="button" onClick={addExperienceRow} variant="outline" size="sm">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-lg">
+                      <Award className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <Label className="text-xl font-black text-slate-800">Working Experience</Label>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={addExperienceRow}
+                    variant="outline"
+                    className="h-10 px-4 rounded-xl font-bold border-2 border-blue-200 text-blue-700 hover:bg-blue-50 shadow-lg"
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Experience
                   </Button>
                 </div>
 
                 {form.experience.map((exp, idx) => (
-                  <Card key={idx} className="p-4 mb-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="font-medium">Experience {idx + 1}</h4>
+                  <Card key={idx} className="p-6 mb-6 border-0 shadow-xl bg-white/95 backdrop-blur-xl">
+                    <div className="flex justify-between items-center mb-6">
+                      <h4 className="text-lg font-black text-slate-800">Experience {idx + 1}</h4>
                       {form.experience.length > 1 && (
-                        <Button type="button" variant="outline" size="sm" onClick={() => removeExperienceRow(idx)}>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeExperienceRow(idx)}
+                          className="h-8 px-3 rounded-xl font-bold border-2 border-red-200 text-red-700 hover:bg-red-50"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <Label>Institution *</Label>
+                        <Label className="text-sm font-black text-slate-700 mb-2 block">Institution *</Label>
                         <FocusInput
                           placeholder="Institution name"
                           value={exp.institution}
@@ -627,12 +860,12 @@ const RegistrationForm = memo(
                           error={errors[`exp_institution_${idx}`]}
                         />
                         {errors[`exp_institution_${idx}`] && (
-                          <p className="text-red-500 text-sm mt-1">{errors[`exp_institution_${idx}`]}</p>
+                          <p className="text-red-500 text-sm mt-2 font-semibold">{errors[`exp_institution_${idx}`]}</p>
                         )}
                       </div>
 
                       <div>
-                        <Label>Years of Experience *</Label>
+                        <Label className="text-sm font-black text-slate-700 mb-2 block">Years of Experience *</Label>
                         <FocusInput
                           placeholder="Years"
                           value={exp.years}
@@ -640,12 +873,12 @@ const RegistrationForm = memo(
                           error={errors[`exp_years_${idx}`]}
                         />
                         {errors[`exp_years_${idx}`] && (
-                          <p className="text-red-500 text-sm mt-1">{errors[`exp_years_${idx}`]}</p>
+                          <p className="text-red-500 text-sm mt-2 font-semibold">{errors[`exp_years_${idx}`]}</p>
                         )}
                       </div>
 
                       <div>
-                        <Label>Start Date *</Label>
+                        <Label className="text-sm font-black text-slate-700 mb-2 block">Start Date *</Label>
                         <FocusInput
                           placeholder="Start date"
                           value={exp.start}
@@ -653,12 +886,12 @@ const RegistrationForm = memo(
                           error={errors[`exp_start_${idx}`]}
                         />
                         {errors[`exp_start_${idx}`] && (
-                          <p className="text-red-500 text-sm mt-1">{errors[`exp_start_${idx}`]}</p>
+                          <p className="text-red-500 text-sm mt-2 font-semibold">{errors[`exp_start_${idx}`]}</p>
                         )}
                       </div>
 
                       <div>
-                        <Label>End Date *</Label>
+                        <Label className="text-sm font-black text-slate-700 mb-2 block">End Date *</Label>
                         <FocusInput
                           placeholder="End date"
                           value={exp.end}
@@ -666,12 +899,12 @@ const RegistrationForm = memo(
                           error={errors[`exp_end_${idx}`]}
                         />
                         {errors[`exp_end_${idx}`] && (
-                          <p className="text-red-500 text-sm mt-1">{errors[`exp_end_${idx}`]}</p>
+                          <p className="text-red-500 text-sm mt-2 font-semibold">{errors[`exp_end_${idx}`]}</p>
                         )}
                       </div>
 
                       <div>
-                        <Label>Designation *</Label>
+                        <Label className="text-sm font-black text-slate-700 mb-2 block">Designation *</Label>
                         <FocusInput
                           placeholder="Job title"
                           value={exp.designation}
@@ -679,12 +912,12 @@ const RegistrationForm = memo(
                           error={errors[`exp_designation_${idx}`]}
                         />
                         {errors[`exp_designation_${idx}`] && (
-                          <p className="text-red-500 text-sm mt-1">{errors[`exp_designation_${idx}`]}</p>
+                          <p className="text-red-500 text-sm mt-2 font-semibold">{errors[`exp_designation_${idx}`]}</p>
                         )}
                       </div>
 
                       <div>
-                        <Label>Nature of Work *</Label>
+                        <Label className="text-sm font-black text-slate-700 mb-2 block">Nature of Work *</Label>
                         <FocusInput
                           placeholder="Work description"
                           value={exp.nature}
@@ -692,7 +925,7 @@ const RegistrationForm = memo(
                           error={errors[`exp_nature_${idx}`]}
                         />
                         {errors[`exp_nature_${idx}`] && (
-                          <p className="text-red-500 text-sm mt-1">{errors[`exp_nature_${idx}`]}</p>
+                          <p className="text-red-500 text-sm mt-2 font-semibold">{errors[`exp_nature_${idx}`]}</p>
                         )}
                       </div>
                     </div>
@@ -700,14 +933,21 @@ const RegistrationForm = memo(
                 ))}
               </div>
 
-              <Separator className="my-6" />
+              <Separator className="border-slate-200" />
 
               <div>
-                <h4 className="text-lg font-medium mb-4">Educational Qualifications</h4>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-gradient-to-br from-emerald-100 to-green-100 rounded-xl shadow-lg">
+                    <GraduationCap className="h-6 w-6 text-emerald-600" />
+                  </div>
+                  <h4 className="text-xl font-black text-slate-800">Educational Qualifications</h4>
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="highestQualification">Highest Qualification *</Label>
+                    <Label htmlFor="highestQualification" className="text-sm font-black text-slate-700 mb-2 block">
+                      Highest Qualification *
+                    </Label>
                     <FocusInput
                       id="highestQualification"
                       name="highestQualification"
@@ -717,23 +957,29 @@ const RegistrationForm = memo(
                       error={errors.highestQualification}
                     />
                     {errors.highestQualification && (
-                      <p className="text-red-500 text-sm mt-1">{errors.highestQualification}</p>
+                      <p className="text-red-500 text-sm mt-2 font-semibold">{errors.highestQualification}</p>
                     )}
                   </div>
 
                   <div>
-                    <Label htmlFor="otherQualifications">Other Qualifications *</Label>
+                    <Label htmlFor="otherQualifications" className="text-sm font-black text-slate-700 mb-2 block">
+                      Other Qualifications *
+                    </Label>
                     <Textarea
                       id="otherQualifications"
                       name="otherQualifications"
                       placeholder="Enter other qualifications"
                       value={form.otherQualifications}
                       onChange={handleChange}
-                      className={`${errors.otherQualifications ? "border-red-500" : "focus:border-blue-500"} transition-colors`}
+                      className={`h-24 border-2 ${
+                        errors.otherQualifications
+                          ? "border-red-300 focus:border-red-500 bg-red-50/50"
+                          : "border-slate-200 focus:border-blue-500 bg-white/90"
+                      } rounded-xl shadow-lg backdrop-blur-sm transition-all duration-300 font-medium`}
                       rows={3}
                     />
                     {errors.otherQualifications && (
-                      <p className="text-red-500 text-sm mt-1">{errors.otherQualifications}</p>
+                      <p className="text-red-500 text-sm mt-2 font-semibold">{errors.otherQualifications}</p>
                     )}
                   </div>
                 </div>
@@ -743,10 +989,12 @@ const RegistrationForm = memo(
 
         case 3:
           return (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-8 animate-in fade-in-50 duration-300">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="course_ids">Courses *</Label>
+                  <Label htmlFor="course_ids" className="text-sm font-black text-slate-700 mb-2 block">
+                    Courses *
+                  </Label>
                   <select
                     id="course_ids"
                     name="course_ids"
@@ -758,7 +1006,7 @@ const RegistrationForm = memo(
                       )
                       handleSelectChange("course_ids", selectedOptions)
                     }}
-                    className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors min-h-[120px]"
+                    className="w-full p-4 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 min-h-[120px] bg-white/90 backdrop-blur-sm shadow-lg font-medium"
                   >
                     {courses.map((course) => (
                       <option key={course.id} value={course.id} className="p-2">
@@ -766,12 +1014,14 @@ const RegistrationForm = memo(
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500">Hold Ctrl/Cmd to select multiple courses</p>
-                  {errors.course_ids && <p className="text-red-500 text-sm mt-1">{errors.course_ids}</p>}
+                  <p className="text-xs text-slate-500 mt-2 font-medium">Hold Ctrl/Cmd to select multiple courses</p>
+                  {errors.course_ids && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.course_ids}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="stream">Stream *</Label>
+                  <Label htmlFor="stream" className="text-sm font-black text-slate-700 mb-2 block">
+                    Stream *
+                  </Label>
                   <FocusInput
                     id="stream"
                     name="stream"
@@ -780,11 +1030,13 @@ const RegistrationForm = memo(
                     onChange={handleChange}
                     error={errors.stream}
                   />
-                  {errors.stream && <p className="text-red-500 text-sm mt-1">{errors.stream}</p>}
+                  {errors.stream && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.stream}</p>}
                 </div>
 
                 <div className="md:col-span-2">
-                  <Label htmlFor="module">Module *</Label>
+                  <Label htmlFor="module" className="text-sm font-black text-slate-700 mb-2 block">
+                    Module *
+                  </Label>
                   <FocusInput
                     id="module"
                     name="module"
@@ -793,15 +1045,20 @@ const RegistrationForm = memo(
                     onChange={handleChange}
                     error={errors.module}
                   />
-                  {errors.module && <p className="text-red-500 text-sm mt-1">{errors.module}</p>}
+                  {errors.module && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.module}</p>}
                 </div>
               </div>
 
-              <Separator className="my-6" />
+              <Separator className="border-slate-200" />
 
               <div>
-                <h4 className="text-lg font-medium mb-4">Document Upload (Optional)</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-gradient-to-br from-purple-100 to-violet-100 rounded-xl shadow-lg">
+                    <FileText className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <h4 className="text-xl font-black text-slate-800">Document Upload (Optional)</h4>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FileUpload
                     name="nic_file"
                     label="NIC Copy"
@@ -855,51 +1112,72 @@ const RegistrationForm = memo(
     }
 
     return (
-      <div className="space-y-6">
-        {/* Simple Progress */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-600">
+      <div className="space-y-8">
+        {/* Enhanced Progress */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-lg font-black text-slate-700">
               Step {step + 1} of {steps.length}: {steps[step].title}
             </span>
-            <span className="text-sm text-gray-500">{Math.round(progressPercentage)}%</span>
+            <span className="text-sm font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+              {Math.round(progressPercentage)}% Complete
+            </span>
           </div>
-          <Progress value={progressPercentage} className="h-2" />
+          <Progress value={progressPercentage} className="h-3 bg-slate-200 rounded-full" />
+          <p className="text-sm text-slate-600 mt-2 font-medium">{steps[step].description}</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           {isLoading && step === 0 && id && (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex items-center justify-center py-16">
               <div className="text-center">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-                <span className="text-gray-600">Loading lecturer data...</span>
+                <div className="p-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl shadow-xl mb-6 inline-block">
+                  <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+                </div>
+                <span className="text-slate-700 font-semibold text-lg">Loading lecturer data...</span>
               </div>
             </div>
           )}
 
           {renderStep()}
 
-          <div className="flex justify-between mt-6 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={back} disabled={step === 0 || isSubmitting}>
-              <ChevronLeft className="h-4 w-4 mr-2" />
+          <div className="flex justify-between mt-8 pt-6 border-t-2 border-slate-200">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={back}
+              disabled={step === 0 || isSubmitting}
+              className="h-12 px-6 rounded-xl font-bold border-2 hover:bg-slate-50 shadow-lg"
+            >
+              <ChevronLeft className="h-5 w-5 mr-2" />
               Back
             </Button>
 
             {step < steps.length - 1 ? (
-              <Button type="button" onClick={next} disabled={isSubmitting}>
-                Next
-                <ChevronRight className="h-4 w-4 ml-2" />
+              <Button
+                type="button"
+                onClick={next}
+                disabled={isSubmitting}
+                className="h-12 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl shadow-xl font-bold transform hover:scale-105 transition-all duration-300"
+              >
+                Next Step
+                <ChevronRight className="h-5 w-5 ml-2" />
               </Button>
             ) : (
-              <Button type="submit" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="h-12 px-6 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 rounded-xl shadow-xl font-bold transform hover:scale-105 transition-all duration-300"
+              >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
                     {isEditMode ? "Updating..." : "Submitting..."}
                   </>
                 ) : (
                   <>
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="h-5 w-5 mr-2" />
+                    <Sparkles className="h-4 w-4 mr-2" />
                     {isEditMode ? "Update Registration" : "Submit Registration"}
                   </>
                 )}
@@ -914,7 +1192,7 @@ const RegistrationForm = memo(
 
 RegistrationForm.displayName = "RegistrationForm"
 
-// Main component with all API logic and functionality
+// Main component with enhanced design
 export default function LecturerManagementFull() {
   const [lecturers, setLecturers] = useState([])
   const [courses, setCourses] = useState([])
@@ -963,6 +1241,18 @@ export default function LecturerManagementFull() {
 
   const [errors, setErrors] = useState({})
 
+  // Add performance CSS to document head
+  useLayoutEffect(() => {
+    const style = document.createElement("style")
+    style.innerHTML = PERFORMANCE_CSS
+    document.head.appendChild(style)
+    return () => {
+      if (document.head.contains(style)) {
+        document.head.removeChild(style)
+      }
+    }
+  }, [])
+
   // Extract lecturer ID from URL or query params
   const getIdFromUrl = () => {
     if (typeof window !== "undefined") {
@@ -977,7 +1267,7 @@ export default function LecturerManagementFull() {
   const fetchLecturers = async () => {
     try {
       setLoadingLecturers(true)
-      const response = await authRequest("get", "http://localhost:5003/api/lecturer-registration")
+      const response = await authRequest("get", "http://10.70.4.34:5003/api/lecturer-registration")
       if (Array.isArray(response)) {
         setLecturers(response)
       }
@@ -991,7 +1281,7 @@ export default function LecturerManagementFull() {
   // Fetch courses
   const fetchCourses = async () => {
     try {
-      const response = await authRequest("get", "http://localhost:5003/api/lecturer-registration/courses")
+      const response = await authRequest("get", "http://10.70.4.34:5003/api/lecturer-registration/courses")
       if (Array.isArray(response)) {
         setCourses(response)
       }
@@ -1012,10 +1302,10 @@ export default function LecturerManagementFull() {
       const fetchLecturerData = async () => {
         try {
           setIsLoading(true)
-          const lecturerData = await authRequest("get", `http://localhost:5003/api/lecturer-registration/${id}`)
+          const lecturerData = await authRequest("get", `http://10.70.4.34:5003/api/lecturer-registration/${id}`)
 
           if (lecturerData) {
-            // --- FIX: Parse experience from academic_details if present ---
+            // Parse experience from academic_details if present
             let experience = []
             let academicDetails = {}
             if (lecturerData.academic_details) {
@@ -1028,7 +1318,6 @@ export default function LecturerManagementFull() {
                   academicDetails = {}
                 }
               }
-              // Parse experience from academic_details
               if (academicDetails.experience) {
                 if (typeof academicDetails.experience === "string") {
                   try {
@@ -1266,70 +1555,76 @@ export default function LecturerManagementFull() {
   }
 
   // Handle edit lecturer
-  const handleEditLecturer = (lecturerId) => {
-    // Update URL to include the ID
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location)
-      url.searchParams.set("id", lecturerId)
-      window.history.pushState({}, "", url)
-    }
+  const handleEditLecturer = useCallback(
+    (lecturerId) => {
+      // Update URL to include the ID
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location)
+        url.searchParams.set("id", lecturerId)
+        window.history.pushState({}, "", url)
+      }
 
-    const lecturer = lecturers.find((l) => l.id === lecturerId)
-    if (lecturer) {
-      // Populate form with lecturer data
-      setForm({
-        fullName: lecturer.full_name || "",
-        email: lecturer.email || "",
-        nicNumber: lecturer.id_number || "",
-        dob: lecturer.date_of_birth ? lecturer.date_of_birth.split("T")[0] : "",
-        address: lecturer.address || "",
-        phone: lecturer.phone || "",
-        cdcNumber: lecturer.cdc_number || "",
-        category: lecturer.category || "",
-        vehicleNumber: lecturer.vehicle_number || "",
-        status: lecturer.status || "Active",
-        bankName: lecturer.bank_details?.bank_name || "",
-        branchName: lecturer.bank_details?.branch_name || "",
-        accountNumber: lecturer.bank_details?.account_number || "",
-        experience: lecturer.experience || [
-          { institution: "", years: "", start: "", end: "", designation: "", nature: "" },
-        ],
-        highestQualification: lecturer.academic_details?.highest_qualification || "",
-        otherQualifications: lecturer.academic_details?.other_qualifications || "",
-        course_ids: lecturer.course_ids || [],
-        stream: lecturer.stream || "",
-        module: lecturer.module || "",
-        nic_file: null,
-        photo_file: null,
-        passbook_file: null,
-        education_certificate_file: null,
-        cdc_book_file: null,
-        driving_trainer_license_file: null,
-        other_documents_file: null,
-      })
-      setIsEditMode(true)
-      setEditingLecturer(lecturerId)
-      setIsAddDialogOpen(true)
-      setViewMode("list")
-      setSelectedLecturer(null)
-    }
-  }
-
-  // Handle delete lecturer
-  const handleDeleteLecturer = async (lecturerId) => {
-    if (window.confirm("Are you sure you want to delete this lecturer?")) {
-      try {
-        await authRequest("delete", `http://localhost:5003/api/lecturer-registration/${lecturerId}`)
-        setLecturers((prev) => prev.filter((l) => l.id !== lecturerId))
+      const lecturer = lecturers.find((l) => l.id === lecturerId)
+      if (lecturer) {
+        // Populate form with lecturer data
+        setForm({
+          fullName: lecturer.full_name || "",
+          email: lecturer.email || "",
+          nicNumber: lecturer.id_number || "",
+          dob: lecturer.date_of_birth ? lecturer.date_of_birth.split("T")[0] : "",
+          address: lecturer.address || "",
+          phone: lecturer.phone || "",
+          cdcNumber: lecturer.cdc_number || "",
+          category: lecturer.category || "",
+          vehicleNumber: lecturer.vehicle_number || "",
+          status: lecturer.status || "Active",
+          bankName: lecturer.bank_details?.bank_name || "",
+          branchName: lecturer.bank_details?.branch_name || "",
+          accountNumber: lecturer.bank_details?.account_number || "",
+          experience: lecturer.experience || [
+            { institution: "", years: "", start: "", end: "", designation: "", nature: "" },
+          ],
+          highestQualification: lecturer.academic_details?.highest_qualification || "",
+          otherQualifications: lecturer.academic_details?.other_qualifications || "",
+          course_ids: lecturer.course_ids || [],
+          stream: lecturer.stream || "",
+          module: lecturer.module || "",
+          nic_file: null,
+          photo_file: null,
+          passbook_file: null,
+          education_certificate_file: null,
+          cdc_book_file: null,
+          driving_trainer_license_file: null,
+          other_documents_file: null,
+        })
+        setIsEditMode(true)
+        setEditingLecturer(lecturerId)
+        setIsAddDialogOpen(true)
         setViewMode("list")
         setSelectedLecturer(null)
-        alert("Lecturer deleted successfully!")
-      } catch (error) {
-        console.error("Error deleting lecturer:", error)
-        alert("Failed to delete lecturer")
       }
-    }
-  }
+    },
+    [lecturers],
+  )
+
+  // Handle delete lecturer
+  const handleDeleteLecturer = useCallback(
+    async (lecturerId) => {
+      if (window.confirm("Are you sure you want to delete this lecturer?")) {
+        try {
+          await authRequest("delete", `http://10.70.4.34:5003/api/lecturer-registration/${lecturerId}`)
+          setLecturers((prev) => prev.filter((l) => l.id !== lecturerId))
+          setViewMode("list")
+          setSelectedLecturer(null)
+          alert("Lecturer deleted successfully!")
+        } catch (error) {
+          console.error("Error deleting lecturer:", error)
+          alert("Failed to delete lecturer")
+        }
+      }
+    },
+    [authRequest],
+  )
 
   // Submit logic with FormData
   const handleSubmit = async (e) => {
@@ -1410,8 +1705,8 @@ export default function LecturerManagementFull() {
 
     try {
       const url = isEditMode
-        ? `http://localhost:5003/api/lecturer-registration/${editingLecturer}`
-        : "http://localhost:5003/api/lecturer-registration/"
+        ? `http://10.70.4.34:5003/api/lecturer-registration/${editingLecturer}`
+        : "http://10.70.4.34:5003/api/lecturer-registration/"
 
       const method = isEditMode ? "put" : "post"
 
@@ -1446,16 +1741,16 @@ export default function LecturerManagementFull() {
     switch (status) {
       case "Active":
       case true:
-        return "bg-green-100 text-green-800"
+        return "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border-2 border-emerald-300"
       case "Pending":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border-2 border-amber-300"
       case "Completed":
-        return "bg-blue-100 text-blue-800"
+        return "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-2 border-blue-300"
       case "Inactive":
       case false:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gradient-to-r from-slate-100 to-gray-100 text-slate-800 border-2 border-slate-300"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gradient-to-r from-slate-100 to-gray-100 text-slate-800 border-2 border-slate-300"
     }
   }
 
@@ -1510,52 +1805,62 @@ export default function LecturerManagementFull() {
   }
 
   // Show detail view if a lecturer is selected
-  if (viewMode === "detail" && selectedLecturer) {
-    return (
-      <LecturerDetailView
-        lecturer={selectedLecturer}
-        onBack={() => {
-          setViewMode("list")
-          setSelectedLecturer(null)
-        }}
-        onEdit={handleEditLecturer}
-        onDelete={handleDeleteLecturer}
-        authRequest={authRequest}
-      />
-    )
-  }
+  const showDetailView = useCallback(() => {
+    if (viewMode === "detail" && selectedLecturer) {
+      return (
+        <LecturerDetailView
+          lecturer={selectedLecturer}
+          onBack={() => {
+            setViewMode("list")
+            setSelectedLecturer(null)
+          }}
+          onEdit={handleEditLecturer}
+          onDelete={handleDeleteLecturer}
+          authRequest={authRequest}
+        />
+      )
+    }
+    return null
+  }, [viewMode, selectedLecturer, handleEditLecturer, handleDeleteLecturer, authRequest])
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="p-2 sm:p-4 md:p-6 lg:p-8 max-w-full md:max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto">
-        {/* Simple Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <h1
-              className="text-2xl font-bold"
-              style={{
-                background: "linear-gradient(135deg, #2D3C5E, #1e3a8a)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                color: "transparent",
-              }}
-            >
-              Lecturer Management
-            </h1>
-            <p className="text-gray-600">Manage lecturer registrations and information</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/50 to-purple-50/50"></div>
+      </div>
+
+      <div className="relative z-10 p-6 max-w-7xl mx-auto">
+        {/* Enhanced Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
+          <div className="flex items-center gap-6">
+            <div className="relative">
+              <div className="p-4 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700 rounded-2xl shadow-2xl">
+                <Users className="h-9 w-9 text-white" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
+            </div>
+            <div>
+              <h1 className="text-4xl font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
+                Lecturer Management
+              </h1>
+              <p className="text-slate-600 font-semibold text-lg mt-2">Manage lecturer registrations and information</p>
+            </div>
           </div>
           <Dialog open={isAddDialogOpen} onOpenChange={handleDialogOpenChange}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
+              <Button className="h-14 px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-800 rounded-2xl shadow-xl font-bold transition-all duration-300 transform hover:scale-105">
+                <Plus className="h-5 w-5 mr-2" />
+                <Sparkles className="h-4 w-4 mr-2" />
                 Add Lecturer
               </Button>
             </DialogTrigger>
-            <DialogContent className="w-full max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl max-h-[90vh] overflow-y-auto mt-7">
-              <DialogHeader>
-                <DialogTitle>{isEditMode ? "Edit Lecturer Registration" : "Add New Lecturer"}</DialogTitle>
-                <DialogDescription>
+            <DialogContent className="w-full max-w-5xl max-h-[70vh] overflow-y-auto border-0 shadow-2xl bg-white/95 backdrop-blur-xl mt-10">
+              <DialogHeader className="border-b border-slate-200 pb-4">
+                <DialogTitle className="text-2xl font-black bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
+                  {isEditMode ? "Edit Lecturer Registration" : "Add New Lecturer"}
+                </DialogTitle>
+                <DialogDescription className="text-slate-600 font-semibold">
                   {isEditMode
                     ? "Update the lecturer details below."
                     : "Fill in the lecturer details to add them to the system."}
@@ -1584,94 +1889,97 @@ export default function LecturerManagementFull() {
           </Dialog>
         </div>
 
-        {/* Simple Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Lecturers</p>
-                  <p className="text-2xl font-bold">{lecturers.length}</p>
-                </div>
-                <Users className="h-8 w-8 text-gray-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Active</p>
-                  <p className="text-2xl font-bold">{lecturers.filter((l) => l.status === "Active").length}</p>
-                </div>
-                <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <div className="h-3 w-3 bg-green-500 rounded-full"></div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Pending</p>
-                  <p className="text-2xl font-bold">{lecturers.filter((l) => l.status === "Pending").length}</p>
-                </div>
-                <div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <div className="h-3 w-3 bg-yellow-500 rounded-full"></div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Inactive</p>
-                  <p className="text-2xl font-bold">{lecturers.filter((l) => l.status === "Inactive").length}</p>
-                </div>
-                <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center">
-                  <div className="h-3 w-3 bg-gray-500 rounded-full"></div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Enhanced Statistics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 fade-in-stagger">
+          <StatCard
+            title="Total Lecturers"
+            value={lecturers.length}
+            subtext="All registered lecturers"
+            icon={Users}
+            color="blue"
+            progress={lecturers.length > 0 ? 85 : 0}
+          />
+          <StatCard
+            title="Active Lecturers"
+            value={lecturers.filter((l) => l.status === "Active").length}
+            subtext="Currently teaching"
+            icon={UserCheck}
+            color="green"
+            progress={
+              lecturers.length > 0
+                ? (lecturers.filter((l) => l.status === "Active").length / lecturers.length) * 100
+                : 0
+            }
+          />
+          <StatCard
+            title="Pending Approval"
+            value={lecturers.filter((l) => l.status === "Pending").length}
+            subtext="Awaiting verification"
+            icon={Star}
+            color="yellow"
+            progress={
+              lecturers.length > 0
+                ? (lecturers.filter((l) => l.status === "Pending").length / lecturers.length) * 100
+                : 0
+            }
+          />
+          <StatCard
+            title="Total Courses"
+            value={courses.length}
+            subtext="Available courses"
+            icon={GraduationCap}
+            color="purple"
+            progress={courses.length > 0 ? 70 : 0}
+          />
         </div>
 
-        {/* Lecturers Table */}
-        <Card>
-          <CardHeader>
+        {/* Enhanced Lecturers Table */}
+        <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-xl">
+          <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50 rounded-t-2xl">
             <div className="flex items-center justify-between">
-              <CardTitle>All Lecturers</CardTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-lg">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl font-black bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
+                    All Lecturers
+                  </CardTitle>
+                  <p className="text-slate-600 font-semibold">Manage and view all lecturer information</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="h-10 px-4 rounded-xl font-bold border-2 border-blue-200 text-blue-700 hover:bg-blue-50 shadow-lg"
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Export
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  className="h-10 px-4 rounded-xl font-bold border-2 border-slate-200 text-slate-700 hover:bg-slate-50 shadow-lg"
+                >
                   <Settings className="h-4 w-4 mr-2" />
                   Settings
                 </Button>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            {/* Search and Filter */}
-            <div className="flex flex-col md:flex-row gap-4 mb-4">
+          <CardContent className="p-6">
+            {/* Enhanced Search and Filter */}
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
                 <Input
-                  placeholder="Search lecturers..."
+                  placeholder="Search lecturers by name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-12 h-12 border-2 border-slate-200 focus:border-blue-500 rounded-xl bg-white/90 backdrop-blur-sm shadow-lg font-medium"
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full md:w-[150px]">
+                <SelectTrigger className="w-full md:w-[180px] h-12 border-2 border-slate-200 focus:border-blue-500 rounded-xl bg-white/90 backdrop-blur-sm shadow-lg font-medium">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1683,93 +1991,125 @@ export default function LecturerManagementFull() {
               </Select>
             </div>
 
-            {/* Table */}
+            {/* Enhanced Table */}
             {loadingLecturers ? (
-              <div className="text-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-                <p className="text-gray-500">Loading lecturers...</p>
+              <div className="text-center py-16">
+                <div className="p-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl shadow-xl mb-6 inline-block">
+                  <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+                </div>
+                <p className="text-slate-700 font-semibold text-lg">Loading lecturers...</p>
               </div>
             ) : (
-              <div className="w-full overflow-x-auto">
-                <table className="w-full min-w-[700px] md:min-w-[900px] lg:min-w-[1100px] xl:min-w-[1200px] table-auto">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-center py-3 px-4 font-medium">Lecturer</th>
-                      <th className="text-left py-3 px-4 font-medium">Contact</th>
-                      <th className="text-left py-3 px-4 font-medium">Course</th>
-                      <th className="text-left py-3 px-4 font-medium">Status</th>
-                      <th className="text-center py-3 px-4 font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredLecturers.length > 0 ? (
-                      filteredLecturers.map((lecturer) => (
-                        <tr key={lecturer.id} className="border-b hover:bg-gray-50">
-                          <td className="py-3 px-4 text-center align-middle">
-                            <div className="flex items-center">
-                              <Avatar className="h-10 w-10 mr-3">
-                                <AvatarImage src="/placeholder.svg?height=40&width=40" />
-                                <AvatarFallback>
-                                  {lecturer.full_name
-                                    ?.split(" ")
-                                    .map((n) => n[0])
-                                    .join("")
-                                    .toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium">{lecturer.full_name}</p>
-                                <p className="text-sm text-gray-500">ID: #{lecturer.id}</p>
+              <div className="rounded-2xl border-2 border-slate-200 overflow-hidden shadow-xl bg-white/50 backdrop-blur-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-800">
+                      <tr>
+                        <th className="text-white font-bold py-4 px-6 text-left">Lecturer</th>
+                        <th className="text-white font-bold py-4 px-6 text-left">Contact</th>
+                        <th className="text-white font-bold py-4 px-6 text-left">Course</th>
+                        <th className="text-white font-bold py-4 px-6 text-left">Status</th>
+                        <th className="text-white font-bold py-4 px-6 text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredLecturers.length > 0 ? (
+                        filteredLecturers.map((lecturer, index) => (
+                          <tr
+                            key={lecturer.id}
+                            className={`${
+                              index % 2 === 0 ? "bg-white/80" : "bg-slate-50/80"
+                            } hover:bg-blue-50/80 transition-all duration-200 backdrop-blur-sm lecturer-card`}
+                          >
+                            <td className="py-4 px-6">
+                              <div className="flex items-center">
+                                <Avatar className="h-12 w-12 mr-4 shadow-lg border-2 border-white">
+                                  <AvatarImage src="/placeholder.svg?height=48&width=48" />
+                                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold">
+                                    {lecturer.full_name
+                                      ?.split(" ")
+                                      .map((n) => n[0])
+                                      .join("")
+                                      .toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="font-bold text-slate-900 text-lg">{lecturer.full_name}</p>
+                                  <p className="text-sm text-slate-600 font-medium">ID: #{lecturer.id}</p>
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="text-sm">
-                              <p>{lecturer.email}</p>
-                              <p className="text-gray-500">{lecturer.phone || "N/A"}</p>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="text-sm">
-                              <p>{lecturer.courses}</p>
-                              <p className="text-gray-500">{lecturer.module}</p>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <Badge className={getStatusColor(lecturer.status)}>{lecturer.status}</Badge>
-                          </td>
-                          <td className="py-3 px-4 text-center align-middle">
-                            <div className="flex gap-6 justify-center items-center">
-                              <Button variant="ghost" size="icon" onClick={() => handleViewLecturer(lecturer.id)}>
-                                <Eye className="h-5 w-5" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => handleEditLecturer(lecturer.id)}>
-                                <Edit className="h-5 w-5" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => handleDeleteLecturer(lecturer.id)}>
-                                <Trash2 className="h-5 w-5" />
-                              </Button>
+                            </td>
+                            <td className="py-4 px-6">
+                              <div className="text-sm">
+                                <p className="font-semibold text-slate-900">{lecturer.email}</p>
+                                <p className="text-slate-600 font-medium">{lecturer.phone || "N/A"}</p>
+                              </div>
+                            </td>
+                            <td className="py-4 px-6">
+                              <div className="text-sm">
+                                <p className="font-semibold text-slate-900">{lecturer.courses}</p>
+                                <p className="text-slate-600 font-medium">{lecturer.module}</p>
+                              </div>
+                            </td>
+                            <td className="py-4 px-6">
+                              <Badge className={`${getStatusColor(lecturer.status)} px-3 py-1 rounded-full font-bold`}>
+                                {lecturer.status}
+                              </Badge>
+                            </td>
+                            <td className="py-4 px-6 text-center">
+                              <div className="flex gap-2 justify-center">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedLecturer(lecturer)
+                                    setViewMode("detail")
+                                  }}
+                                  className="h-8 w-8 p-0 rounded-xl hover:bg-blue-100 text-blue-600"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditLecturer(lecturer.id)}
+                                  className="h-8 w-8 p-0 rounded-xl hover:bg-emerald-100 text-emerald-600"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteLecturer(lecturer.id)}
+                                  className="h-8 w-8 p-0 rounded-xl hover:bg-red-100 text-red-600"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="text-center py-16">
+                            <div className="flex flex-col items-center">
+                              <div className="p-6 bg-gradient-to-br from-slate-100 to-blue-100 rounded-2xl shadow-xl mb-6">
+                                <Users className="h-16 w-16 text-slate-400" />
+                              </div>
+                              <p className="text-slate-500 text-xl font-bold mb-2">No lecturers found</p>
+                              <p className="text-slate-400 font-medium">Try adjusting your search criteria</p>
                             </div>
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={5} className="text-center py-12">
-                          <div className="flex flex-col items-center">
-                            <Users className="h-12 w-12 text-gray-300 mb-4" />
-                            <p className="text-gray-500 text-lg font-medium">No lecturers found</p>
-                            <p className="text-gray-400 text-sm">Try adjusting your search criteria</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
+        {showDetailView()}
       </div>
     </div>
   )

@@ -5636,3 +5636,923 @@
 [2025-06-06T08:35:09.983Z] INFO: User SuperAdmin1 logged in at: 2025-06-06 14:05:09
 [2025-06-06T08:36:50.980Z] INFO: Updated Booking Status to: APPROVED at: 2025-06-06 14:06:50 By: SuperAdmin1
 [2025-06-06T08:36:50.981Z] INFO: Updated Booking ID: 82
+[2025-06-06T09:10:27.888Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-06T10:10:27.922Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-06T10:15:27.865Z] INFO: User SuperAdmin1 logged in at: 2025-06-06 15:45:27
+[2025-06-06T10:24:16.755Z] INFO: Connected to MySQL database
+[2025-06-06T10:24:16.756Z] INFO: DB HOST: localhost
+[2025-06-06T10:24:16.756Z] INFO: DB: event_management
+[2025-06-06T10:24:16.762Z] INFO: Courses table ready
+[2025-06-06T10:24:16.763Z] INFO: Batches table ready
+[2025-06-06T10:24:16.764Z] INFO: Students table ready
+[2025-06-06T10:24:16.765Z] INFO: Student courses table ready
+[2025-06-06T10:24:16.766Z] INFO: Student batches table ready
+[2025-06-06T10:24:16.766Z] INFO: Course payments table ready
+[2025-06-06T10:24:16.767Z] INFO: Lecturers table ready
+[2025-06-06T10:24:16.767Z] INFO: Lecturer courses table ready
+[2025-06-06T10:24:16.768Z] INFO: Lecturer academic details table ready
+[2025-06-06T10:24:16.768Z] INFO: Lecturer bank details table ready
+[2025-06-06T10:24:16.769Z] INFO: Lecturer batches table ready
+[2025-06-06T10:24:16.769Z] INFO: All database tables created successfully
+[2025-06-06T10:24:16.782Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-06T10:24:32.313Z] INFO: User SuperAdmin1 logged in at: 2025-06-06 15:54:32
+[2025-06-06T12:20:10.280Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-06T12:20:10.290Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-06T13:59:15.544Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-06T13:59:15.554Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-06T15:23:37.168Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-06T15:23:37.173Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-06T16:07:55.917Z] INFO: User SuperAdmin1 logged in at: 2025-06-06 21:37:55
+[2025-06-06T16:28:10.865Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-06T16:28:10.868Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-06T17:53:35.400Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-06T17:53:35.402Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-06T18:58:09.499Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-06T18:58:09.506Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-06T20:31:05.719Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-06T20:31:05.721Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-06T22:09:23.367Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-06T22:09:23.369Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-06T23:35:35.482Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-06T23:35:35.484Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-07T00:36:07.656Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-07T00:36:07.657Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-07T01:04:54.404Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 06:34:54
+[2025-06-07T01:36:08.092Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-07T01:44:24.384Z] INFO: Connected to MySQL database
+[2025-06-07T01:44:24.385Z] INFO: DB HOST: localhost
+[2025-06-07T01:44:24.385Z] INFO: DB: event_management
+[2025-06-07T01:44:24.389Z] INFO: Courses table ready
+[2025-06-07T01:44:24.390Z] INFO: Batches table ready
+[2025-06-07T01:44:24.391Z] INFO: Students table ready
+[2025-06-07T01:44:24.392Z] INFO: Student courses table ready
+[2025-06-07T01:44:24.393Z] INFO: Student batches table ready
+[2025-06-07T01:44:24.394Z] INFO: Course payments table ready
+[2025-06-07T01:44:24.395Z] INFO: Lecturers table ready
+[2025-06-07T01:44:24.397Z] INFO: Lecturer courses table ready
+[2025-06-07T01:44:24.397Z] INFO: Lecturer academic details table ready
+[2025-06-07T01:44:24.398Z] INFO: Lecturer bank details table ready
+[2025-06-07T01:44:24.398Z] INFO: Lecturer batches table ready
+[2025-06-07T01:44:24.398Z] INFO: All database tables created successfully
+[2025-06-07T01:44:24.410Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T01:44:28.416Z] INFO: Connected to MySQL database
+[2025-06-07T01:44:28.417Z] INFO: DB HOST: localhost
+[2025-06-07T01:44:28.418Z] INFO: DB: event_management
+[2025-06-07T01:44:28.419Z] INFO: Courses table ready
+[2025-06-07T01:44:28.420Z] INFO: Batches table ready
+[2025-06-07T01:44:28.420Z] INFO: Students table ready
+[2025-06-07T01:44:28.421Z] INFO: Student courses table ready
+[2025-06-07T01:44:28.422Z] INFO: Student batches table ready
+[2025-06-07T01:44:28.422Z] INFO: Course payments table ready
+[2025-06-07T01:44:28.423Z] INFO: Lecturers table ready
+[2025-06-07T01:44:28.424Z] INFO: Lecturer courses table ready
+[2025-06-07T01:44:28.424Z] INFO: Lecturer academic details table ready
+[2025-06-07T01:44:28.425Z] INFO: Lecturer bank details table ready
+[2025-06-07T01:44:28.425Z] INFO: Lecturer batches table ready
+[2025-06-07T01:44:28.425Z] INFO: All database tables created successfully
+[2025-06-07T01:44:28.427Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T01:44:42.358Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T01:44:42.360Z] INFO: HTTP server closed
+[2025-06-07T01:44:42.366Z] INFO: Database connection closed
+[2025-06-07T01:46:45.765Z] INFO: Connected to MySQL database
+[2025-06-07T01:46:45.767Z] INFO: DB HOST: localhost
+[2025-06-07T01:46:45.767Z] INFO: DB: event_management
+[2025-06-07T01:46:45.767Z] INFO: Courses table ready
+[2025-06-07T01:46:45.768Z] INFO: Batches table ready
+[2025-06-07T01:46:45.770Z] INFO: Students table ready
+[2025-06-07T01:46:45.770Z] INFO: Student courses table ready
+[2025-06-07T01:46:45.771Z] INFO: Student batches table ready
+[2025-06-07T01:46:45.772Z] INFO: Course payments table ready
+[2025-06-07T01:46:45.773Z] INFO: Lecturers table ready
+[2025-06-07T01:46:45.774Z] INFO: Lecturer courses table ready
+[2025-06-07T01:46:45.775Z] INFO: Lecturer academic details table ready
+[2025-06-07T01:46:45.776Z] INFO: Lecturer bank details table ready
+[2025-06-07T01:46:45.776Z] INFO: Lecturer batches table ready
+[2025-06-07T01:46:45.776Z] INFO: All database tables created successfully
+[2025-06-07T01:46:45.784Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T01:55:35.462Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 07:25:35
+[2025-06-07T01:56:35.275Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:41:32.873Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:46:45.708Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-07T02:50:02.971Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:56:28.233Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 08:26:28
+[2025-06-07T02:58:17.426Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:58:17.441Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:58:18.093Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:58:18.098Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:58:26.222Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:58:26.227Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:58:30.562Z] INFO: Connected to MySQL database
+[2025-06-07T02:58:30.566Z] INFO: DB HOST: localhost
+[2025-06-07T02:58:30.566Z] INFO: DB: event_management
+[2025-06-07T02:58:30.566Z] INFO: Courses table ready
+[2025-06-07T02:58:30.567Z] INFO: Batches table ready
+[2025-06-07T02:58:30.569Z] INFO: Students table ready
+[2025-06-07T02:58:30.569Z] INFO: Student courses table ready
+[2025-06-07T02:58:30.570Z] INFO: Student batches table ready
+[2025-06-07T02:58:30.571Z] INFO: Course payments table ready
+[2025-06-07T02:58:30.572Z] INFO: Lecturers table ready
+[2025-06-07T02:58:30.574Z] INFO: Lecturer courses table ready
+[2025-06-07T02:58:30.574Z] INFO: Lecturer academic details table ready
+[2025-06-07T02:58:30.575Z] INFO: Lecturer bank details table ready
+[2025-06-07T02:58:30.584Z] INFO: Lecturer batches table ready
+[2025-06-07T02:58:30.584Z] INFO: All database tables created successfully
+[2025-06-07T02:58:30.589Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T02:58:31.126Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:58:31.133Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:58:47.109Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:58:47.120Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:58:50.010Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:58:50.018Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:58:56.005Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:58:56.011Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:59:13.244Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:59:27.150Z] INFO: Courses table ready
+[2025-06-07T02:59:27.152Z] INFO: Connected to MySQL database
+[2025-06-07T02:59:27.152Z] INFO: DB HOST: localhost
+[2025-06-07T02:59:27.152Z] INFO: DB: event_management
+[2025-06-07T02:59:27.152Z] INFO: Batches table ready
+[2025-06-07T02:59:27.153Z] INFO: Students table ready
+[2025-06-07T02:59:27.154Z] INFO: Student courses table ready
+[2025-06-07T02:59:27.154Z] INFO: Student batches table ready
+[2025-06-07T02:59:27.155Z] INFO: Course payments table ready
+[2025-06-07T02:59:27.156Z] INFO: Lecturers table ready
+[2025-06-07T02:59:27.157Z] INFO: Lecturer courses table ready
+[2025-06-07T02:59:27.158Z] INFO: Lecturer academic details table ready
+[2025-06-07T02:59:27.158Z] INFO: Lecturer bank details table ready
+[2025-06-07T02:59:27.158Z] INFO: Lecturer batches table ready
+[2025-06-07T02:59:27.158Z] INFO: All database tables created successfully
+[2025-06-07T02:59:27.160Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T02:59:28.414Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:59:28.426Z] ERROR: GET /batches error ER_BAD_FIELD_ERROR: Unknown column 'c.course_name' in 'field list'
+[2025-06-07T02:59:31.239Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T02:59:31.239Z] INFO: HTTP server closed
+[2025-06-07T02:59:37.258Z] INFO: Connected to MySQL database
+[2025-06-07T02:59:37.259Z] INFO: DB HOST: localhost
+[2025-06-07T02:59:37.259Z] INFO: DB: event_management
+[2025-06-07T02:59:37.260Z] INFO: Courses table ready
+[2025-06-07T02:59:37.261Z] INFO: Batches table ready
+[2025-06-07T02:59:37.262Z] INFO: Students table ready
+[2025-06-07T02:59:37.263Z] INFO: Student courses table ready
+[2025-06-07T02:59:37.263Z] INFO: Student batches table ready
+[2025-06-07T02:59:37.264Z] INFO: Course payments table ready
+[2025-06-07T02:59:37.265Z] INFO: Lecturers table ready
+[2025-06-07T02:59:37.267Z] INFO: Lecturer courses table ready
+[2025-06-07T02:59:37.267Z] INFO: Lecturer academic details table ready
+[2025-06-07T02:59:37.268Z] INFO: Lecturer bank details table ready
+[2025-06-07T02:59:37.268Z] INFO: Lecturer batches table ready
+[2025-06-07T02:59:37.268Z] INFO: All database tables created successfully
+[2025-06-07T02:59:37.269Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T03:08:23.358Z] INFO: Connected to MySQL database
+[2025-06-07T03:08:23.365Z] INFO: DB HOST: localhost
+[2025-06-07T03:08:23.365Z] INFO: DB: event_management
+[2025-06-07T03:08:23.365Z] INFO: Courses table ready
+[2025-06-07T03:08:23.367Z] INFO: Batches table ready
+[2025-06-07T03:08:23.368Z] INFO: Students table ready
+[2025-06-07T03:08:23.369Z] INFO: Student courses table ready
+[2025-06-07T03:08:23.370Z] INFO: Student batches table ready
+[2025-06-07T03:08:23.371Z] INFO: Course payments table ready
+[2025-06-07T03:08:23.371Z] INFO: Lecturers table ready
+[2025-06-07T03:08:23.372Z] INFO: Lecturer courses table ready
+[2025-06-07T03:08:23.373Z] INFO: Lecturer academic details table ready
+[2025-06-07T03:08:23.373Z] INFO: Lecturer bank details table ready
+[2025-06-07T03:08:23.373Z] INFO: Lecturer batches table ready
+[2025-06-07T03:08:23.374Z] INFO: All database tables created successfully
+[2025-06-07T03:08:23.382Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T03:08:25.889Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T03:08:25.891Z] INFO: HTTP server closed
+[2025-06-07T03:08:29.279Z] INFO: Connected to MySQL database
+[2025-06-07T03:08:29.281Z] INFO: DB HOST: localhost
+[2025-06-07T03:08:29.281Z] INFO: DB: event_management
+[2025-06-07T03:08:29.282Z] INFO: Courses table ready
+[2025-06-07T03:08:29.283Z] INFO: Batches table ready
+[2025-06-07T03:08:29.284Z] INFO: Students table ready
+[2025-06-07T03:08:29.285Z] INFO: Student courses table ready
+[2025-06-07T03:08:29.286Z] INFO: Student batches table ready
+[2025-06-07T03:08:29.286Z] INFO: Course payments table ready
+[2025-06-07T03:08:29.287Z] INFO: Lecturers table ready
+[2025-06-07T03:08:29.288Z] INFO: Lecturer courses table ready
+[2025-06-07T03:08:29.289Z] INFO: Lecturer academic details table ready
+[2025-06-07T03:08:29.289Z] INFO: Lecturer bank details table ready
+[2025-06-07T03:08:29.290Z] INFO: Lecturer batches table ready
+[2025-06-07T03:08:29.290Z] INFO: All database tables created successfully
+[2025-06-07T03:08:29.291Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T03:51:19.519Z] INFO: Connected to MySQL database
+[2025-06-07T03:51:19.524Z] INFO: DB HOST: localhost
+[2025-06-07T03:51:19.524Z] INFO: DB: event_management
+[2025-06-07T03:51:19.525Z] INFO: Courses table ready
+[2025-06-07T03:51:19.526Z] INFO: Batches table ready
+[2025-06-07T03:51:19.527Z] INFO: Students table ready
+[2025-06-07T03:51:19.528Z] INFO: Student courses table ready
+[2025-06-07T03:51:19.529Z] INFO: Student batches table ready
+[2025-06-07T03:51:19.530Z] INFO: Course payments table ready
+[2025-06-07T03:51:19.530Z] INFO: Lecturers table ready
+[2025-06-07T03:51:19.531Z] INFO: Lecturer courses table ready
+[2025-06-07T03:51:19.532Z] INFO: Lecturer academic details table ready
+[2025-06-07T03:51:19.532Z] INFO: Lecturer bank details table ready
+[2025-06-07T03:51:19.532Z] INFO: Lecturer batches table ready
+[2025-06-07T03:51:19.533Z] INFO: All database tables created successfully
+[2025-06-07T03:51:19.540Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T03:51:23.884Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T03:51:23.886Z] INFO: HTTP server closed
+[2025-06-07T03:51:27.388Z] INFO: Connected to MySQL database
+[2025-06-07T03:51:27.389Z] INFO: DB HOST: localhost
+[2025-06-07T03:51:27.389Z] INFO: DB: event_management
+[2025-06-07T03:51:27.390Z] INFO: Courses table ready
+[2025-06-07T03:51:27.391Z] INFO: Batches table ready
+[2025-06-07T03:51:27.392Z] INFO: Students table ready
+[2025-06-07T03:51:27.393Z] INFO: Student courses table ready
+[2025-06-07T03:51:27.393Z] INFO: Student batches table ready
+[2025-06-07T03:51:27.394Z] INFO: Course payments table ready
+[2025-06-07T03:51:27.395Z] INFO: Lecturers table ready
+[2025-06-07T03:51:27.395Z] INFO: Lecturer courses table ready
+[2025-06-07T03:51:27.396Z] INFO: Lecturer academic details table ready
+[2025-06-07T03:51:27.396Z] INFO: Lecturer bank details table ready
+[2025-06-07T03:51:27.397Z] INFO: Lecturer batches table ready
+[2025-06-07T03:51:27.397Z] INFO: All database tables created successfully
+[2025-06-07T03:51:27.399Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T03:51:34.432Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 09:21:34
+[2025-06-07T03:52:20.567Z] INFO: Courses table ready
+[2025-06-07T03:52:20.569Z] INFO: Connected to MySQL database
+[2025-06-07T03:52:20.569Z] INFO: DB HOST: localhost
+[2025-06-07T03:52:20.570Z] INFO: DB: event_management
+[2025-06-07T03:52:20.570Z] INFO: Batches table ready
+[2025-06-07T03:52:20.571Z] INFO: Students table ready
+[2025-06-07T03:52:20.571Z] INFO: Student courses table ready
+[2025-06-07T03:52:20.572Z] INFO: Student batches table ready
+[2025-06-07T03:52:20.572Z] INFO: Course payments table ready
+[2025-06-07T03:52:20.573Z] INFO: Lecturers table ready
+[2025-06-07T03:52:20.574Z] INFO: Lecturer courses table ready
+[2025-06-07T03:52:20.574Z] INFO: Lecturer academic details table ready
+[2025-06-07T03:52:20.575Z] INFO: Lecturer bank details table ready
+[2025-06-07T03:52:20.576Z] INFO: Lecturer batches table ready
+[2025-06-07T03:52:20.576Z] INFO: All database tables created successfully
+[2025-06-07T03:52:20.578Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T03:52:31.466Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T03:52:31.466Z] INFO: HTTP server closed
+[2025-06-07T03:52:34.882Z] INFO: Courses table ready
+[2025-06-07T03:52:34.885Z] INFO: Connected to MySQL database
+[2025-06-07T03:52:34.885Z] INFO: DB HOST: localhost
+[2025-06-07T03:52:34.885Z] INFO: DB: event_management
+[2025-06-07T03:52:34.885Z] INFO: Batches table ready
+[2025-06-07T03:52:34.886Z] INFO: Students table ready
+[2025-06-07T03:52:34.887Z] INFO: Student courses table ready
+[2025-06-07T03:52:34.887Z] INFO: Student batches table ready
+[2025-06-07T03:52:34.888Z] INFO: Course payments table ready
+[2025-06-07T03:52:34.888Z] INFO: Lecturers table ready
+[2025-06-07T03:52:34.889Z] INFO: Lecturer courses table ready
+[2025-06-07T03:52:34.890Z] INFO: Lecturer academic details table ready
+[2025-06-07T03:52:34.890Z] INFO: Lecturer bank details table ready
+[2025-06-07T03:52:34.891Z] INFO: Lecturer batches table ready
+[2025-06-07T03:52:34.891Z] INFO: All database tables created successfully
+[2025-06-07T03:52:34.892Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T05:01:52.404Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-07T05:27:46.309Z] INFO: Connected to MySQL database
+[2025-06-07T05:27:46.314Z] INFO: DB HOST: localhost
+[2025-06-07T05:27:46.314Z] INFO: DB: event_management
+[2025-06-07T05:27:46.315Z] INFO: Courses table ready
+[2025-06-07T05:27:46.316Z] INFO: Batches table ready
+[2025-06-07T05:27:46.317Z] INFO: Students table ready
+[2025-06-07T05:27:46.318Z] INFO: Student courses table ready
+[2025-06-07T05:27:46.319Z] INFO: Student batches table ready
+[2025-06-07T05:27:46.320Z] INFO: Course payments table ready
+[2025-06-07T05:27:46.321Z] INFO: Lecturers table ready
+[2025-06-07T05:27:46.321Z] INFO: Lecturer courses table ready
+[2025-06-07T05:27:46.322Z] INFO: Lecturer academic details table ready
+[2025-06-07T05:27:46.323Z] INFO: Lecturer bank details table ready
+[2025-06-07T05:27:46.323Z] INFO: Lecturer batches table ready
+[2025-06-07T05:27:46.323Z] INFO: All database tables created successfully
+[2025-06-07T05:27:46.332Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T05:27:48.202Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T05:27:48.202Z] INFO: HTTP server closed
+[2025-06-07T05:27:48.204Z] INFO: Database connection closed
+[2025-06-07T05:27:51.177Z] INFO: Connected to MySQL database
+[2025-06-07T05:27:51.182Z] INFO: DB HOST: localhost
+[2025-06-07T05:27:51.183Z] INFO: DB: event_management
+[2025-06-07T05:27:51.183Z] INFO: Courses table ready
+[2025-06-07T05:27:51.184Z] INFO: Batches table ready
+[2025-06-07T05:27:51.185Z] INFO: Students table ready
+[2025-06-07T05:27:51.186Z] INFO: Student courses table ready
+[2025-06-07T05:27:51.186Z] INFO: Student batches table ready
+[2025-06-07T05:27:51.187Z] INFO: Course payments table ready
+[2025-06-07T05:27:51.187Z] INFO: Lecturers table ready
+[2025-06-07T05:27:51.188Z] INFO: Lecturer courses table ready
+[2025-06-07T05:27:51.189Z] INFO: Lecturer academic details table ready
+[2025-06-07T05:27:51.189Z] INFO: Lecturer bank details table ready
+[2025-06-07T05:27:51.190Z] INFO: Lecturer batches table ready
+[2025-06-07T05:27:51.190Z] INFO: All database tables created successfully
+[2025-06-07T05:27:51.192Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T05:28:03.489Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 10:58:03
+[2025-06-07T05:28:36.976Z] INFO: Connected to MySQL database
+[2025-06-07T05:28:36.980Z] INFO: DB HOST: localhost
+[2025-06-07T05:28:36.981Z] INFO: DB: event_management
+[2025-06-07T05:28:36.981Z] INFO: Courses table ready
+[2025-06-07T05:28:36.982Z] INFO: Batches table ready
+[2025-06-07T05:28:36.983Z] INFO: Students table ready
+[2025-06-07T05:28:36.984Z] INFO: Student courses table ready
+[2025-06-07T05:28:36.984Z] INFO: Student batches table ready
+[2025-06-07T05:28:36.985Z] INFO: Course payments table ready
+[2025-06-07T05:28:36.986Z] INFO: Lecturers table ready
+[2025-06-07T05:28:36.986Z] INFO: Lecturer courses table ready
+[2025-06-07T05:28:36.987Z] INFO: Lecturer academic details table ready
+[2025-06-07T05:28:36.987Z] INFO: Lecturer bank details table ready
+[2025-06-07T05:28:36.988Z] INFO: Lecturer batches table ready
+[2025-06-07T05:28:36.988Z] INFO: All database tables created successfully
+[2025-06-07T05:28:36.991Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T05:28:37.516Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T05:28:37.517Z] INFO: HTTP server closed
+[2025-06-07T05:28:40.258Z] INFO: Connected to MySQL database
+[2025-06-07T05:28:40.259Z] INFO: DB HOST: localhost
+[2025-06-07T05:28:40.259Z] INFO: DB: event_management
+[2025-06-07T05:28:40.260Z] INFO: Courses table ready
+[2025-06-07T05:28:40.260Z] INFO: Batches table ready
+[2025-06-07T05:28:40.261Z] INFO: Students table ready
+[2025-06-07T05:28:40.262Z] INFO: Student courses table ready
+[2025-06-07T05:28:40.263Z] INFO: Student batches table ready
+[2025-06-07T05:28:40.263Z] INFO: Course payments table ready
+[2025-06-07T05:28:40.264Z] INFO: Lecturers table ready
+[2025-06-07T05:28:40.264Z] INFO: Lecturer courses table ready
+[2025-06-07T05:28:40.265Z] INFO: Lecturer academic details table ready
+[2025-06-07T05:28:40.265Z] INFO: Lecturer bank details table ready
+[2025-06-07T05:28:40.266Z] INFO: Lecturer batches table ready
+[2025-06-07T05:28:40.266Z] INFO: All database tables created successfully
+[2025-06-07T05:28:40.267Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T05:32:35.957Z] INFO: Courses table ready
+[2025-06-07T05:32:35.960Z] INFO: Connected to MySQL database
+[2025-06-07T05:32:35.960Z] INFO: DB HOST: localhost
+[2025-06-07T05:32:35.960Z] INFO: DB: event_management
+[2025-06-07T05:32:35.960Z] INFO: Batches table ready
+[2025-06-07T05:32:35.962Z] INFO: Students table ready
+[2025-06-07T05:32:35.963Z] INFO: Student courses table ready
+[2025-06-07T05:32:35.963Z] INFO: Student batches table ready
+[2025-06-07T05:32:35.964Z] INFO: Course payments table ready
+[2025-06-07T05:32:35.965Z] INFO: Lecturers table ready
+[2025-06-07T05:32:35.965Z] INFO: Lecturer courses table ready
+[2025-06-07T05:32:35.966Z] INFO: Lecturer academic details table ready
+[2025-06-07T05:32:35.966Z] INFO: Lecturer bank details table ready
+[2025-06-07T05:32:35.966Z] INFO: Lecturer batches table ready
+[2025-06-07T05:32:35.967Z] INFO: All database tables created successfully
+[2025-06-07T05:32:35.968Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T05:32:36.752Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T05:32:36.753Z] INFO: HTTP server closed
+[2025-06-07T05:32:36.755Z] INFO: Database connection closed
+[2025-06-07T05:32:42.689Z] INFO: Connected to MySQL database
+[2025-06-07T05:32:42.690Z] INFO: DB HOST: localhost
+[2025-06-07T05:32:42.691Z] INFO: DB: event_management
+[2025-06-07T05:32:42.691Z] INFO: Courses table ready
+[2025-06-07T05:32:42.692Z] INFO: Batches table ready
+[2025-06-07T05:32:42.693Z] INFO: Students table ready
+[2025-06-07T05:32:42.694Z] INFO: Student courses table ready
+[2025-06-07T05:32:42.695Z] INFO: Student batches table ready
+[2025-06-07T05:32:42.695Z] INFO: Course payments table ready
+[2025-06-07T05:32:42.696Z] INFO: Lecturers table ready
+[2025-06-07T05:32:42.697Z] INFO: Lecturer courses table ready
+[2025-06-07T05:32:42.697Z] INFO: Lecturer academic details table ready
+[2025-06-07T05:32:42.698Z] INFO: Lecturer bank details table ready
+[2025-06-07T05:32:42.699Z] INFO: Lecturer batches table ready
+[2025-06-07T05:32:42.699Z] INFO: All database tables created successfully
+[2025-06-07T05:32:42.700Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T05:33:21.413Z] INFO: Connected to MySQL database
+[2025-06-07T05:33:21.414Z] INFO: DB HOST: localhost
+[2025-06-07T05:33:21.414Z] INFO: DB: event_management
+[2025-06-07T05:33:21.415Z] INFO: Courses table ready
+[2025-06-07T05:33:21.416Z] INFO: Batches table ready
+[2025-06-07T05:33:21.417Z] INFO: Students table ready
+[2025-06-07T05:33:21.417Z] INFO: Student courses table ready
+[2025-06-07T05:33:21.418Z] INFO: Student batches table ready
+[2025-06-07T05:33:21.419Z] INFO: Course payments table ready
+[2025-06-07T05:33:21.419Z] INFO: Lecturers table ready
+[2025-06-07T05:33:21.420Z] INFO: Lecturer courses table ready
+[2025-06-07T05:33:21.421Z] INFO: Lecturer academic details table ready
+[2025-06-07T05:33:21.421Z] INFO: Lecturer bank details table ready
+[2025-06-07T05:33:21.422Z] INFO: Lecturer batches table ready
+[2025-06-07T05:33:21.422Z] INFO: All database tables created successfully
+[2025-06-07T05:33:21.423Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T05:33:21.560Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T05:33:21.561Z] INFO: HTTP server closed
+[2025-06-07T05:33:21.563Z] INFO: Database connection closed
+[2025-06-07T05:33:25.257Z] INFO: Connected to MySQL database
+[2025-06-07T05:33:25.258Z] INFO: DB HOST: localhost
+[2025-06-07T05:33:25.258Z] INFO: DB: event_management
+[2025-06-07T05:33:25.258Z] INFO: Courses table ready
+[2025-06-07T05:33:25.259Z] INFO: Batches table ready
+[2025-06-07T05:33:25.260Z] INFO: Students table ready
+[2025-06-07T05:33:25.261Z] INFO: Student courses table ready
+[2025-06-07T05:33:25.261Z] INFO: Student batches table ready
+[2025-06-07T05:33:25.262Z] INFO: Course payments table ready
+[2025-06-07T05:33:25.263Z] INFO: Lecturers table ready
+[2025-06-07T05:33:25.263Z] INFO: Lecturer courses table ready
+[2025-06-07T05:33:25.264Z] INFO: Lecturer academic details table ready
+[2025-06-07T05:33:25.264Z] INFO: Lecturer bank details table ready
+[2025-06-07T05:33:25.265Z] INFO: Lecturer batches table ready
+[2025-06-07T05:33:25.265Z] INFO: All database tables created successfully
+[2025-06-07T05:33:25.266Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T05:34:12.560Z] INFO: Connected to MySQL database
+[2025-06-07T05:34:12.561Z] INFO: DB HOST: localhost
+[2025-06-07T05:34:12.562Z] INFO: DB: event_management
+[2025-06-07T05:34:12.562Z] INFO: Courses table ready
+[2025-06-07T05:34:12.563Z] INFO: Batches table ready
+[2025-06-07T05:34:12.564Z] INFO: Students table ready
+[2025-06-07T05:34:12.564Z] INFO: Student courses table ready
+[2025-06-07T05:34:12.565Z] INFO: Student batches table ready
+[2025-06-07T05:34:12.566Z] INFO: Course payments table ready
+[2025-06-07T05:34:12.566Z] INFO: Lecturers table ready
+[2025-06-07T05:34:12.567Z] INFO: Lecturer courses table ready
+[2025-06-07T05:34:12.567Z] INFO: Lecturer academic details table ready
+[2025-06-07T05:34:12.568Z] INFO: Lecturer bank details table ready
+[2025-06-07T05:34:12.568Z] INFO: Lecturer batches table ready
+[2025-06-07T05:34:12.568Z] INFO: All database tables created successfully
+[2025-06-07T05:34:12.570Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T05:34:13.931Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T05:34:13.932Z] INFO: HTTP server closed
+[2025-06-07T05:34:16.916Z] INFO: Connected to MySQL database
+[2025-06-07T05:34:16.917Z] INFO: DB HOST: localhost
+[2025-06-07T05:34:16.917Z] INFO: DB: event_management
+[2025-06-07T05:34:16.918Z] INFO: Courses table ready
+[2025-06-07T05:34:16.919Z] INFO: Batches table ready
+[2025-06-07T05:34:16.920Z] INFO: Students table ready
+[2025-06-07T05:34:16.921Z] INFO: Student courses table ready
+[2025-06-07T05:34:16.921Z] INFO: Student batches table ready
+[2025-06-07T05:34:16.922Z] INFO: Course payments table ready
+[2025-06-07T05:34:16.922Z] INFO: Lecturers table ready
+[2025-06-07T05:34:16.923Z] INFO: Lecturer courses table ready
+[2025-06-07T05:34:16.923Z] INFO: Lecturer academic details table ready
+[2025-06-07T05:34:16.924Z] INFO: Lecturer bank details table ready
+[2025-06-07T05:34:16.924Z] INFO: Lecturer batches table ready
+[2025-06-07T05:34:16.924Z] INFO: All database tables created successfully
+[2025-06-07T05:34:16.925Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T05:36:39.646Z] INFO: Connected to MySQL database
+[2025-06-07T05:36:39.647Z] INFO: DB HOST: localhost
+[2025-06-07T05:36:39.647Z] INFO: DB: event_management
+[2025-06-07T05:36:40.434Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T05:36:40.435Z] INFO: HTTP server closed
+[2025-06-07T05:36:43.503Z] INFO: Connected to MySQL database
+[2025-06-07T05:36:43.504Z] INFO: DB HOST: localhost
+[2025-06-07T05:36:43.505Z] INFO: DB: event_management
+[2025-06-07T05:36:43.505Z] INFO: Courses table ready
+[2025-06-07T05:36:43.506Z] INFO: Batches table ready
+[2025-06-07T05:36:43.507Z] INFO: Students table ready
+[2025-06-07T05:36:43.508Z] INFO: Student courses table ready
+[2025-06-07T05:36:43.509Z] INFO: Student batches table ready
+[2025-06-07T05:36:43.511Z] INFO: Course payments table ready
+[2025-06-07T05:36:43.511Z] INFO: Lecturers table ready
+[2025-06-07T05:36:43.512Z] INFO: Lecturer courses table ready
+[2025-06-07T05:36:43.513Z] INFO: Lecturer academic details table ready
+[2025-06-07T05:36:43.513Z] INFO: Lecturer bank details table ready
+[2025-06-07T05:36:43.514Z] INFO: Lecturer batches table ready
+[2025-06-07T05:36:43.514Z] INFO: All database tables created successfully
+[2025-06-07T05:36:43.515Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T05:37:36.482Z] INFO: Courses table ready
+[2025-06-07T05:37:36.485Z] INFO: Connected to MySQL database
+[2025-06-07T05:37:36.485Z] INFO: DB HOST: localhost
+[2025-06-07T05:37:36.485Z] INFO: DB: event_management
+[2025-06-07T05:37:36.485Z] INFO: Batches table ready
+[2025-06-07T05:37:36.486Z] INFO: Students table ready
+[2025-06-07T05:37:36.487Z] INFO: Student courses table ready
+[2025-06-07T05:37:36.487Z] INFO: Student batches table ready
+[2025-06-07T05:37:36.488Z] INFO: Course payments table ready
+[2025-06-07T05:37:36.488Z] INFO: Lecturers table ready
+[2025-06-07T05:37:36.489Z] INFO: Lecturer courses table ready
+[2025-06-07T05:37:36.490Z] INFO: Lecturer academic details table ready
+[2025-06-07T05:37:36.491Z] INFO: Lecturer bank details table ready
+[2025-06-07T05:37:36.491Z] INFO: Lecturer batches table ready
+[2025-06-07T05:37:36.491Z] INFO: All database tables created successfully
+[2025-06-07T05:37:36.492Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T05:37:37.411Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T05:37:37.412Z] INFO: HTTP server closed
+[2025-06-07T05:37:40.168Z] INFO: Courses table ready
+[2025-06-07T05:37:40.169Z] INFO: Connected to MySQL database
+[2025-06-07T05:37:40.169Z] INFO: DB HOST: localhost
+[2025-06-07T05:37:40.170Z] INFO: DB: event_management
+[2025-06-07T05:37:40.171Z] INFO: Batches table ready
+[2025-06-07T05:37:40.171Z] INFO: Students table ready
+[2025-06-07T05:37:40.172Z] INFO: Student courses table ready
+[2025-06-07T05:37:40.173Z] INFO: Student batches table ready
+[2025-06-07T05:37:40.173Z] INFO: Course payments table ready
+[2025-06-07T05:37:40.174Z] INFO: Lecturers table ready
+[2025-06-07T05:37:40.174Z] INFO: Lecturer courses table ready
+[2025-06-07T05:37:40.175Z] INFO: Lecturer academic details table ready
+[2025-06-07T05:37:40.175Z] INFO: Lecturer bank details table ready
+[2025-06-07T05:37:40.176Z] INFO: Lecturer batches table ready
+[2025-06-07T05:37:40.176Z] INFO: All database tables created successfully
+[2025-06-07T05:37:40.177Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T06:45:15.974Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-07T07:33:10.694Z] INFO: Connected to MySQL database
+[2025-06-07T07:33:10.699Z] INFO: DB HOST: localhost
+[2025-06-07T07:33:10.699Z] INFO: DB: event_management
+[2025-06-07T07:33:10.699Z] INFO: Courses table ready
+[2025-06-07T07:33:10.701Z] INFO: Batches table ready
+[2025-06-07T07:33:10.702Z] INFO: Students table ready
+[2025-06-07T07:33:10.702Z] INFO: Student courses table ready
+[2025-06-07T07:33:10.703Z] INFO: Student batches table ready
+[2025-06-07T07:33:10.704Z] INFO: Course payments table ready
+[2025-06-07T07:33:10.705Z] INFO: Lecturers table ready
+[2025-06-07T07:33:10.705Z] INFO: Lecturer courses table ready
+[2025-06-07T07:33:10.706Z] INFO: Lecturer academic details table ready
+[2025-06-07T07:33:10.706Z] INFO: Lecturer bank details table ready
+[2025-06-07T07:33:10.707Z] INFO: Lecturer batches table ready
+[2025-06-07T07:33:10.707Z] INFO: All database tables created successfully
+[2025-06-07T07:33:10.715Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T07:33:12.098Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T07:33:12.098Z] INFO: HTTP server closed
+[2025-06-07T07:33:12.099Z] INFO: Database connection closed
+[2025-06-07T07:33:18.777Z] INFO: Connected to MySQL database
+[2025-06-07T07:33:18.778Z] INFO: DB HOST: localhost
+[2025-06-07T07:33:18.778Z] INFO: DB: event_management
+[2025-06-07T07:33:18.779Z] INFO: Courses table ready
+[2025-06-07T07:33:18.780Z] INFO: Batches table ready
+[2025-06-07T07:33:18.781Z] INFO: Students table ready
+[2025-06-07T07:33:18.781Z] INFO: Student courses table ready
+[2025-06-07T07:33:18.782Z] INFO: Student batches table ready
+[2025-06-07T07:33:18.783Z] INFO: Course payments table ready
+[2025-06-07T07:33:18.784Z] INFO: Lecturers table ready
+[2025-06-07T07:33:18.784Z] INFO: Lecturer courses table ready
+[2025-06-07T07:33:18.785Z] INFO: Lecturer academic details table ready
+[2025-06-07T07:33:18.786Z] INFO: Lecturer bank details table ready
+[2025-06-07T07:33:18.786Z] INFO: Lecturer batches table ready
+[2025-06-07T07:33:18.786Z] INFO: All database tables created successfully
+[2025-06-07T07:33:18.788Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T07:34:24.461Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 13:04:24
+[2025-06-07T07:36:37.919Z] INFO: Connected to MySQL database
+[2025-06-07T07:36:37.925Z] INFO: DB HOST: localhost
+[2025-06-07T07:36:37.925Z] INFO: DB: event_management
+[2025-06-07T07:36:37.926Z] INFO: Courses table ready
+[2025-06-07T07:36:37.927Z] INFO: Batches table ready
+[2025-06-07T07:36:37.928Z] INFO: Students table ready
+[2025-06-07T07:36:37.928Z] INFO: Student courses table ready
+[2025-06-07T07:36:37.929Z] INFO: Student batches table ready
+[2025-06-07T07:36:37.930Z] INFO: Course payments table ready
+[2025-06-07T07:36:37.930Z] INFO: Lecturers table ready
+[2025-06-07T07:36:37.931Z] INFO: Lecturer courses table ready
+[2025-06-07T07:36:37.931Z] INFO: Lecturer academic details table ready
+[2025-06-07T07:36:37.932Z] INFO: Lecturer bank details table ready
+[2025-06-07T07:36:37.932Z] INFO: Lecturer batches table ready
+[2025-06-07T07:36:37.932Z] INFO: All database tables created successfully
+[2025-06-07T07:36:37.942Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T07:36:39.090Z] INFO: Connected to MySQL database
+[2025-06-07T07:36:39.091Z] INFO: DB HOST: localhost
+[2025-06-07T07:36:39.091Z] INFO: DB: event_management
+[2025-06-07T07:36:39.091Z] INFO: Courses table ready
+[2025-06-07T07:36:39.093Z] INFO: Batches table ready
+[2025-06-07T07:36:39.093Z] INFO: Students table ready
+[2025-06-07T07:36:39.098Z] INFO: Student courses table ready
+[2025-06-07T07:36:39.099Z] INFO: Student batches table ready
+[2025-06-07T07:36:39.100Z] INFO: Course payments table ready
+[2025-06-07T07:36:39.101Z] INFO: Lecturers table ready
+[2025-06-07T07:36:39.101Z] INFO: Lecturer courses table ready
+[2025-06-07T07:36:39.102Z] INFO: Lecturer academic details table ready
+[2025-06-07T07:36:39.103Z] INFO: Lecturer bank details table ready
+[2025-06-07T07:36:39.103Z] INFO: Lecturer batches table ready
+[2025-06-07T07:36:39.103Z] INFO: All database tables created successfully
+[2025-06-07T07:36:39.104Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T07:36:53.108Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T07:36:53.109Z] INFO: HTTP server closed
+[2025-06-07T07:38:31.081Z] INFO: Connected to MySQL database
+[2025-06-07T07:38:31.082Z] INFO: DB HOST: localhost
+[2025-06-07T07:38:31.082Z] INFO: DB: event_management
+[2025-06-07T07:38:31.083Z] INFO: Courses table ready
+[2025-06-07T07:38:31.084Z] INFO: Batches table ready
+[2025-06-07T07:38:31.087Z] INFO: Students table ready
+[2025-06-07T07:38:31.088Z] INFO: Student courses table ready
+[2025-06-07T07:38:31.088Z] INFO: Student batches table ready
+[2025-06-07T07:38:31.089Z] INFO: Course payments table ready
+[2025-06-07T07:38:31.090Z] INFO: Lecturers table ready
+[2025-06-07T07:38:31.090Z] INFO: Lecturer courses table ready
+[2025-06-07T07:38:31.091Z] INFO: Lecturer academic details table ready
+[2025-06-07T07:38:31.091Z] INFO: Lecturer bank details table ready
+[2025-06-07T07:38:31.092Z] INFO: Lecturer batches table ready
+[2025-06-07T07:38:31.092Z] INFO: All database tables created successfully
+[2025-06-07T07:38:31.093Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T07:38:43.371Z] INFO: Connected to MySQL database
+[2025-06-07T07:38:43.372Z] INFO: DB HOST: localhost
+[2025-06-07T07:38:43.372Z] INFO: DB: event_management
+[2025-06-07T07:38:43.373Z] INFO: Courses table ready
+[2025-06-07T07:38:43.374Z] INFO: Batches table ready
+[2025-06-07T07:38:43.375Z] INFO: Students table ready
+[2025-06-07T07:38:43.375Z] INFO: Student courses table ready
+[2025-06-07T07:38:43.375Z] INFO: Student batches table ready
+[2025-06-07T07:38:43.376Z] INFO: Course payments table ready
+[2025-06-07T07:38:43.377Z] INFO: Lecturers table ready
+[2025-06-07T07:38:43.377Z] INFO: Lecturer courses table ready
+[2025-06-07T07:38:43.378Z] INFO: Lecturer academic details table ready
+[2025-06-07T07:38:43.378Z] INFO: Lecturer bank details table ready
+[2025-06-07T07:38:43.379Z] INFO: Lecturer batches table ready
+[2025-06-07T07:38:43.379Z] INFO: All database tables created successfully
+[2025-06-07T07:38:43.380Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T07:38:43.457Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T07:38:43.458Z] INFO: HTTP server closed
+[2025-06-07T07:38:48.028Z] INFO: Courses table ready
+[2025-06-07T07:38:48.031Z] INFO: Connected to MySQL database
+[2025-06-07T07:38:48.031Z] INFO: DB HOST: localhost
+[2025-06-07T07:38:48.031Z] INFO: DB: event_management
+[2025-06-07T07:38:48.032Z] INFO: Batches table ready
+[2025-06-07T07:38:48.034Z] INFO: Students table ready
+[2025-06-07T07:38:48.035Z] INFO: Student courses table ready
+[2025-06-07T07:38:48.036Z] INFO: Student batches table ready
+[2025-06-07T07:38:48.036Z] INFO: Course payments table ready
+[2025-06-07T07:38:48.037Z] INFO: Lecturers table ready
+[2025-06-07T07:38:48.038Z] INFO: Lecturer courses table ready
+[2025-06-07T07:38:48.040Z] INFO: Lecturer academic details table ready
+[2025-06-07T07:38:48.041Z] INFO: Lecturer bank details table ready
+[2025-06-07T07:38:48.041Z] INFO: Lecturer batches table ready
+[2025-06-07T07:38:48.041Z] INFO: All database tables created successfully
+[2025-06-07T07:38:48.042Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T07:43:08.320Z] INFO: Batch "KS25/05MP" created by SuperAdmin1 at 2025-06-07T13:13:08+05:30
+[2025-06-07T07:43:23.824Z] INFO: Batch 5 updated by SuperAdmin1 at 2025-06-07T13:13:23+05:30
+[2025-06-07T07:44:13.784Z] INFO: 1 lecturers assigned to batch 5 by SuperAdmin1
+[2025-06-07T07:44:16.022Z] INFO: 1 lecturers assigned to batch 5 by SuperAdmin1
+[2025-06-07T07:44:19.955Z] INFO: 1 lecturers assigned to batch 5 by SuperAdmin1
+[2025-06-07T07:44:40.055Z] INFO: 1 lecturers assigned to batch 5 by SuperAdmin1
+[2025-06-07T07:45:04.586Z] INFO: 1 students assigned to batch 5 by SuperAdmin1
+[2025-06-07T07:52:44.872Z] INFO: Connected to MySQL database
+[2025-06-07T07:52:44.879Z] INFO: DB HOST: localhost
+[2025-06-07T07:52:44.879Z] INFO: DB: event_management
+[2025-06-07T07:52:44.881Z] INFO: Courses table ready
+[2025-06-07T07:52:44.884Z] INFO: Batches table ready
+[2025-06-07T07:52:44.887Z] INFO: Students table ready
+[2025-06-07T07:52:44.890Z] INFO: Student courses table ready
+[2025-06-07T07:52:44.891Z] INFO: Student batches table ready
+[2025-06-07T07:52:44.892Z] INFO: Course payments table ready
+[2025-06-07T07:52:44.893Z] INFO: Lecturers table ready
+[2025-06-07T07:52:44.893Z] INFO: Lecturer courses table ready
+[2025-06-07T07:52:44.894Z] INFO: Lecturer academic details table ready
+[2025-06-07T07:52:44.895Z] INFO: Lecturer bank details table ready
+[2025-06-07T07:52:44.895Z] INFO: Lecturer batches table ready
+[2025-06-07T07:52:44.895Z] INFO: All database tables created successfully
+[2025-06-07T07:52:44.903Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T07:52:47.620Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T07:52:47.621Z] INFO: HTTP server closed
+[2025-06-07T07:52:55.632Z] INFO: Courses table ready
+[2025-06-07T07:52:55.634Z] INFO: Connected to MySQL database
+[2025-06-07T07:52:55.634Z] INFO: DB HOST: localhost
+[2025-06-07T07:52:55.634Z] INFO: DB: event_management
+[2025-06-07T07:52:55.635Z] INFO: Batches table ready
+[2025-06-07T07:52:55.636Z] INFO: Students table ready
+[2025-06-07T07:52:55.636Z] INFO: Student courses table ready
+[2025-06-07T07:52:55.637Z] INFO: Student batches table ready
+[2025-06-07T07:52:55.638Z] INFO: Course payments table ready
+[2025-06-07T07:52:55.638Z] INFO: Lecturers table ready
+[2025-06-07T07:52:55.639Z] INFO: Lecturer courses table ready
+[2025-06-07T07:52:55.639Z] INFO: Lecturer academic details table ready
+[2025-06-07T07:52:55.639Z] INFO: Lecturer bank details table ready
+[2025-06-07T07:52:55.640Z] INFO: Lecturer batches table ready
+[2025-06-07T07:52:55.640Z] INFO: All database tables created successfully
+[2025-06-07T07:52:55.641Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T08:06:11.863Z] INFO: Connected to MySQL database
+[2025-06-07T08:06:11.869Z] INFO: DB HOST: localhost
+[2025-06-07T08:06:11.869Z] INFO: DB: event_management
+[2025-06-07T08:06:11.870Z] INFO: Courses table ready
+[2025-06-07T08:06:11.871Z] INFO: Batches table ready
+[2025-06-07T08:06:11.872Z] INFO: Students table ready
+[2025-06-07T08:06:11.872Z] INFO: Student courses table ready
+[2025-06-07T08:06:11.873Z] INFO: Student batches table ready
+[2025-06-07T08:06:11.874Z] INFO: Course payments table ready
+[2025-06-07T08:06:11.874Z] INFO: Lecturers table ready
+[2025-06-07T08:06:11.875Z] INFO: Lecturer courses table ready
+[2025-06-07T08:06:11.875Z] INFO: Lecturer academic details table ready
+[2025-06-07T08:06:11.876Z] INFO: Lecturer bank details table ready
+[2025-06-07T08:06:11.876Z] INFO: Lecturer batches table ready
+[2025-06-07T08:06:11.876Z] INFO: All database tables created successfully
+[2025-06-07T08:06:11.881Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T08:06:22.467Z] INFO: Courses table ready
+[2025-06-07T08:06:22.470Z] INFO: Connected to MySQL database
+[2025-06-07T08:06:22.470Z] INFO: DB HOST: localhost
+[2025-06-07T08:06:22.470Z] INFO: DB: event_management
+[2025-06-07T08:06:22.470Z] INFO: Batches table ready
+[2025-06-07T08:06:22.471Z] INFO: Students table ready
+[2025-06-07T08:06:22.472Z] INFO: Student courses table ready
+[2025-06-07T08:06:22.472Z] INFO: Student batches table ready
+[2025-06-07T08:06:22.473Z] INFO: Course payments table ready
+[2025-06-07T08:06:22.473Z] INFO: Lecturers table ready
+[2025-06-07T08:06:22.474Z] INFO: Lecturer courses table ready
+[2025-06-07T08:06:22.474Z] INFO: Lecturer academic details table ready
+[2025-06-07T08:06:22.475Z] INFO: Lecturer bank details table ready
+[2025-06-07T08:06:22.475Z] INFO: Lecturer batches table ready
+[2025-06-07T08:06:22.475Z] INFO: All database tables created successfully
+[2025-06-07T08:06:22.477Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T08:08:06.702Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 13:38:06
+[2025-06-07T09:06:22.398Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-07T09:10:31.169Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 14:40:31
+[2025-06-07T09:12:30.056Z] INFO: Batch "TESTLOG/12" created by SuperAdmin1 at 2025-06-07T14:42:30+05:30
+[2025-06-07T09:13:21.996Z] INFO: Batch "TESTLOG/12/1" created by SuperAdmin1 at 2025-06-07T14:43:21+05:30
+[2025-06-07T09:32:41.070Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 15:02:41
+[2025-06-07T09:47:28.005Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 15:17:28
+[2025-06-07T10:06:23.610Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-07T10:15:47.677Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 15:45:47
+[2025-06-07T15:48:36.540Z] INFO: Connected to MySQL database
+[2025-06-07T15:48:36.541Z] INFO: DB HOST: localhost
+[2025-06-07T15:48:36.541Z] INFO: DB: event_management
+[2025-06-07T15:48:36.542Z] INFO: Courses table ready
+[2025-06-07T15:48:36.543Z] INFO: Batches table ready
+[2025-06-07T15:48:36.545Z] INFO: Students table ready
+[2025-06-07T15:48:36.546Z] INFO: Student courses table ready
+[2025-06-07T15:48:36.547Z] INFO: Student batches table ready
+[2025-06-07T15:48:36.548Z] INFO: Course payments table ready
+[2025-06-07T15:48:36.549Z] INFO: Lecturers table ready
+[2025-06-07T15:48:36.550Z] INFO: Lecturer courses table ready
+[2025-06-07T15:48:36.551Z] INFO: Lecturer academic details table ready
+[2025-06-07T15:48:36.552Z] INFO: Lecturer bank details table ready
+[2025-06-07T15:48:36.553Z] INFO: Lecturer batches table ready
+[2025-06-07T15:48:36.553Z] INFO: All database tables created successfully
+[2025-06-07T15:48:36.562Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T15:49:16.977Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 21:19:16
+[2025-06-07T15:49:42.646Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T15:49:42.646Z] INFO: HTTP server closed
+[2025-06-07T15:49:42.649Z] INFO: Database connection closed
+[2025-06-07T15:49:45.465Z] INFO: Connected to MySQL database
+[2025-06-07T15:49:45.466Z] INFO: DB HOST: localhost
+[2025-06-07T15:49:45.466Z] INFO: DB: event_management
+[2025-06-07T15:49:45.466Z] INFO: Courses table ready
+[2025-06-07T15:49:45.467Z] INFO: Batches table ready
+[2025-06-07T15:49:45.468Z] INFO: Students table ready
+[2025-06-07T15:49:45.470Z] INFO: Student courses table ready
+[2025-06-07T15:49:45.471Z] INFO: Student batches table ready
+[2025-06-07T15:49:45.472Z] INFO: Course payments table ready
+[2025-06-07T15:49:45.474Z] INFO: Lecturers table ready
+[2025-06-07T15:49:45.474Z] INFO: Lecturer courses table ready
+[2025-06-07T15:49:45.476Z] INFO: Lecturer academic details table ready
+[2025-06-07T15:49:45.477Z] INFO: Lecturer bank details table ready
+[2025-06-07T15:49:45.479Z] INFO: Lecturer batches table ready
+[2025-06-07T15:49:45.479Z] INFO: All database tables created successfully
+[2025-06-07T15:49:45.484Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-07T15:56:48.642Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 21:26:48
+[2025-06-07T16:28:24.884Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 21:58:24
+[2025-06-07T16:38:28.746Z] INFO: User SuperAdmin1 logged in at: 2025-06-07 22:08:28
+[2025-06-07T16:39:36.580Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-07T16:39:36.582Z] INFO: HTTP server closed
+[2025-06-08T00:40:48.870Z] ERROR: Error creating database tables:
+[2025-06-08T00:40:52.706Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-08T00:40:55.835Z] INFO: Connected to MySQL database
+[2025-06-08T00:40:55.836Z] INFO: DB HOST: localhost
+[2025-06-08T00:40:55.836Z] INFO: DB: event_management
+[2025-06-08T00:40:55.836Z] INFO: Courses table ready
+[2025-06-08T00:40:55.838Z] INFO: Batches table ready
+[2025-06-08T00:40:55.839Z] INFO: Students table ready
+[2025-06-08T00:40:55.840Z] INFO: Student courses table ready
+[2025-06-08T00:40:55.841Z] INFO: Student batches table ready
+[2025-06-08T00:40:55.841Z] INFO: Course payments table ready
+[2025-06-08T00:40:55.842Z] INFO: Lecturers table ready
+[2025-06-08T00:40:55.843Z] INFO: Lecturer courses table ready
+[2025-06-08T00:40:55.844Z] INFO: Lecturer academic details table ready
+[2025-06-08T00:40:55.844Z] INFO: Lecturer bank details table ready
+[2025-06-08T00:40:55.845Z] INFO: Lecturer batches table ready
+[2025-06-08T00:40:55.845Z] INFO: All database tables created successfully
+[2025-06-08T00:40:55.854Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-08T00:41:05.586Z] INFO: User SuperAdmin1 logged in at: 2025-06-08 06:11:05
+[2025-06-08T01:00:02.564Z] INFO: User SuperAdmin1 logged in at: 2025-06-08 06:30:02
+[2025-06-08T01:40:55.909Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-08T03:06:37.097Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-08T04:07:24.399Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-08T04:26:01.952Z] INFO: User SuperAdmin1 logged in at: 2025-06-08 09:56:01
+[2025-06-08T04:42:55.124Z] INFO: User SuperAdmin1 logged in at: 2025-06-08 10:12:55
+[2025-06-08T05:07:24.349Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-08T05:35:55.821Z] INFO: User SuperAdmin1 logged in at: 2025-06-08 11:05:55
+[2025-06-08T05:50:13.889Z] INFO: User SuperAdmin1 logged in at: 2025-06-08 11:20:13
+[2025-06-08T07:53:39.374Z] INFO: Connected to MySQL database
+[2025-06-08T07:53:39.375Z] INFO: DB HOST: localhost
+[2025-06-08T07:53:39.376Z] INFO: DB: event_management
+[2025-06-08T07:53:39.378Z] INFO: Courses table ready
+[2025-06-08T07:53:39.379Z] INFO: Batches table ready
+[2025-06-08T07:53:39.380Z] INFO: Students table ready
+[2025-06-08T07:53:39.381Z] INFO: Student courses table ready
+[2025-06-08T07:53:39.381Z] INFO: Student batches table ready
+[2025-06-08T07:53:39.382Z] INFO: Course payments table ready
+[2025-06-08T07:53:39.382Z] INFO: Lecturers table ready
+[2025-06-08T07:53:39.383Z] INFO: Lecturer courses table ready
+[2025-06-08T07:53:39.383Z] INFO: Lecturer academic details table ready
+[2025-06-08T07:53:39.384Z] INFO: Lecturer bank details table ready
+[2025-06-08T07:53:39.384Z] INFO: Lecturer batches table ready
+[2025-06-08T07:53:39.384Z] INFO: All database tables created successfully
+[2025-06-08T07:53:39.392Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-08T07:54:31.306Z] INFO: Booking created successfully at: 2025-06-08 13:24:31 by user: SuperAdmin1
+[2025-06-08T08:17:27.999Z] INFO: User SuperAdmin1 logged in at: 2025-06-08 13:47:27
+[2025-06-08T08:17:49.295Z] INFO: 1 students assigned to batch 6 by SuperAdmin1
+[2025-06-08T08:52:36.799Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-08T08:52:36.801Z] INFO: HTTP server closed
+[2025-06-08T08:52:36.804Z] INFO: Database connection closed
+[2025-06-09T02:58:19.581Z] INFO: Connected to MySQL database
+[2025-06-09T02:58:19.582Z] INFO: DB HOST: localhost
+[2025-06-09T02:58:19.582Z] INFO: DB: event_management
+[2025-06-09T02:58:19.583Z] INFO: Courses table ready
+[2025-06-09T02:58:19.584Z] INFO: Batches table ready
+[2025-06-09T02:58:19.586Z] INFO: Students table ready
+[2025-06-09T02:58:19.587Z] INFO: Student courses table ready
+[2025-06-09T02:58:19.588Z] INFO: Student batches table ready
+[2025-06-09T02:58:19.589Z] INFO: Course payments table ready
+[2025-06-09T02:58:19.590Z] INFO: Lecturers table ready
+[2025-06-09T02:58:19.590Z] INFO: Lecturer courses table ready
+[2025-06-09T02:58:19.591Z] INFO: Lecturer academic details table ready
+[2025-06-09T02:58:19.591Z] INFO: Lecturer bank details table ready
+[2025-06-09T02:58:19.592Z] INFO: Lecturer batches table ready
+[2025-06-09T02:58:19.592Z] INFO: All database tables created successfully
+[2025-06-09T02:58:19.605Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-09T02:58:35.205Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 08:28:35
+[2025-06-09T03:50:04.633Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 09:20:04
+[2025-06-09T03:58:20.253Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T04:13:52.924Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 09:43:52
+[2025-06-09T04:18:07.982Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 09:48:07
+[2025-06-09T04:48:03.534Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 10:18:03
+[2025-06-09T04:58:20.136Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T05:12:32.958Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 10:42:32
+[2025-06-09T05:58:20.202Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T06:09:59.537Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 11:39:59
+[2025-06-09T06:56:17.076Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 12:26:17
+[2025-06-09T06:58:20.242Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T07:13:11.525Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 12:43:11
+[2025-06-09T07:58:20.184Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T08:21:21.475Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 13:51:21
+[2025-06-09T08:38:05.954Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 14:08:05
+[2025-06-09T08:58:20.219Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T09:04:12.110Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 14:34:12
+[2025-06-09T09:46:38.326Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 15:16:38
+[2025-06-09T09:58:20.255Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T10:03:40.279Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 15:33:40
+[2025-06-09T10:35:27.911Z] INFO: User SuperAdmin1 logged in at: 2025-06-09 16:05:27
+[2025-06-09T11:23:03.182Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T12:23:03.123Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T13:23:03.092Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T14:23:03.133Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T15:23:02.931Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T16:23:02.789Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T16:23:02.806Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-09T18:08:58.945Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T18:08:58.948Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-09T19:21:09.722Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T19:21:09.723Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-09T21:24:44.200Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T21:24:44.203Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-09T22:25:17.354Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T22:25:17.355Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-09T23:43:50.087Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-09T23:43:50.088Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-10T00:43:49.982Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-10T00:43:49.994Z] ERROR: ❌ DB KEEP ALIVE FAILED:
+[2025-06-10T01:43:49.841Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-10T02:04:27.681Z] INFO: User SuperAdmin1 logged in at: 2025-06-10 07:34:27
+[2025-06-10T02:41:11.009Z] INFO: User SuperAdmin1 logged in at: 2025-06-10 08:11:11
+[2025-06-10T02:43:49.778Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-10T02:44:06.508Z] INFO: Booking Deleted at: 2025-06-10 08:14:06 By: SuperAdmin1
+[2025-06-10T02:44:06.508Z] INFO: Deleted Booking ID: 63
+[2025-06-10T02:58:18.578Z] INFO: Server report generated: /Users/kashika_hettihewa/Downloads/Movies 💗/event-management/server/reports/server-report-1749524298574.json
+[2025-06-10T03:22:11.094Z] INFO: User SuperAdmin1 logged in at: 2025-06-10 08:52:11
+[2025-06-10T03:43:49.897Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-10T03:54:47.194Z] INFO: User SuperAdmin1 logged in at: 2025-06-10 09:24:47
+[2025-06-10T04:12:04.756Z] INFO: User SuperAdmin1 logged in at: 2025-06-10 09:42:04
+[2025-06-10T04:41:25.916Z] INFO: User SuperAdmin1 logged in at: 2025-06-10 10:11:25
+[2025-06-10T04:43:49.945Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-10T04:51:30.893Z] INFO: User SuperAdmin1 logged in at: 2025-06-10 10:21:30
+[2025-06-10T05:43:49.900Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-10T06:43:49.822Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-10T07:43:49.521Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-10T07:45:20.585Z] INFO: User SuperAdmin1 logged in at: 2025-06-10 13:15:20
+[2025-06-10T17:24:24.864Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-10T18:47:32.516Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-10T20:10:16.999Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-10T21:47:45.926Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-10T22:57:05.688Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-11T00:18:26.001Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-11T01:33:41.774Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-11T02:39:23.251Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-11T03:00:59.457Z] INFO: Server report generated: /Users/kashika_hettihewa/Downloads/Movies 💗/event-management/server/reports/server-report-1749610859454.json
+[2025-06-11T03:34:13.945Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 09:04:13
+[2025-06-11T03:37:04.477Z] INFO: Connected to MySQL database
+[2025-06-11T03:37:04.482Z] INFO: DB HOST: localhost
+[2025-06-11T03:37:04.482Z] INFO: DB: event_management
+[2025-06-11T03:37:04.485Z] INFO: Courses table ready
+[2025-06-11T03:37:04.486Z] INFO: Batches table ready
+[2025-06-11T03:37:04.487Z] INFO: Students table ready
+[2025-06-11T03:37:04.488Z] INFO: Student courses table ready
+[2025-06-11T03:37:04.488Z] INFO: Student batches table ready
+[2025-06-11T03:37:04.489Z] INFO: Course payments table ready
+[2025-06-11T03:37:04.489Z] INFO: Lecturers table ready
+[2025-06-11T03:37:04.489Z] INFO: Lecturer courses table ready
+[2025-06-11T03:37:04.490Z] INFO: Lecturer academic details table ready
+[2025-06-11T03:37:04.490Z] INFO: Lecturer bank details table ready
+[2025-06-11T03:37:04.490Z] INFO: Lecturer batches table ready
+[2025-06-11T03:37:04.490Z] INFO: All database tables created successfully
+[2025-06-11T03:37:04.499Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-11T03:37:47.177Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-11T03:37:47.180Z] INFO: HTTP server closed
+[2025-06-11T03:37:47.185Z] INFO: Database connection closed
+[2025-06-11T03:37:56.949Z] INFO: Connected to MySQL database
+[2025-06-11T03:37:56.950Z] INFO: DB HOST: localhost
+[2025-06-11T03:37:56.950Z] INFO: DB: event_management
+[2025-06-11T03:37:56.950Z] INFO: Courses table ready
+[2025-06-11T03:37:56.951Z] INFO: Batches table ready
+[2025-06-11T03:37:56.952Z] INFO: Students table ready
+[2025-06-11T03:37:56.953Z] INFO: Student courses table ready
+[2025-06-11T03:37:56.954Z] INFO: Student batches table ready
+[2025-06-11T03:37:56.954Z] INFO: Course payments table ready
+[2025-06-11T03:37:56.955Z] INFO: Lecturers table ready
+[2025-06-11T03:37:56.956Z] INFO: Lecturer courses table ready
+[2025-06-11T03:37:56.956Z] INFO: Lecturer academic details table ready
+[2025-06-11T03:37:56.956Z] INFO: Lecturer bank details table ready
+[2025-06-11T03:37:56.957Z] INFO: Lecturer batches table ready
+[2025-06-11T03:37:56.957Z] INFO: All database tables created successfully
+[2025-06-11T03:37:56.965Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-11T03:39:59.451Z] ERROR: Error creating database tables: ER_ACCESS_DENIED_ERROR: Access denied for user 'root'@'10.105.12.226' (using password: YES)
+[2025-06-11T03:40:06.396Z] ERROR: Error creating database tables: ER_ACCESS_DENIED_ERROR: Access denied for user 'root'@'10.105.12.226' (using password: YES)
+[2025-06-11T03:40:07.435Z] ERROR: Error creating database tables: ER_ACCESS_DENIED_ERROR: Access denied for user 'root'@'10.105.12.226' (using password: YES)
+[2025-06-11T03:40:10.067Z] ERROR: Error creating database tables: ER_ACCESS_DENIED_ERROR: Access denied for user 'root'@'10.105.12.226' (using password: YES)
+[2025-06-11T03:40:11.553Z] ERROR: Error creating database tables: ER_ACCESS_DENIED_ERROR: Access denied for user 'root'@'10.105.12.226' (using password: YES)
+[2025-06-11T03:40:17.415Z] INFO: Received SIGINT, gracefully shutting down...

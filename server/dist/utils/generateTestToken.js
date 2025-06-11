@@ -27,4 +27,4 @@ console.log('\n=== TEST TOKENS ===\n');
 console.log(`Access Token (expires in 1 hour):\n${accessToken}\n`);
 console.log(`Refresh Token (expires in 7 days):\n${refreshToken}\n`);
 console.log('For testing with curl:');
-console.log(`curl -H "Authorization: Bearer ${accessToken}" http://localhost:5003/api/students\n`);
+console.log(`curl -H "Authorization: Bearer ${accessToken}" http://10.70.4.34:5003/api/students\n`);

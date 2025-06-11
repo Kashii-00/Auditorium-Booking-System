@@ -36,7 +36,7 @@ if (DEBUG) {
 }
 
 // CORS configuration to support credentials
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:3060'];
+const allowedOrigins = ['http://10.70.4.34:3000','http://10.70.4.34:3060'];
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)

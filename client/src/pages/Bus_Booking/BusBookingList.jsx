@@ -1,73 +1,54 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef, useMemo, memo } from "react"
-import { useLocation } from "react-router-dom"
-import { authRequest } from "../../services/authService"
+import { useEffect, useState, useCallback, useMemo, memo, lazy, Suspense } from "react"
 import {
   Search,
   Filter,
   Download,
-  Calendar,
-  MapPin,
-  User,
-  Phone,
   Check,
   X,
   Trash2,
-  Bus,
-  ArrowRight,
+  Calendar,
   AlertCircle,
   XCircle,
-  MoreHorizontal,
+  Bus,
   ChevronLeft,
   ChevronRight,
   ArrowUpDown,
+  MapPin,
+  User,
+  Phone,
+  ArrowRight,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox"
-import LoadingScreen from "../LoadingScreen/LoadingScreen"
+import { authRequest } from "../../services/authService"
 
-// Optimized debounce utility
-const debounce = (func, wait) => {
-  let timeout
-  const debounced = function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout)
-      func(...args)
-    }
-    clearTimeout(timeout)
-    timeout = setTimeout(later, wait)
-  }
-  debounced.cancel = () => clearTimeout(timeout)
-  return debounced
-}
+// Lazy load heavy components
+const LoadingScreen = lazy(() => import("../LoadingScreen/LoadingScreen"))
 
-// Memoized Success popup component
-const SuccessPopup = memo(({ message }) => {
-  return (
-    <div className="fixed top-6 right-6 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-600 text-white px-8 py-4 rounded-2xl shadow-2xl z-50 animate-in slide-in-from-top-4 duration-500 border border-white/20 backdrop-blur-xl">
-      <div className="flex items-center gap-4">
-        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
-          <Check className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <p className="font-black text-lg">{message}</p>
-          <p className="text-emerald-100 text-sm">Your action has been completed successfully</p>
-        </div>
+// Memoized components for better performance
+const SuccessPopup = memo(({ message }) => (
+  <div className="fixed top-6 right-6 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-600 text-white px-8 py-4 rounded-2xl shadow-2xl z-50 animate-in slide-in-from-top-4 duration-500 border border-white/20 backdrop-blur-xl">
+    <div className="flex items-center gap-4">
+      <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+        <div className="w-3 h-3 bg-white rounded-full"></div>
+      </div>
+      <div>
+        <p className="font-black text-lg">{message}</p>
+        <p className="text-emerald-100 text-sm">Your action has been completed successfully</p>
       </div>
     </div>
-  )
-})
+  </div>
+))
 
 SuccessPopup.displayName = "SuccessPopup"
 
-// Memoized Statistics Card Component
+// Optimized StatCard with explicit dimensions to prevent CLS
 const StatCard = memo(({ title, value, icon: Icon, color = "blue" }) => {
   const colorClasses = useMemo(
     () => ({
@@ -140,9 +121,7 @@ const ColumnHeader = memo(({ title, sortable = false, sortKey, currentSort, onSo
 
   return (
     <th
-      className={`text-left py-3 xl:py-4 px-3 xl:px-4 font-black bg-gradient-to-r from-slate-700 to-blue-700 bg-clip-text text-transparent text-sm xl:text-base ${
-        sortable ? "cursor-pointer hover:from-blue-800 hover:to-indigo-800" : ""
-      }`}
+      className={`py-3 px-4 text-left font-bold text-white ${sortable ? "cursor-pointer hover:bg-blue-800" : ""}`}
       onClick={handleSort}
     >
       <div className="flex items-center space-x-1">
@@ -158,21 +137,19 @@ ColumnHeader.displayName = "ColumnHeader"
 // Status badge component
 const StatusBadge = memo(({ status }) => {
   const getStatusColor = useCallback((status) => {
-    switch (status) {
+    switch (status?.toUpperCase()) {
       case "APPROVED":
-        return "bg-gradient-to-r from-emerald-100 via-green-100 to-teal-100 text-emerald-800 border-emerald-300 shadow-emerald-200/50"
+        return "bg-green-100 text-green-800 border-green-300"
       case "PENDING":
-        return "bg-gradient-to-r from-amber-100 via-yellow-100 to-orange-100 text-amber-800 border-amber-300 shadow-amber-200/50"
+        return "bg-yellow-100 text-yellow-800 border-yellow-300"
       case "DENIED":
-        return "bg-gradient-to-r from-rose-100 via-red-100 to-pink-100 text-rose-800 border-rose-300 shadow-rose-200/50"
+        return "bg-red-100 text-red-800 border-red-300"
       default:
-        return "bg-gradient-to-r from-slate-100 via-gray-100 to-zinc-100 text-slate-800 border-slate-300 shadow-slate-200/50"
+        return "bg-gray-100 text-gray-800 border-gray-300"
     }
   }, [])
 
-  return (
-    <Badge className={`${getStatusColor(status)} text-xs xl:text-sm font-black px-3 py-1 shadow-lg`}>{status}</Badge>
-  )
+  return <Badge className={`${getStatusColor(status)} px-3 py-1 rounded-full text-xs font-medium`}>{status}</Badge>
 })
 
 StatusBadge.displayName = "StatusBadge"
@@ -189,14 +166,17 @@ const Pagination = memo(({ currentPage, totalPages, totalItems, onPageChange }) 
       }
     } else {
       if (currentPage <= Math.ceil(maxVisiblePages / 2)) {
+        // Near the start
         for (let i = 1; i <= maxVisiblePages; i++) {
           pages.push(i)
         }
       } else if (currentPage >= totalPages - Math.floor(maxVisiblePages / 2)) {
+        // Near the end
         for (let i = totalPages - maxVisiblePages + 1; i <= totalPages; i++) {
           pages.push(i)
         }
       } else {
+        // In the middle
         for (
           let i = currentPage - Math.floor(maxVisiblePages / 2);
           i <= currentPage + Math.floor(maxVisiblePages / 2);
@@ -274,24 +254,20 @@ const useDebounce = (value, delay) => {
   return debouncedValue
 }
 
-const BusBookingFull = () => {
+export default function BusBookingFull() {
   const [bookings, setBookings] = useState([])
   const [showPopup, setShowPopup] = useState(false)
   const [error, setError] = useState(null)
-  const location = useLocation()
-
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("ALL")
   const [filterMonth, setFilterMonth] = useState("ALL")
-
-  const [selectedBookings, setSelectedBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [highlightedBookingId, setHighlightedBookingId] = useState(null)
+  const [selectedBookings, setSelectedBookings] = useState([])
   const [initialLoad, setInitialLoad] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [sort, setSort] = useState({ key: "forWho", direction: "asc" })
   const [popupMessage, setPopupMessage] = useState("")
-
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const stored = localStorage.getItem("sidebarState")
     return stored !== null ? stored === "true" : false
@@ -300,20 +276,27 @@ const BusBookingFull = () => {
   // Items per page
   const ITEMS_PER_PAGE = 5
 
-  // Refs for performance optimization
-  const fetchInProgress = useRef(false)
-  const lastFetchTime = useRef(0)
-  const abortControllerRef = useRef(null)
-  const MIN_FETCH_INTERVAL = 2000
-
-  const highlightId = location.state?.highlightId ? Number(location.state.highlightId) : null
-
   // Debounced search for better performance
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
+  // Memoized API call
+  const fetchBookings = useCallback(async () => {
+    try {
+      setLoading(true)
+      const bookingsData = await authRequest("get", "http://10.70.4.34:5003/api/busBookings")
+      setBookings(bookingsData)
+      setError(null)
+    } catch (err) {
+      console.error("Error fetching bus bookings:", err)
+      setError("Failed to fetch bus bookings")
+    } finally {
+      setLoading(false)
+      setInitialLoad(false)
+    }
+  }, [])
+
   // Memoized helper functions
   const formatDate = useCallback((dateString) => {
-    if (!dateString) return ""
     const date = new Date(dateString)
     return date.toLocaleDateString("en-US", {
       month: "short",
@@ -322,223 +305,30 @@ const BusBookingFull = () => {
     })
   }, [])
 
-  const getStatusColor = useCallback((status) => {
-    switch (status) {
-      case "APPROVED":
-        return "bg-gradient-to-r from-emerald-100 via-green-100 to-teal-100 text-emerald-800 border-emerald-300 shadow-emerald-200/50"
-      case "PENDING":
-        return "bg-gradient-to-r from-amber-100 via-yellow-100 to-orange-100 text-amber-800 border-amber-300 shadow-amber-200/50"
-      case "DENIED":
-        return "bg-gradient-to-r from-rose-100 via-red-100 to-pink-100 text-rose-800 border-rose-300 shadow-rose-200/50"
-      default:
-        return "bg-gradient-to-r from-slate-100 via-gray-100 to-zinc-100 text-slate-800 border-slate-300 shadow-slate-200/50"
-    }
-  }, [])
-
-  // Optimized sidebar state sync with debouncing
-  const debouncedSyncSidebarState = useMemo(
-    () =>
-      debounce(() => {
-        const stored = localStorage.getItem("sidebarState")
-        if (stored !== null) {
-          const isCollapsed = stored === "true"
-          setSidebarCollapsed(isCollapsed)
-
-          document.documentElement.style.setProperty("--sidebar-width", isCollapsed ? "90px" : "280px")
-          document.documentElement.style.setProperty("--sidebar-transition", "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)")
-
-          if (isCollapsed) {
-            document.body.classList.add("sidebar-collapsed")
-          } else {
-            document.body.classList.remove("sidebar-collapsed")
-          }
-        }
-      }, 50),
-    [],
-  )
-
-  useEffect(() => {
-    debouncedSyncSidebarState()
-
-    const handleSidebarToggle = (e) => {
-      const isCollapsed = e.detail.isCollapsed
-      setSidebarCollapsed(isCollapsed)
-      localStorage.setItem("sidebarState", isCollapsed.toString())
-
-      document.documentElement.style.setProperty("--sidebar-width", isCollapsed ? "90px" : "280px")
-
-      if (isCollapsed) {
-        document.body.classList.add("sidebar-collapsed")
-      } else {
-        document.body.classList.remove("sidebar-collapsed")
-      }
-    }
-
-    const handleSidebarHover = (e) => {
-      const isHovered = e.detail.isHovered
-      if (isHovered && sidebarCollapsed) {
-        document.documentElement.style.setProperty("--sidebar-width", "280px")
-      } else if (!isHovered && sidebarCollapsed) {
-        document.documentElement.style.setProperty("--sidebar-width", "90px")
-      }
-    }
-
-    window.addEventListener("sidebarToggle", handleSidebarToggle)
-    window.addEventListener("sidebarHover", handleSidebarHover)
-    window.addEventListener("popstate", debouncedSyncSidebarState)
-
-    return () => {
-      window.removeEventListener("sidebarToggle", handleSidebarToggle)
-      window.removeEventListener("sidebarHover", handleSidebarHover)
-      window.removeEventListener("popstate", debouncedSyncSidebarState)
-      debouncedSyncSidebarState.cancel()
-    }
-  }, [sidebarCollapsed, debouncedSyncSidebarState])
-
-  // Optimized fetch function with abort controller
-  const fetchBookings = useCallback(async () => {
-    if (fetchInProgress.current) return
-    const now = Date.now()
-    if (now - lastFetchTime.current < MIN_FETCH_INTERVAL) return
-
-    try {
-      fetchInProgress.current = true
-      lastFetchTime.current = now
-      setLoading(true)
-
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
-      }
-
-      abortControllerRef.current = new AbortController()
-
-      const bookingsData = await authRequest("get", "http://10.70.4.34:5003/api/busBookings", null, {
-        signal: abortControllerRef.current.signal,
-      })
-
-      setBookings(bookingsData || [])
-      setError(null)
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        console.error("Error fetching bus bookings:", err)
-        setError("Failed to fetch bookings. Please try again later.")
-      }
-    } finally {
-      fetchInProgress.current = false
-      setLoading(false)
-      setInitialLoad(false)
-    }
-  }, [])
-
-  // Memoized filtered bookings with optimized filtering
-  const filteredBookings = useMemo(() => {
-    if (!bookings.length) return []
-
-    return bookings.filter((booking) => {
-      if (filterStatus !== "ALL" && booking.status !== filterStatus) return false
-
-      if (filterMonth !== "ALL") {
-        const bookingMonth = booking.travelDate ? new Date(booking.travelDate).getMonth() : -1
-        if (bookingMonth !== Number.parseInt(filterMonth)) return false
-      }
-
-      if (debouncedSearchTerm) {
-        const searchLower = debouncedSearchTerm.toLowerCase()
-        return (
-          booking.forWho?.toLowerCase().includes(searchLower) ||
-          booking.ContactNo?.toLowerCase().includes(searchLower) ||
-          booking.fromPlace?.toLowerCase().includes(searchLower) ||
-          booking.toPlace?.toLowerCase().includes(searchLower)
-        )
-      }
-
-      return true
-    })
-  }, [bookings, debouncedSearchTerm, filterStatus, filterMonth])
-
-  // Sort the filtered bookings
-  const sortedBookings = useMemo(() => {
-    return [...filteredBookings].sort((a, b) => {
-      let valueA, valueB
-
-      switch (sort.key) {
-        case "forWho":
-          valueA = a.forWho || ""
-          valueB = b.forWho || ""
-          break
-        case "ContactNo":
-          valueA = a.ContactNo || ""
-          valueB = b.ContactNo || ""
-          break
-        case "travelDate":
-          valueA = new Date(a.travelDate).getTime()
-          valueB = new Date(b.travelDate).getTime()
-          break
-        case "status":
-          valueA = a.status || ""
-          valueB = b.status || ""
-          break
-        default:
-          valueA = a.forWho || ""
-          valueB = b.forWho || ""
-      }
-
-      if (sort.direction === "asc") {
-        return valueA > valueB ? 1 : -1
-      } else {
-        return valueA < valueB ? 1 : -1
-      }
-    })
-  }, [filteredBookings, sort])
-
-  // Paginate the sorted bookings
-  const paginatedBookings = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-    return sortedBookings.slice(startIndex, startIndex + ITEMS_PER_PAGE)
-  }, [sortedBookings, currentPage])
-
-  // Calculate total pages
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredBookings.length / ITEMS_PER_PAGE)), [filteredBookings])
-
-  // Handle page change
-  const handlePageChange = useCallback(
-    (page) => {
-      if (page < 1 || page > totalPages) return
-      setCurrentPage(page)
-    },
-    [totalPages],
-  )
-
-  // Memoized statistics
-  const stats = useMemo(() => {
-    const total = bookings.length
-    const approved = bookings.filter((b) => b.status === "APPROVED").length
-    const pending = bookings.filter((b) => b.status === "PENDING").length
-    const denied = bookings.filter((b) => b.status === "DENIED").length
-    return { total, approved, pending, denied }
-  }, [bookings])
-
-  // Optimized API functions with error handling
+  // Optimized status update with batching
   const updateStatus = useCallback(
     async (id, status) => {
       try {
         await authRequest("put", `http://10.70.4.34:5003/api/busBookings/${id}`, { status })
 
-        // Optimistic update
+        // Optimistic update for better UX
         setBookings((prev) => prev.map((booking) => (booking.id === id ? { ...booking, status } : booking)))
 
-        setPopupMessage(`Booking status updated to ${status}`)
+        setError(null)
+        setPopupMessage(`Bus booking status updated to ${status}`)
         setShowPopup(true)
         setTimeout(() => setShowPopup(false), 3000)
       } catch (err) {
-        console.error("Error updating booking status:", err)
-        setError("Failed to update booking status. Please try again.")
+        console.error("Error updating status:", err)
+        setError("Failed to update bus booking status")
+        // Revert optimistic update on error
         await fetchBookings()
       }
     },
     [fetchBookings],
   )
 
+  // Optimized delete with batching
   const deleteBooking = useCallback(
     async (id) => {
       try {
@@ -548,12 +338,14 @@ const BusBookingFull = () => {
         setBookings((prev) => prev.filter((booking) => booking.id !== id))
         setSelectedBookings((prev) => prev.filter((bookingId) => bookingId !== id))
 
-        setPopupMessage("Booking deleted successfully")
+        setError(null)
+        setPopupMessage("Bus booking deleted successfully")
         setShowPopup(true)
         setTimeout(() => setShowPopup(false), 3000)
       } catch (err) {
         console.error("Error deleting booking:", err)
-        setError("Failed to delete booking. Please try again.")
+        setError("Failed to delete bus booking")
+        // Revert optimistic update on error
         await fetchBookings()
       }
     },
@@ -571,6 +363,7 @@ const BusBookingFull = () => {
       if (!window.confirm(confirmMessage)) return
 
       try {
+        // Batch API calls for better performance
         const promises = selectedBookings.map((id) => {
           switch (action) {
             case "approve":
@@ -605,10 +398,96 @@ const BusBookingFull = () => {
       } catch (err) {
         console.error(`Error performing bulk ${action}:`, err)
         setError(`Failed to ${action} selected bookings`)
+        // Revert optimistic update on error
         await fetchBookings()
       }
     },
     [selectedBookings, fetchBookings],
+  )
+
+  // Memoized filtered bookings with optimized filtering
+  const filteredBookings = useMemo(() => {
+    return bookings.filter((booking) => {
+      const matchesSearch =
+        !debouncedSearchTerm ||
+        (booking.forWho?.toLowerCase() || "").includes(debouncedSearchTerm.toLowerCase()) ||
+        (booking.ContactNo?.toLowerCase() || "").includes(debouncedSearchTerm.toLowerCase()) ||
+        (booking.fromPlace?.toLowerCase() || "").includes(debouncedSearchTerm.toLowerCase()) ||
+        (booking.toPlace?.toLowerCase() || "").includes(debouncedSearchTerm.toLowerCase()) ||
+        (booking.name?.toLowerCase() || "").includes(debouncedSearchTerm.toLowerCase())
+
+      const matchesStatus = filterStatus === "ALL" || booking.status === filterStatus
+      const matchesMonth =
+        filterMonth === "ALL" || new Date(booking.travelDate).getMonth() === Number.parseInt(filterMonth)
+
+      return matchesSearch && matchesStatus && matchesMonth
+    })
+  }, [bookings, debouncedSearchTerm, filterStatus, filterMonth])
+
+  // Sort the filtered bookings
+  const sortedBookings = useMemo(() => {
+    return [...filteredBookings].sort((a, b) => {
+      let valueA, valueB
+
+      // Extract the values to compare based on sort key
+      switch (sort.key) {
+        case "forWho":
+          valueA = a.forWho || ""
+          valueB = b.forWho || ""
+          break
+        case "ContactNo":
+          valueA = a.ContactNo || ""
+          valueB = b.ContactNo || ""
+          break
+        case "travelDate":
+          valueA = new Date(a.travelDate).getTime()
+          valueB = new Date(b.travelDate).getTime()
+          break
+        case "status":
+          valueA = a.status || ""
+          valueB = b.status || ""
+          break
+        default:
+          valueA = a.forWho || ""
+          valueB = b.forWho || ""
+      }
+
+      // Compare the values based on sort direction
+      if (sort.direction === "asc") {
+        return valueA > valueB ? 1 : -1
+      } else {
+        return valueA < valueB ? 1 : -1
+      }
+    })
+  }, [filteredBookings, sort])
+
+  // Paginate the sorted bookings
+  const paginatedBookings = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    return sortedBookings.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+  }, [sortedBookings, currentPage])
+
+  // Calculate total pages
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredBookings.length / ITEMS_PER_PAGE)), [filteredBookings])
+
+  // Handle page change
+  const handlePageChange = useCallback(
+    (page) => {
+      if (page < 1 || page > totalPages) return
+      setCurrentPage(page)
+    },
+    [totalPages],
+  )
+
+  // Memoized statistics
+  const stats = useMemo(
+    () => ({
+      total: bookings.length,
+      approved: bookings.filter((b) => b.status === "APPROVED").length,
+      pending: bookings.filter((b) => b.status === "PENDING").length,
+      rejected: bookings.filter((b) => b.status === "DENIED").length,
+    }),
+    [bookings],
   )
 
   // Optimized selection handlers
@@ -624,22 +503,19 @@ const BusBookingFull = () => {
   )
 
   const handleSelectBooking = useCallback((bookingId, checked) => {
-    setSelectedBookings((prev) => {
-      if (checked) {
-        return [...prev, bookingId]
-      } else {
-        return prev.filter((id) => id !== bookingId)
-      }
-    })
+    setSelectedBookings((prev) => (checked ? [...prev, bookingId] : prev.filter((id) => id !== bookingId)))
   }, [])
 
-  // Optimized export function
+  // Optimized CSV export
   const exportToCSV = useCallback(() => {
-    if (!window.confirm("Are you sure you want to export the current booking data to CSV?")) return
+    if (!window.confirm("Are you sure you want to export the current bus booking data to CSV?")) return
 
     const headers = ["Passenger", "Contact", "From", "To", "Travel Date", "Return Date", "Booked By", "Status"]
+
     let filename = "bus_bookings"
-    if (filterStatus !== "ALL") filename += `_${filterStatus.toLowerCase()}`
+    if (filterStatus !== "ALL") {
+      filename += `_${filterStatus.toLowerCase()}`
+    }
     if (filterMonth !== "ALL") {
       const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
       filename += `_${monthNames[Number.parseInt(filterMonth)]}`
@@ -647,13 +523,13 @@ const BusBookingFull = () => {
     filename += ".csv"
 
     const data = filteredBookings.map((booking) => [
-      booking.forWho,
-      booking.ContactNo,
-      booking.fromPlace,
-      booking.toPlace,
-      booking.travelDate,
-      booking.ReturnDate,
-      booking.name,
+      booking.forWho || "N/A",
+      booking.ContactNo || "N/A",
+      booking.fromPlace || "N/A",
+      booking.toPlace || "N/A",
+      formatDate(booking.travelDate),
+      formatDate(booking.ReturnDate),
+      booking.name || "N/A",
       booking.status,
     ])
 
@@ -670,28 +546,42 @@ const BusBookingFull = () => {
     a.click()
     document.body.removeChild(a)
     window.URL.revokeObjectURL(url)
-  }, [filteredBookings, filterStatus, filterMonth])
+  }, [filteredBookings, filterStatus, filterMonth, formatDate])
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchBookings()
+    const interval = setInterval(fetchBookings, 60000) // Reduced frequency for better performance
+    return () => clearInterval(interval)
+  }, [fetchBookings])
 
   // Handle highlighted booking from calendar
   useEffect(() => {
     if (highlightedBookingId && bookings.length > 0) {
-      const bookingIndex = sortedBookings.findIndex((booking) => booking.id === highlightedBookingId)
-      if (bookingIndex !== -1) {
-        const pageNumber = Math.floor(bookingIndex / ITEMS_PER_PAGE) + 1
-        setCurrentPage(pageNumber)
+      // Find the booking in the list
+      const highlightedBooking = bookings.find((booking) => booking.id === highlightedBookingId)
+      if (highlightedBooking) {
+        // Calculate which page this booking should be on
+        const bookingIndex = sortedBookings.findIndex((booking) => booking.id === highlightedBookingId)
+        if (bookingIndex !== -1) {
+          const pageNumber = Math.floor(bookingIndex / ITEMS_PER_PAGE) + 1
+          setCurrentPage(pageNumber)
 
-        setTimeout(() => {
-          const bookingElement = document.querySelector(`[data-booking-id="${highlightedBookingId}"]`)
-          if (bookingElement) {
-            bookingElement.scrollIntoView({ behavior: "smooth", block: "center" })
-            bookingElement.classList.add("highlight-pulse")
-            setTimeout(() => {
-              bookingElement.classList.remove("highlight-pulse")
-            }, 2000)
-          }
-        }, 100)
+          // Small delay to ensure the page change has taken effect
+          setTimeout(() => {
+            const bookingElement = document.querySelector(`[data-booking-id="${highlightedBookingId}"]`)
+            if (bookingElement) {
+              bookingElement.scrollIntoView({ behavior: "smooth", block: "center" })
+              bookingElement.classList.add("highlight-pulse")
+              setTimeout(() => {
+                bookingElement.classList.remove("highlight-pulse")
+              }, 2000)
+            }
+          }, 100)
+        }
       }
 
+      // Clear the highlight after 5 seconds
       const clearTimer = setTimeout(() => {
         setHighlightedBookingId(null)
       }, 5000)
@@ -700,15 +590,16 @@ const BusBookingFull = () => {
     }
   }, [highlightedBookingId, bookings, sortedBookings])
 
-  // Navigation and highlight effects
+  // Listen for navigation events from calendar
   useEffect(() => {
     const handleNavigateToBookings = (event) => {
       const { bookingId, highlight } = event.detail
       if (highlight && bookingId) {
-        setHighlightedBookingId(bookingId)
+        setHighlightedBookingId(Number(bookingId))
       }
     }
 
+    // Check for stored highlight ID on mount
     const storedHighlightId = localStorage.getItem("highlightBookingId")
     if (storedHighlightId) {
       setHighlightedBookingId(Number(storedHighlightId))
@@ -716,102 +607,66 @@ const BusBookingFull = () => {
     }
 
     window.addEventListener("navigate-to-bookings", handleNavigateToBookings)
+    window.addEventListener("page-switched-to-bookings", handleNavigateToBookings)
 
     return () => {
       window.removeEventListener("navigate-to-bookings", handleNavigateToBookings)
+      window.removeEventListener("page-switched-to-bookings", handleNavigateToBookings)
     }
   }, [])
 
-  // Also handle the original highlightId from location state for backward compatibility
+  // Sync sidebar state
   useEffect(() => {
-    if (highlightId) {
-      setHighlightedBookingId(highlightId)
-      setTimeout(() => {
-        const highlightedElement = document.getElementById(`booking-${highlightId}`)
-        if (highlightedElement) {
-          highlightedElement.scrollIntoView({ behavior: "smooth", block: "center" })
-          highlightedElement.classList.add("highlight-pulse")
-          setTimeout(() => {
-            highlightedElement.classList.remove("highlight-pulse")
-          }, 2000)
-        }
-      }, 500)
-
-      setTimeout(() => {
-        setHighlightedBookingId(null)
-      }, 5000)
+    const handleSidebarToggle = (e) => {
+      setSidebarCollapsed(e.detail.isCollapsed)
     }
-  }, [highlightId, bookings])
 
-  // Initial fetch and periodic updates
-  useEffect(() => {
-    fetchBookings()
-    const interval = setInterval(fetchBookings, 30000)
-    return () => {
-      clearInterval(interval)
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
+    const syncSidebarState = () => {
+      const stored = localStorage.getItem("sidebarState")
+      if (stored !== null) {
+        setSidebarCollapsed(stored === "true")
       }
     }
-  }, [fetchBookings])
+
+    syncSidebarState()
+    window.addEventListener("sidebarToggle", handleSidebarToggle)
+    window.addEventListener("popstate", syncSidebarState)
+
+    return () => {
+      window.removeEventListener("sidebarToggle", handleSidebarToggle)
+      window.removeEventListener("popstate", syncSidebarState)
+    }
+  }, [])
 
   return (
     <div
-      className={`min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative sidebar-transition`}
+      className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative"
       data-page="bus-bookings"
-      style={{
-        paddingLeft: sidebarCollapsed ? "50px" : "50px",
-      }}
     >
+      {/* Initial loading screen */}
       {initialLoad && (
-        <div className="fixed inset-0 z-50">
-          <LoadingScreen message="Loading bus booking system..." />
-        </div>
+        <Suspense fallback={<div>Loading...</div>}>
+          <div className="fixed inset-0 z-50">
+            <LoadingScreen message="Loading bus booking system..." type="bus-bookings" />
+          </div>
+        </Suspense>
       )}
 
-      {/* Enhanced Background Pattern */}
+      {/* Background Pattern - Optimized */}
       <div className="absolute inset-0 opacity-30 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/50 to-purple-50/50"></div>
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23e0e7ff' fillOpacity='0.4'%3E%3Ccircle cx='40' cy='40' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: "80px 80px",
-          }}
-        ></div>
       </div>
 
-      <style jsx>{`
-        .highlight-pulse {
-          animation: highlightPulse 2s ease-in-out;
-        }
-        
-        @keyframes highlightPulse {
-          0%, 100% { 
-            background-color: rgb(219 234 254); 
-            border-color: rgb(147 197 253);
-            box-shadow: 0 0 0 2px rgb(59 130 246 / 0.3);
-          }
-          50% { 
-            background-color: rgb(191 219 254); 
-            border-color: rgb(59 130 246);
-            box-shadow: 0 0 0 4px rgb(59 130 246 / 0.5);
-          }
-        }
-      `}</style>
-
+      {/* Success Popup */}
       {showPopup && <SuccessPopup message={popupMessage} />}
 
       <div className="relative z-10 p-4 xl:p-6 space-y-6 xl:space-y-8">
-        {error && (
-          <Alert className="border-red-200 bg-gradient-to-r from-red-50 via-rose-50 to-pink-50 shadow-xl backdrop-blur-xl">
-            <XCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800 font-semibold">{error}</AlertDescription>
-          </Alert>
-        )}
+        {/* Error Display */}
+        {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>}
 
-        {/* Enhanced Stats Cards with Responsive Layout */}
+        {/* Statistics Cards */}
         <div className="relative">
+          {/* Container for all 4 cards with smooth transitions */}
           <div className="grid grid-cols-4 gap-4 xl:gap-6">
             {/* Total Bookings Card - slides out when sidebar opens */}
             <div
@@ -827,7 +682,7 @@ const BusBookingFull = () => {
             {/* Other 3 cards - slide and center when sidebar opens */}
             <div
               className={`col-span-3 grid grid-cols-3 gap-4 xl:gap-6 transition-all duration-500 ease-in-out ${
-                sidebarCollapsed ? "translate-x-0" : "translate-x-[-25%] scale-105"
+                sidebarCollapsed ? "translate-x-0" : "translate-x-[-18%] scale-105"
               }`}
             >
               <div className="transition-all duration-300 ease-in-out hover:scale-105">
@@ -837,7 +692,7 @@ const BusBookingFull = () => {
                 <StatCard title="Pending" value={stats.pending} icon={AlertCircle} color="yellow" />
               </div>
               <div className="transition-all duration-300 ease-in-out hover:scale-105 delay-150">
-                <StatCard title="Denied" value={stats.denied} icon={XCircle} color="red" />
+                <StatCard title="Rejected" value={stats.rejected} icon={XCircle} color="red" />
               </div>
             </div>
           </div>
@@ -852,14 +707,14 @@ const BusBookingFull = () => {
                   Bus Booking Requests
                 </CardTitle>
                 <p className="text-slate-600 mt-2 text-base xl:text-lg font-semibold">
-                  Manage and review all bus reservation requests
+                  View and manage all bus reservation requests
                 </p>
               </div>
             </div>
           </CardHeader>
 
           <CardContent className="p-4 xl:p-6">
-            {/* Enhanced Search and Filters */}
+            {/* Search and Filters */}
             <div className="flex flex-col lg:flex-row gap-3 xl:gap-4 items-center justify-between mb-4 xl:mb-6">
               <div className="relative flex-1 max-w-md w-full lg:w-auto">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 z-10 pointer-events-none" />
@@ -868,7 +723,7 @@ const BusBookingFull = () => {
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value)
-                    setCurrentPage(1)
+                    setCurrentPage(1) // Reset to first page on search
                   }}
                   className="pl-12 h-12 xl:h-14 text-base border-2 border-slate-200 focus:border-blue-500 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg focus:shadow-xl transition-all duration-300"
                 />
@@ -879,7 +734,7 @@ const BusBookingFull = () => {
                   value={filterStatus}
                   onValueChange={(value) => {
                     setFilterStatus(value)
-                    setCurrentPage(1)
+                    setCurrentPage(1) // Reset to first page on filter change
                   }}
                 >
                   <SelectTrigger className="w-32 xl:w-40 h-12 xl:h-14 border-2 border-slate-200 focus:border-blue-500 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg">
@@ -898,7 +753,7 @@ const BusBookingFull = () => {
                   value={filterMonth}
                   onValueChange={(value) => {
                     setFilterMonth(value)
-                    setCurrentPage(1)
+                    setCurrentPage(1) // Reset to first page on filter change
                   }}
                 >
                   <SelectTrigger className="w-32 xl:w-40 h-12 xl:h-14 border-2 border-slate-200 focus:border-blue-500 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg">
@@ -941,20 +796,27 @@ const BusBookingFull = () => {
                     {selectedBookings.length} booking(s) selected
                   </span>
                   <div className="flex flex-wrap gap-2 xl:gap-3">
-                    <Button
-                      size="sm"
-                      className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-600 hover:from-emerald-600 hover:via-green-600 hover:to-teal-700 text-white shadow-xl font-bold text-xs xl:text-sm rounded-xl transform hover:scale-105 transition-all duration-300"
-                      onClick={() => handleBulkAction("approve")}
-                    >
-                      Approve Selected
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 hover:from-amber-600 hover:via-yellow-600 hover:to-orange-600 text-white shadow-xl font-bold text-xs xl:text-sm rounded-xl transform hover:scale-105 transition-all duration-300"
-                      onClick={() => handleBulkAction("reject")}
-                    >
-                      Reject Selected
-                    </Button>
+                    {selectedBookings.some((id) => {
+                      const booking = paginatedBookings.find((b) => b.id === id)
+                      return booking && booking.status === "PENDING"
+                    }) && (
+                      <>
+                        <Button
+                          size="sm"
+                          className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-600 hover:from-emerald-600 hover:via-green-600 hover:to-teal-700 text-white shadow-xl font-bold text-xs xl:text-sm rounded-xl transform hover:scale-105 transition-all duration-300"
+                          onClick={() => handleBulkAction("approve")}
+                        >
+                          Approve Selected
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 hover:from-amber-600 hover:via-yellow-600 hover:to-orange-600 text-white shadow-xl font-bold text-xs xl:text-sm rounded-xl transform hover:scale-105 transition-all duration-300"
+                          onClick={() => handleBulkAction("reject")}
+                        >
+                          Reject Selected
+                        </Button>
+                      </>
+                    )}
                     <Button
                       size="sm"
                       className="bg-gradient-to-r from-rose-500 via-red-500 to-pink-500 hover:from-rose-600 hover:via-red-600 hover:to-pink-600 text-white shadow-xl font-bold text-xs xl:text-sm rounded-xl transform hover:scale-105 transition-all duration-300"
@@ -967,16 +829,17 @@ const BusBookingFull = () => {
               </div>
             )}
 
-            {/* Enhanced Table */}
-            <div className="border-2 border-slate-200/60 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl bg-white/95">
+            {/* Modern Table */}
+            <div className="rounded-lg overflow-hidden shadow-lg">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[800px]">
-                  <thead className="bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50 border-b-2 border-slate-200/60 pointer-events-none">
+                  <thead className="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-800">
                     <tr>
-                      <th className="text-left py-3 xl:py-4 px-3 xl:px-4 font-black text-slate-700 w-12 text-sm xl:text-base pointer-events-auto">
+                      <th className="py-3 px-4 text-left text-white w-12">
                         <Checkbox
                           checked={selectedBookings.length === paginatedBookings.length && paginatedBookings.length > 0}
                           onCheckedChange={handleSelectAll}
+                          className="border-white"
                         />
                       </th>
                       <ColumnHeader
@@ -1009,12 +872,10 @@ const BusBookingFull = () => {
                         currentSort={sort}
                         onSort={setSort}
                       />
-                      <th className="text-left py-3 xl:py-4 px-3 xl:px-4 font-black bg-gradient-to-r from-slate-700 to-blue-700 bg-clip-text text-transparent text-sm xl:text-base">
-                        Actions
-                      </th>
+                      <th className="py-3 px-4 text-right text-white">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white/95 backdrop-blur-sm">
+                  <tbody>
                     {loading ? (
                       <tr>
                         <td colSpan={sidebarCollapsed ? 8 : 7} className="p-0">
@@ -1024,115 +885,111 @@ const BusBookingFull = () => {
                     ) : paginatedBookings.length === 0 ? (
                       <tr>
                         <td colSpan={sidebarCollapsed ? 8 : 7} className="text-center py-8 text-gray-500">
-                          No bookings found
+                          No bus bookings found
                         </td>
                       </tr>
                     ) : (
                       paginatedBookings.map((booking, index) => (
                         <tr
                           key={booking.id}
-                          id={`booking-${booking.id}`}
                           data-booking-id={booking.id}
                           className={`${
                             index % 2 === 0 ? "bg-white" : "bg-gray-50"
                           } hover:bg-blue-50 transition-colors duration-150 ${
-                            highlightedBookingId === booking.id || highlightId === booking.id
-                              ? "bg-blue-100 border border-blue-300 shadow-lg"
-                              : ""
+                            highlightedBookingId === booking.id ? "bg-blue-100 border border-blue-300" : ""
                           }`}
                         >
-                          <td className="py-3 xl:py-4 px-3 xl:px-4">
+                          <td className="py-4 px-4">
                             <Checkbox
                               checked={selectedBookings.includes(booking.id)}
                               onCheckedChange={(checked) => handleSelectBooking(booking.id, checked)}
                             />
                           </td>
-                          <td className="py-3 xl:py-4 px-3 xl:px-4">
-                            <div className="font-semibold text-gray-900 text-sm xl:text-base flex items-center gap-2">
+                          <td className="py-4 px-4">
+                            <div className="font-medium flex items-center gap-2">
                               <User className="w-4 h-4 text-blue-600" />
-                              {booking.forWho}
+                              {booking.forWho || "N/A"}
                             </div>
                           </td>
-                          <td className="py-3 xl:py-4 px-3 xl:px-4">
-                            <div className="text-sm xl:text-base text-gray-900 flex items-center gap-2">
+                          <td className="py-4 px-4">
+                            <div className="text-sm flex items-center gap-2">
                               <Phone className="w-4 h-4 text-blue-600" />
-                              <span className="truncate max-w-[150px]">{booking.ContactNo}</span>
+                              {booking.ContactNo || "N/A"}
                             </div>
                           </td>
-                          <td className="py-3 xl:py-4 px-3 xl:px-4">
+                          <td className="py-4 px-4">
                             <div className="flex items-center gap-2">
                               <MapPin className="w-4 h-4 text-blue-600" />
-                              <span className="text-sm xl:text-base font-medium text-gray-900">
+                              <span className="text-sm font-medium">
                                 {booking.fromPlace} <ArrowRight className="w-3 h-3 inline" /> {booking.toPlace}
                               </span>
                             </div>
                           </td>
-                          <td className="py-3 xl:py-4 px-3 xl:px-4">
+                          <td className="py-4 px-4">
                             <div className="text-sm">
                               <div className="flex items-center gap-1">
                                 <Calendar className="w-3 h-3 text-blue-600" />
-                                <span className="font-medium text-gray-900">{formatDate(booking.travelDate)}</span>
+                                <span className="font-medium">{formatDate(booking.travelDate)}</span>
                               </div>
                               <div className="text-gray-500 text-xs">to {formatDate(booking.ReturnDate)}</div>
                             </div>
                           </td>
                           {sidebarCollapsed && (
-                            <td className="py-3 xl:py-4 px-3 xl:px-4">
-                              <span className="text-sm xl:text-base font-medium text-gray-900">{booking.name}</span>
+                            <td className="py-4 px-4">
+                              <div className="text-sm font-medium">{booking.name || "N/A"}</div>
                             </td>
                           )}
-                          <td className="py-3 xl:py-4 px-3 xl:px-4">
+                          <td className="py-4 px-4">
                             <StatusBadge status={booking.status} />
                           </td>
-                          <td className="py-3 xl:py-4 px-3 xl:px-4">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                {booking.status === "PENDING" && (
-                                  <>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        if (window.confirm("Are you sure you want to approve this booking?")) {
-                                          updateStatus(booking.id, "APPROVED")
-                                        }
-                                      }}
-                                    >
-                                      <Check className="h-4 w-4 mr-2" />
-                                      Approve
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        if (window.confirm("Are you sure you want to reject this booking?")) {
-                                          updateStatus(booking.id, "DENIED")
-                                        }
-                                      }}
-                                    >
-                                      <X className="h-4 w-4 mr-2" />
-                                      Reject
-                                    </DropdownMenuItem>
-                                  </>
-                                )}
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    if (
-                                      window.confirm(
-                                        "Are you sure you want to delete this booking? This action cannot be undone.",
-                                      )
-                                    ) {
-                                      deleteBooking(booking.id)
-                                    }
-                                  }}
-                                  className="text-red-600"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                          <td className="py-4 px-4 text-right">
+                            <div className="flex justify-end space-x-2">
+                              {booking.status === "PENDING" && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800"
+                                    onClick={() => {
+                                      if (window.confirm("Are you sure you want to approve this bus booking?")) {
+                                        updateStatus(booking.id, "APPROVED")
+                                      }
+                                    }}
+                                  >
+                                    <Check className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 border-yellow-200 text-yellow-700 hover:bg-yellow-50 hover:text-yellow-800"
+                                    onClick={() => {
+                                      if (window.confirm("Are you sure you want to reject this bus booking?")) {
+                                        updateStatus(booking.id, "DENIED")
+                                      }
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
+
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                                onClick={() => {
+                                  if (
+                                    window.confirm(
+                                      "Are you sure you want to delete this bus booking? This action cannot be undone.",
+                                    )
+                                  ) {
+                                    deleteBooking(booking.id)
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -1154,8 +1011,27 @@ const BusBookingFull = () => {
           </CardContent>
         </Card>
       </div>
+
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+          .highlight-pulse {
+            animation: highlightPulse 2s ease-in-out;
+          }
+          
+          @keyframes highlightPulse {
+            0%, 100% { 
+              background-color: rgb(219 234 254); 
+              border-color: rgb(147 197 253);
+            }
+            50% { 
+              background-color: rgb(191 219 254); 
+              border-color: rgb(59 130 246);
+            }
+          }
+        `,
+        }}
+      />
     </div>
   )
 }
-
-export default BusBookingFull

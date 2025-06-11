@@ -686,7 +686,7 @@ export default function EventBookingFull() {
             {/* Other 3 cards - slide and center when sidebar opens */}
             <div
               className={`col-span-3 grid grid-cols-3 gap-4 xl:gap-6 transition-all duration-500 ease-in-out ${
-                sidebarCollapsed ? "translate-x-0" : "translate-x-[-25%] scale-105"
+                sidebarCollapsed ? "translate-x-0" : "translate-x-[-18%] scale-105"
               }`}
             >
               <div className="transition-all duration-300 ease-in-out hover:scale-105">
@@ -1008,22 +1008,26 @@ export default function EventBookingFull() {
         </Card>
       </div>
 
-      <style jsx global>{`
-        .highlight-pulse {
-          animation: highlightPulse 2s ease-in-out;
-        }
-        
-        @keyframes highlightPulse {
-          0%, 100% { 
-            background-color: rgb(219 234 254); 
-            border-color: rgb(147 197 253);
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+          .highlight-pulse {
+            animation: highlightPulse 2s ease-in-out;
           }
-          50% { 
-            background-color: rgb(191 219 254); 
-            border-color: rgb(59 130 246);
+          
+          @keyframes highlightPulse {
+            0%, 100% { 
+              background-color: rgb(219 234 254); 
+              border-color: rgb(147 197 253);
+            }
+            50% { 
+              background-color: rgb(191 219 254); 
+              border-color: rgb(59 130 246);
+            }
           }
-        }
-      `}</style>
+        `,
+        }}
+      />
     </div>
   )
 }

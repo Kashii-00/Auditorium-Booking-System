@@ -174,7 +174,7 @@ const CreateUser = () => {
         setIsLoading(true)
         // Add minimum loading time to show the loading screen
         const [userData] = await Promise.all([
-          authRequest("get", `http://localhost:5003/api/users/${id}`),
+          authRequest("get", `http://10.70.4.34:5003/api/users/${id}`),
           new Promise((resolve) => setTimeout(resolve, 1000)), // Minimum 1 second loading
         ])
 
@@ -244,7 +244,7 @@ const CreateUser = () => {
         }),
       }
 
-      const endpoint = id ? `http://localhost:5003/api/users/${id}` : "http://localhost:5003/api/users"
+      const endpoint = id ? `http://10.70.4.34:5003/api/users/${id}` : "http://10.70.4.34:5003/api/users"
 
       const method = id ? "put" : "post"
       const response = await authRequest(method, endpoint, userData)
