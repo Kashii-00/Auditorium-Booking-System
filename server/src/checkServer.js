@@ -65,7 +65,7 @@ try {
 // Check if the server is running
 console.log('\n--- Checking if server is running ---');
 const req = http.request({
-  host: '10.70.4.34 ',
+  host: 'localhost',
   port: PORT,
   path: '/',
   method: 'GET',

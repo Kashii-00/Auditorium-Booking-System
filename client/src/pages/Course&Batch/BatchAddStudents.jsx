@@ -57,7 +57,7 @@ const BatchAddStudents = React.memo(() => {
   // Fetch batch details
   const fetchBatch = useCallback(async () => {
     try {
-      const batchData = await authRequest("get", `http://10.70.4.34 :5003/api/batches/${id}`)
+      const batchData = await authRequest("get", `http://localhost:5003/api/batches/${id}`)
       setBatch(batchData)
     } catch (err) {
       console.error("Error fetching batch data:", err)
@@ -76,7 +76,7 @@ const BatchAddStudents = React.memo(() => {
         return
       }
 
-      const availableStudents = await authRequest("get", `http://10.70.4.34 :5003/api/batches/${id}/available-students`)
+      const availableStudents = await authRequest("get", `http://localhost:5003/api/batches/${id}/available-students`)
       setStudents(Array.isArray(availableStudents) ? availableStudents : [])
     } catch (err) {
       console.error("Error fetching available students:", err)
@@ -155,7 +155,7 @@ const BatchAddStudents = React.memo(() => {
       setAdding(true)
       setError("")
 
-      const response = await authRequest("post", `http://10.70.4.34 :5003/api/batches/${id}/students`, {
+      const response = await authRequest("post", `http://localhost:5003/api/batches/${id}/students`, {
         student_ids: selectedStudents,
       })
 

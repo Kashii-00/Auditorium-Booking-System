@@ -949,7 +949,7 @@ export default function LecturerManagementFull() {
   const fetchLecturers = async () => {
     try {
       setLoadingLecturers(true)
-      const response = await authRequest("get", "http://10.70.4.34 :5003/api/lecturer-registration")
+      const response = await authRequest("get", "http://localhost:5003/api/lecturer-registration")
       if (Array.isArray(response)) {
         setLecturers(response)
       }
@@ -963,7 +963,7 @@ export default function LecturerManagementFull() {
   // Fetch courses
   const fetchCourses = async () => {
     try {
-      const response = await authRequest("get", "http://10.70.4.34 :5003/api/lecturer-registration/courses")
+      const response = await authRequest("get", "http://localhost:5003/api/lecturer-registration/courses")
       if (Array.isArray(response)) {
         setCourses(response)
       }
@@ -984,7 +984,7 @@ export default function LecturerManagementFull() {
       const fetchLecturerData = async () => {
         try {
           setIsLoading(true)
-          const lecturerData = await authRequest("get", `http://10.70.4.34 :5003/api/lecturer-registration/${id}`)
+          const lecturerData = await authRequest("get", `http://localhost:5003/api/lecturer-registration/${id}`)
 
           if (lecturerData) {
             // Parse experience from academic_details if present
@@ -1294,7 +1294,7 @@ export default function LecturerManagementFull() {
     async (lecturerId) => {
       if (window.confirm("Are you sure you want to delete this lecturer?")) {
         try {
-          await authRequest("delete", `http://10.70.4.34 :5003/api/lecturer-registration/${lecturerId}`)
+          await authRequest("delete", `http://localhost:5003/api/lecturer-registration/${lecturerId}`)
           setLecturers((prev) => prev.filter((l) => l.id !== lecturerId))
           setViewMode("list")
           setSelectedLecturer(null)
@@ -1387,8 +1387,8 @@ export default function LecturerManagementFull() {
 
     try {
       const url = isEditMode
-        ? `http://10.70.4.34 :5003/api/lecturer-registration/${editingLecturer}`
-        : "http://10.70.4.34 :5003/api/lecturer-registration/"
+        ? `http://localhost:5003/api/lecturer-registration/${editingLecturer}`
+        : "http://localhost:5003/api/lecturer-registration/"
 
       const method = isEditMode ? "put" : "post"
 

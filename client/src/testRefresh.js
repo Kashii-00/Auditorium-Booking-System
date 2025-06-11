@@ -10,7 +10,7 @@ const MAX_ATTEMPTS = 3;
 // Simulate login
 const login = async () => {
   try {
-    const response = await axios.post('http://10.70.4.34 :5003/api/auth/login', {
+    const response = await axios.post('http://localhost:5003/api/auth/login', {
       email: 'test@example.com',
       password: 'password123'
     });
@@ -34,7 +34,7 @@ const testRefresh = async () => {
     refreshCount++;
     console.log(`Refresh attempt ${refreshCount}`);
     
-    const response = await axios.post('http://10.70.4.34 :5003/api/auth/refresh');
+    const response = await axios.post('http://localhost:5003/api/auth/refresh');
     
     console.log('Refresh successful:', response.data);
     

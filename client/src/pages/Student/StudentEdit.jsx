@@ -75,7 +75,7 @@ const StudentEdit = () => {
       setInitialLoading(true);
       setErrorMessage('');
       
-      const studentData = await authRequest('get', `http://10.70.4.34 :5003/api/students/${id}`);
+      const studentData = await authRequest('get', `http://localhost:5003/api/students/${id}`);
       
       if (!studentData || !studentData.id) {
         setStudentNotFound(true);
@@ -163,7 +163,7 @@ const StudentEdit = () => {
       setCoursesLoading(true);
       setErrorMessage('');
       
-      const coursesData = await authRequest('get', 'http://10.70.4.34 :5003/api/students/courses');
+      const coursesData = await authRequest('get', 'http://localhost:5003/api/students/courses');
       
       if (coursesData && Array.isArray(coursesData)) {
         setCourses(coursesData);
@@ -388,7 +388,7 @@ const StudentEdit = () => {
       }
       
       // Use PUT method for update
-      const response = await authRequest('put', `http://10.70.4.34 :5003/api/students/${id}`, formDataObj, {
+      const response = await authRequest('put', `http://localhost:5003/api/students/${id}`, formDataObj, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

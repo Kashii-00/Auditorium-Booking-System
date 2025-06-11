@@ -236,12 +236,6 @@
   background-color: #E39D29; /* Ensure consistent color */
 }
 
-.sidebar-link:hover {
-  background-color: #3A507A; /* Updated hover background color */
-  color: #fff !important;
-  text-shadow: 0 0 1px rgba(255,255,255,0.5);
-  font-weight: 500;
-}
 
 .sidebar-link.active {
   background-color: #1065ef; /* blue highlight for active */
@@ -388,9 +382,6 @@
   border-radius: 3px;
 }
 
-.sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
 
 @media (max-width: 768px) {
   .sidebar {

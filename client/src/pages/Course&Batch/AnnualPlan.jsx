@@ -349,7 +349,7 @@ const AnnualPlan = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const coursesData = await authRequest("get", "http://10.70.4.34 :5003/api/CourseRegistrationRoute")
+        const coursesData = await authRequest("get", "http://localhost:5003/api/CourseRegistrationRoute")
         setCourses(coursesData)
         if (coursesData.length > 0) {
           setSelectedCourse(coursesData[0].id.toString())
@@ -371,7 +371,7 @@ const AnnualPlan = () => {
       try {
         const response = await authRequest(
           "get",
-          `http://10.70.4.34 :5003/api/batches?course_id=${selectedCourse}&year=${selectedYear}`,
+          `http://localhost:5003/api/batches?course_id=${selectedCourse}&year=${selectedYear}`,
         )
 
         if (Array.isArray(response)) {
@@ -385,7 +385,7 @@ const AnnualPlan = () => {
             const batchesWithCounts = await Promise.all(
               response.map(async (batch) => {
                 try {
-                  const batchDetails = await authRequest("get", `http://10.70.4.34 :5003/api/batches/${batch.id}`)
+                  const batchDetails = await authRequest("get", `http://localhost:5003/api/batches/${batch.id}`)
                   return {
                     ...batch,
                     student_count: batchDetails.student_count || 0,
