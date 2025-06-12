@@ -33,6 +33,18 @@ const Sidebar = ({ user, onLogout }) => {
       pathname.startsWith("/LRegistration")
     )
       return "Lecturers"
+      if (
+      pathname.startsWith("/classroombookingform") ||
+      pathname.startsWith("/classroombooking") ||
+      pathname.startsWith("/classroombookingschedule") ||
+      pathname.startsWith("/classroomcalendar") ||
+      pathname.startsWith("/calendarbookingtable") ||
+      pathname.startsWith("/singlebookingdetails") || 
+      pathname.startsWith("/cancelRequestByUser") 
+
+    )
+      return "crbooking"
+
     if (pathname.startsWith("/ClassBooking")) return "ClassRoom"
     if (pathname.startsWith("/users")) return "users"
     return "audi" // default
@@ -500,7 +512,7 @@ const Sidebar = ({ user, onLogout }) => {
               )}
             </>
           )}
-          
+
           {selectedSection === "users" && hasRole("SuperAdmin") && (
             <Link to="/users" className={`sidebar-link ${location.pathname === "/users" ? "active" : ""}`}>
               <img src={admin2 || "/placeholder.svg"} alt="UserList" className="sidebar-icon" />
