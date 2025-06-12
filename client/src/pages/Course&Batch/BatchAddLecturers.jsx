@@ -55,7 +55,7 @@ const BatchAddLecturers = React.memo(({ onLecturersAdded }) => {
   // Fetch batch data
   const fetchBatch = useCallback(async () => {
     try {
-      const batchData = await authRequest("get", `http://10.70.4.34:5003/api/batches/${batchId}`)
+      const batchData = await authRequest("get", `http://localhost:5003/api/batches/${batchId}`)
       setBatch(batchData)
     } catch (err) {
       console.error("Error fetching batch:", err)
@@ -71,8 +71,8 @@ const BatchAddLecturers = React.memo(({ onLecturersAdded }) => {
     setError("")
 
     try {
-      const allLecturers = await authRequest("get", "http://10.70.4.34:5003/api/lecturer-registration")
-      const assigned = await authRequest("get", `http://10.70.4.34:5003/api/batches/${batchId}/lecturers`)
+      const allLecturers = await authRequest("get", "http://localhost:5003/api/lecturer-registration")
+      const assigned = await authRequest("get", `http://localhost:5003/api/batches/${batchId}/lecturers`)
 
       const assignedIds = assigned.map((l) => l.id)
       const filtered = allLecturers.filter((l) => {
@@ -127,7 +127,7 @@ const BatchAddLecturers = React.memo(({ onLecturersAdded }) => {
       setAdding(true)
       setError("")
 
-      await authRequest("post", `http://10.70.4.34:5003/api/batches/${batchId}/lecturers`, {
+      await authRequest("post", `http://localhost:5003/api/batches/${batchId}/lecturers`, {
         lecturer_ids: selected,
       })
 

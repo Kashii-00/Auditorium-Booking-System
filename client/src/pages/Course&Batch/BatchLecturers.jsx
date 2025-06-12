@@ -61,7 +61,7 @@ const BatchLecturers = React.memo(() => {
   // Fetch batch and lecturer data
   const fetchBatchData = useCallback(async () => {
     try {
-      const batchData = await authRequest("get", `http://10.70.4.34:5003/api/batches/${id}`)
+      const batchData = await authRequest("get", `http://localhost:5003/api/batches/${id}`)
       setBatch(batchData)
     } catch (err) {
       console.error("Error fetching batch data:", err)
@@ -72,7 +72,7 @@ const BatchLecturers = React.memo(() => {
   const fetchBatchLecturers = useCallback(async () => {
     try {
       setLoading(true)
-      const lecturersData = await authRequest("get", `http://10.70.4.34:5003/api/batches/${id}/lecturers`)
+      const lecturersData = await authRequest("get", `http://localhost:5003/api/batches/${id}/lecturers`)
       setLecturers(lecturersData || [])
       setError(null)
     } catch (err) {
@@ -105,7 +105,7 @@ const BatchLecturers = React.memo(() => {
 
       const response = await authRequest(
         "delete",
-        `http://10.70.4.34:5003/api/batches/${id}/lecturers/${lecturerToDelete.id}`,
+        `http://localhost:5003/api/batches/${id}/lecturers/${lecturerToDelete.id}`,
       )
 
       if (response.success) {
@@ -140,7 +140,7 @@ const BatchLecturers = React.memo(() => {
 
       const response = await authRequest(
         "put",
-        `http://10.70.4.34:5003/api/batches/${id}/lecturers/${currentLecturer.id}`,
+        `http://localhost:5003/api/batches/${id}/lecturers/${currentLecturer.id}`,
         { module: moduleValue },
       )
 

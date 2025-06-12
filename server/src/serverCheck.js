@@ -32,7 +32,7 @@ const serverPort = process.env.PORT || 5003;
 
 const checkServer = () => {
   const req = http.request({
-    hostname: '10.70.4.34 ',
+    hostname: 'localhost ',
     port: serverPort,
     path: '/api/health',
     method: 'GET',

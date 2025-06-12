@@ -34,7 +34,7 @@ const BatchDetailsPopup = React.memo(({ batchId, onClose }) => {
     setError(null)
 
     try {
-      const response = await authRequest("get", `http://10.70.4.34:5003/api/batches/details/${batchId}`)
+      const response = await authRequest("get", `http://localhost:5003/api/batches/details/${batchId}`)
       setBatchDetails(response)
     } catch (err) {
       console.error("Error fetching batch details:", err)
@@ -99,8 +99,8 @@ const BatchDetailsPopup = React.memo(({ batchId, onClose }) => {
     try {
       const endpoint =
         deleteDialog.type === "student"
-          ? `http://10.70.4.34:5003/api/batches/${batchId}/students/${deleteDialog.id}`
-          : `http://10.70.4.34:5003/api/batches/${batchId}/lecturers/${deleteDialog.id}`
+          ? `http://localhost:5003/api/batches/${batchId}/students/${deleteDialog.id}`
+          : `http://localhost:5003/api/batches/${batchId}/lecturers/${deleteDialog.id}`
 
       await authRequest("delete", endpoint)
       await fetchBatchDetails()

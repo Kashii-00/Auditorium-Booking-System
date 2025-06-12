@@ -13,11 +13,16 @@ const CourseRegistrationRoute = require('./routes/CourseRegistrationRoute');
 const PayCourseRoute = require('./routes/PayCourseRoute');
 const lecturerRegistrationRoutes = require('./routes/lecturerRegistration');
 const studentRoutes = require('./routes/studentRoutes'); // Make sure this is imported
-const { requestMonitor } = require('./utils/monitorServer');
+const aidRequestRoutes = require("./routes/");
+const aidHandoverRoutes = require("./routes/aidHandover");
+const classroomCalendarRoutes = require("./routes/classroomCalendarRoutes");
+const { requestMonitor } = require("./utils/monitorServer");
 
 // Import the batch routes
 const batchRoutes = require('./routes/batchRoutes');
-
+const emailRoutes = require("./routes/email");
+const cron = require("node-cron");
+const processPendingEmails = require("./utils/emailProcessor");
 // Initialize Express app
 const app = express();
 
@@ -33,7 +38,7 @@ if (DEBUG) {
 }
 
 // CORS configuration to support credentials
-const allowedOrigins = ['http://10.70.4.34:3000','http://10.70.4.34:3060'];
+const allowedOrigins = ['http://localhost:3000','http://localhost:3060'];
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -49,6 +54,12 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200
 };
+
+// Every 5 minutes
+cron.schedule("*/5 * * * *", () => {
+  console.log("⏰ Checking for approved/denied requests needing emails...");
+  processPendingEmails();
+});
 
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -81,6 +92,11 @@ app.use('/api/course-payments', PayCourseRoute);
 app.use('/api/lecturer-registration', lecturerRegistrationRoutes);
 app.use('/api/students', studentRoutes); // Make sure this route is registered
 app.use('/api/batches', batchRoutes); // Add batch routes
+app.use("/api/aidrequests", aidRequestRoutes);
+app.use("/api/aidhandover", aidHandoverRoutes);
+app.use("/api/classroom-calendar", classroomCalendarRoutes);
+
+app.use("/api/email", emailRoutes);
 
 // Stats endpoint (admin only)
 app.get('/api/stats', (req, res) => {

@@ -115,7 +115,7 @@ export default function CourseManagementImproved() {
     try {
       setIsLoading(true)
       setError(null)
-      const data = await authRequest("get", "http://10.70.4.34:5003/api/CourseRegistrationRoute")
+      const data = await authRequest("get", "http://localhost:5003/api/CourseRegistrationRoute")
       if (Array.isArray(data)) {
         setCourses(data)
         if (showToast) {
@@ -644,7 +644,7 @@ function CourseDashboard({ courses: initialCourses, setCourses, onRegisterClick,
     try {
       const response = await authRequest(
         "put",
-        `http://10.70.4.34:5003/api/CourseRegistrationRoute/${editingCourse.id}`,
+        `http://localhost:5003/api/CourseRegistrationRoute/${editingCourse.id}`,
         formData,
       )
       if (response.success) {
@@ -1232,7 +1232,7 @@ function CourseRegistrationForm({ onBack, onSuccess }) {
 
     setIsLoading(true)
     try {
-      const response = await authRequest("post", "http://10.70.4.34:5003/api/CourseRegistrationRoute", submissionData)
+      const response = await authRequest("post", "http://localhost:5003/api/CourseRegistrationRoute", submissionData)
       if (response.success) {
         toast({
           title: "Success!",
@@ -1260,7 +1260,7 @@ function CourseRegistrationForm({ onBack, onSuccess }) {
       return
     }
     try {
-      const response = await authRequest("get", `http://10.70.4.34:5003/api/CourseRegistrationRoute/check/${id}`)
+      const response = await authRequest("get", `http://localhost:5003/api/CourseRegistrationRoute/check/${id}`)
       if (response.exists) {
         setCourseIdError("This Course ID is already in use")
       } else {

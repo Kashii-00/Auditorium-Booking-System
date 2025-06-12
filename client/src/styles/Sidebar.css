@@ -117,7 +117,7 @@
 .sidebar-dropdown {
   margin: 0 0 16px 0;
   width: 100%;
-  background-color: #495057; /* Updated background color */
+  background-color: #264461; /* Updated background color */
   color: #ffffff !important; /* Updated text color */
   border: none;
   padding: 8px 12px; /* Updated padding */
@@ -136,19 +136,7 @@
   text-align: center;
 }
 
-.sidebar-dropdown:focus,
-.sidebar-dropdown:active {
-  background-color: rgba(255, 255, 255, 0.2) !important;
-  color: #fff !important;
-  outline: none;
-  border-radius: 20px;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
-}
 
-
-.sidebar-dropdown:focus {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
-}
 
 .sidebar.collapsed .sidebar-dropdown {
   opacity: 0;
@@ -457,4 +445,3 @@
     display: inline !important;
   }
 }
-

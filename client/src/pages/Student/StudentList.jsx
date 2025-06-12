@@ -28,7 +28,7 @@ const StudentList = () => {
         setLoading(true);
         setError(null);
         
-        const studentsData = await authRequest('get', 'http://10.70.4.34:5003/api/students');
+        const studentsData = await authRequest('get', 'http://localhost:5003/api/students');
         
         if (Array.isArray(studentsData)) {
           setStudents(studentsData);
@@ -98,7 +98,7 @@ const StudentList = () => {
     try {
       setDeleteLoading(true);
       
-      const response = await authRequest('delete', `http://10.70.4.34:5003/api/students/${studentToDelete.id}`);
+      const response = await authRequest('delete', `http://localhost:5003/api/students/${studentToDelete.id}`);
       
       if (response.success) {
         setStudents(students.filter(s => s.id !== studentToDelete.id));

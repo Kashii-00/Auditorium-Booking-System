@@ -1,0 +1,458 @@
+/* ---------------------------------
+   Base: Layout & Background
+---------------------------------- */
+.form-wp {
+  background: url("../../assets/ports.jpg") no-repeat center center;
+  background-size: cover;
+  min-height: 90vh;
+  padding: 1rem;
+  box-sizing: border-box;
+  position: relative;
+}
+
+#clsBooking {
+  padding: 1rem;
+}
+
+/* -------------------------------
+  Success popup styling 
+---------------------------------*/
+.success-popup {
+  position: fixed;
+  top: 50px;
+  right: 40px;
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  color: #155724;
+  border-left: 4px solid #155724;
+  border-radius: 4px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.success-popup svg {
+  margin-right: 10px;
+  color: #155724;
+}
+/* ---------------------------------
+   Nav Layout
+---------------------------------- */
+.navRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Hamburger Menu - Hidden by default */
+.hamburgerMenu {
+  display: none;
+  position: relative;
+}
+
+/* MultiNav Buttons (Desktop Visible) */
+.multiNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Individual Buttons */
+.formBtn {
+  position: relative;
+  flex: 1 1 200px;
+  max-width: 260px;
+  height: 100px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 20px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: white;
+  font-weight: 500;
+  z-index: 0;
+  padding: 5px;
+  font-size: 0.9rem;
+
+  /* 3D effect starts here */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 5px solid rgb(255, 255, 255);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.2),
+    0 12px 28px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.formBtn:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2), 0 12px 24px rgba(0, 0, 0, 0.25),
+    0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.formBtn:nth-child(1) {
+  background-image: url("../styles/requesting.png");
+}
+.formBtn:nth-child(2) {
+  background-image: url("../styles/handingover.jpg");
+}
+.formBtn:nth-child(3) {
+  background-image: url("../styles/bookingCal.jpg");
+}
+
+/* Semi-transparent overlay by default */
+.formBtn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  transition: background-color 0.3s ease;
+  border-radius: 20px;
+  z-index: 1;
+}
+
+.formBtn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.formBtn span {
+  position: relative;
+  z-index: 2;
+}
+
+.formBtn .iconNav {
+  position: relative;
+  z-index: 2;
+}
+
+.formBtn:hover::before {
+  background-color: rgba(0, 0, 0, 0.74);
+}
+
+/* Logo Container */
+.logoNav {
+  flex: 1 1 200px;
+  max-width: 300px;
+  height: 120px;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-left: auto;
+}
+
+.logoNav img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------------------------------
+   Main Content Area
+---------------------------------- */
+.contentRow {
+  display: flex;
+  /* flex-direction: row; */
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  min-height: 75vh;
+  justify-content: space-between;
+}
+
+.formContent {
+  flex: 2;
+  min-width: 300px;
+  min-height: 500px;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 1rem;
+  border: 5px solid rgb(255, 255, 255);
+}
+
+.otherContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  /* flex: 1; */
+}
+
+.minContent {
+  position: relative;
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 20px;
+  padding: 1rem;
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  color: white;
+  font-size: 0.9rem;
+  overflow: hidden;
+  max-width: 300px;
+  min-width: 280px;
+  /* 3D effect */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 5px solid rgb(255, 255, 255);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.2),
+    0 12px 28px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.minContent:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2), 0 12px 24px rgba(0, 0, 0, 0.25),
+    0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.minContent::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Assign different background images */
+.minContent:nth-child(1) {
+  background-image: url("../styles/calendarprev.jpg");
+}
+
+.minContent:nth-child(2) {
+  background-image: url("../styles/avaiClsr.jpg");
+}
+
+.minContent:nth-child(3) {
+  background-image: url("../styles/bookingtb.jpg");
+}
+
+/* Semi-transparent overlay by default */
+.minContent::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  transition: background-color 0.3s ease;
+  border-radius: 20px;
+  z-index: 0;
+}
+
+.minContent:nth-child(2)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease;
+  border-radius: 20px;
+  z-index: 0;
+}
+/* On hover: lighten the overlay to show more image */
+.minContent:hover::before {
+  background-color: rgba(0, 0, 0, 0.74);
+}
+
+.minContent:nth-child(2):hover::before {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Ensure content stays on top */
+.minContent > * {
+  position: relative;
+  z-index: 1;
+}
+
+.minContent:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------------------------------
+   Responsive Media Queries
+---------------------------------- */
+
+/* ≤1306px: Hamburger menu active, logo right, hamburger left */
+@media (max-width: 1306px) {
+  .hamburgerMenu {
+    display: block;
+    order: 1;
+  }
+
+  .multiNav {
+    display: none;
+  }
+
+  .logoNav {
+    margin-left: auto;
+    order: 2;
+  }
+
+  .navRow {
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .hamburgerBtn {
+    font-size: 1.5rem;
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+  }
+
+  .hamburgerDropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 270px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 12px;
+    padding: 1rem;
+    z-index: 50;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hamburgerDropdown {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .menuItem {
+    position: relative;
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .menuItem span {
+    position: relative;
+  }
+
+  .menuItem span::after {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 70%;
+    height: 2px;
+    background: #ffffff;
+    border-radius: 2px;
+    transform-origin: left;
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+  }
+
+  .menuItem span:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+/* ≤1024px: Stack layout */
+@media (max-width: 1024px) {
+  .navRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .formBtn,
+  .logoNav {
+    width: 100%;
+  }
+
+  .formContent {
+    flex: 1 1 100%;
+  }
+
+  .otherContent {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .minContent {
+    flex: 1 1 45%;
+  }
+}
+
+/* ≤600px: Full column layout */
+@media (max-width: 600px) {
+  .multiNav {
+    flex-direction: column;
+  }
+
+  .formBtn,
+  .logoNav,
+  .minContent {
+    width: 100%;
+  }
+
+  .contentRow {
+    flex-direction: column;
+  }
+
+  .otherContent {
+    flex-direction: column;
+  }
+}
+
+.dashIcon {
+  width: 40px;
+  height: 40px;
+}

@@ -342,6 +342,14 @@ const Sidebar = ({ user, onLogout }) => {
       if (hasRole("bookings_access")) return "/bookings"
       return null
     },
+    crbooking: () => {
+    if (hasRole("SuperAdmin") || hasRole("cb_SU_access") || hasRole("cb_Admin_access")) return "/classroombookingform"
+    if (hasRole("cb_Admin_access")) return "/classroombooking"
+    if (hasRole("cb_Admin_access")) return "/classroomcalendar"
+    if (hasRole("cb_Admin_access")) return "/calendarbookingtable"
+    if (hasRole("cb_Admin_access") || hasRole("cb_SU_access")) return "/classroombookingschedule"
+    return null
+  },
     bus: () => {
       if (hasRole("SuperAdmin") || hasRole("bus_access")) return "/bus"
       if (hasRole("busbookings_access")) return "/busbookings"
@@ -385,7 +393,7 @@ const Sidebar = ({ user, onLogout }) => {
         roles: ["course_registration_access", "student_registration_access"],
       },
       { value: "Lecturers", label: "ʟᴇᴄᴛᴜʀᴇʀꜱ ᴍᴀɴᴀɡᴇᴍᴇɴᴛ", roles: ["lecturer_management_access"] },
-      { value: "ClassRoom", label: "ᴄʟᴀꜱꜱ ᴍᴀɴᴀɡᴇᴍᴇɴᴛ", roles: ["class_request_access"] },
+      { value: "crbooking", label: "ᴄʟᴀꜱꜱ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ", roles: ["cb_Admin_access", "cb_SU_access"] },
       { value: "users", label: "ᴀᴅᴍɪɴɪꜱᴛʀᴀᴛɪᴏɴ", roles: ["SuperAdmin"] },
     ]
 
@@ -446,6 +454,53 @@ const Sidebar = ({ user, onLogout }) => {
               )}
             </>
           )}
+          {selectedSection === "crbooking" && (
+            <>
+              {(hasRole("SuperAdmin") || hasRole("cb_SU_access") || hasRole("cb_Admin_access")) && (
+                <Link to="/classroombookingform" className={`sidebar-link ${location.pathname === "/classroombookingform" ? "active" : ""}`}>
+                  <img src={List || "/placeholder.svg"} alt="BookingList" className="sidebar-icon" />
+                  <span className="sidebar-text">CLASSROOM BOOKING FORMS</span>
+                </Link>
+              )}
+              {(hasRole("SuperAdmin") || hasRole("cb_Admin_access")) && (
+                <Link to="/classroomcalendar" className={`sidebar-link ${location.pathname === "/classroomcalendar" ? "active" : ""}`}>
+                  <img src={calender || "/placeholder.svg"} alt="CalanderLogo" className="sidebar-icon" />
+                  <span className="sidebar-text">CB CALENDAR FORM</span>
+                </Link>
+              )}
+              {(hasRole("SuperAdmin") || hasRole("cb_Admin_access")) && (
+                <Link to="/calendarbookingtable" className={`sidebar-link ${location.pathname === "/calendarbookingtable" ? "active" : ""}`}>
+                  <img src={calender || "/placeholder.svg"} alt="CalanderLogo" className="sidebar-icon" />
+                  <span className="sidebar-text">CB CALENDAR BOOKINGS TABLE</span>
+                </Link>
+              )}
+              {(hasRole("SuperAdmin") || hasRole("cb_Admin_access")) && (
+                <Link to="/classroombooking" className={`sidebar-link ${location.pathname === "/classroombooking" ? "active" : ""}`}>
+                  <img src={List || "/placeholder.svg"} alt="BookingList" className="sidebar-icon" />
+                  <span className="sidebar-text">CB DETAILS TABLE</span>
+                </Link>
+              )}
+              {(hasRole("SuperAdmin") || hasRole("cb_Admin_access") || hasRole("cb_SU_access")) && (
+                <Link to="/classroombookingschedule" className={`sidebar-link ${location.pathname === "/classroombookingschedule" ? "active" : ""}`}>
+                  <img src={List || "/placeholder.svg"} alt="BookingList" className="sidebar-icon" />
+                  <span className="sidebar-text">CB SCHEDULE</span>
+                </Link>
+              )}
+              {(hasRole("SuperAdmin") || hasRole("cb_Admin_access") || hasRole("cb_SU_access")) && (
+                <Link to="/singlebookingdetails" className={`sidebar-link ${location.pathname === "/singlebookingdetails" ? "active" : ""}`}>
+                  <img src={List || "/placeholder.svg"} alt="BookingList" className="sidebar-icon" />
+                  <span className="sidebar-text">Single Booking Details</span>
+                </Link>
+              )}
+              {(hasRole("SuperAdmin") || hasRole("cb_Admin_access") || hasRole("cb_SU_access")) && (
+                <Link to="/cancelRequestByUser" className={`sidebar-link ${location.pathname === "/cancelRequestByUser" ? "active" : ""}`}>
+                  <img src={List || "/placeholder.svg"} alt="BookingList" className="sidebar-icon" />
+                  <span className="sidebar-text">Cancel Request</span>
+                </Link>
+              )}
+            </>
+          )}
+          
           {selectedSection === "users" && hasRole("SuperAdmin") && (
             <Link to="/users" className={`sidebar-link ${location.pathname === "/users" ? "active" : ""}`}>
               <img src={admin2 || "/placeholder.svg"} alt="UserList" className="sidebar-icon" />

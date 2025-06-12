@@ -26,6 +26,13 @@ import AnnualPlan from "./pages/Course&Batch/AnnualPlan"
 import LecturerView from "./pages/Lecturer/LecturerView"
 import AnnualPlanPrintReport from "./pages/Course&Batch/annual-plan-print-report"
 import ErrorBoundary from "./ErrorBoundary" // Add this import
+import ClassroomCalendar from "./pages/Classroom_Booking/ClassroomReservationCalendar"
+import ClassroomBooking from "./pages/Classroom_Booking/ClassroomBooking"
+import ClassroomBookingForm from "./pages/Classroom_Booking/ClassroomBookingForm"
+import CalendarBookingTable from "./pages/Classroom_Booking/CalendarBookingTable"
+import ScheduleChecker from "./pages/Classroom_Booking/ScheduleChecker"
+import SingleBookingFullDetails from "./pages/Classroom_Booking/SingleBookingFullDetails"
+import CancelRequestForm from "./pages/Classroom_Booking/CancelRequestForm"
 
 import "./styles/App.css"
 import "./styles/global.css"
@@ -158,6 +165,8 @@ function App() {
   const canAccessBatchAddLecturers = hasRole("SuperAdmin") || hasRole("batch_lecturers_access")
   const canAccessAnnualPlan = hasRole("SuperAdmin") || hasRole("annual_plan_access")
   const canAccessLecturerView = hasRole("SuperAdmin")
+  const canAccess_CB_ADMIN = hasRole("SuperAdmin") || hasRole("cb_Admin_access")
+  const canAccess_CB_COMMON = hasRole("SuperAdmin") || hasRole("cb_Admin_access") || hasRole("cb_SU_access")
 
   // Add a permission for the print report page (reuse annual plan permission)
   const canAccessAnnualPlanPrint = canAccessAnnualPlan;
@@ -338,6 +347,76 @@ function App() {
           <Route
             path="/batch/:id/lecturers"
             element={<ProtectedRouteWithErrorBoundary element={BatchLecturers} canAccess={canAccessBatchLecturers} />}
+          />
+
+          <Route
+            path="/classroombookingform"
+            element={
+              <ProtectedRouteWithErrorBoundary
+                element={ClassroomBookingForm}
+                canAccess={canAccess_CB_COMMON}
+                user={loggedInUser}
+              />
+            }
+          />
+          <Route
+            path="/classroomcalendar"
+            element={
+              <ProtectedRouteWithErrorBoundary
+                element={ClassroomCalendar}
+                canAccess={canAccess_CB_ADMIN}
+                user={loggedInUser}
+              />
+            }
+          />
+          <Route
+            path="/calendarbookingtable"
+            element={
+              <ProtectedRouteWithErrorBoundary
+                element={CalendarBookingTable}
+                canAccess={canAccess_CB_ADMIN}
+                user={loggedInUser}
+              />
+            }
+          />
+          <Route
+            path="/classroombooking"
+            element={
+              <ProtectedRouteWithErrorBoundary
+                element={ClassroomBooking}
+                canAccess={canAccess_CB_ADMIN}
+                user={loggedInUser}
+              />
+            }
+          />
+          <Route
+            path="/singlebookingdetails"
+            element={
+              <ProtectedRouteWithErrorBoundary
+                element={SingleBookingFullDetails}
+                canAccess={canAccess_CB_COMMON}
+                user={loggedInUser}
+              />
+            }
+          />
+          <Route
+            path="/cancelRequestByUser"
+            element={
+              <ProtectedRouteWithErrorBoundary
+                element={CancelRequestForm}
+                canAccess={canAccess_CB_COMMON}
+                user={loggedInUser}
+              />
+            }
+          />
+          <Route
+            path="/classroombookingschedule"
+            element={
+              <ProtectedRouteWithErrorBoundary
+                element={ScheduleChecker}
+                canAccess={canAccess_CB_COMMON}
+              />
+            }
           />
 
           <Route

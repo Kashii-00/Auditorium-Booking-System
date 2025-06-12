@@ -89,7 +89,7 @@ const BusCalendarFull = ({ user = { id: 1, name: "Demo User" } }) => {
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await authRequest("get", "http://10.70.4.34:5003/api/busBookings")
+      const response = await authRequest("get", "http://localhost:5003/api/busBookings")
       setBookings(response || [])
     } catch (error) {
       console.error("Error fetching bookings:", error)
@@ -291,7 +291,7 @@ const BusCalendarFull = ({ user = { id: 1, name: "Demo User" } }) => {
     try {
       const { travelDate, returnDate, fromPlace, toPlace, forWho, ContactNo } = formState
 
-      const response = await authRequest("post", "http://10.70.4.34:5003/api/busBookings", {
+      const response = await authRequest("post", "http://localhost:5003/api/busBookings", {
         user_id: user.id,
         fromPlace: fromPlace.trim(),
         toPlace: toPlace.trim(),

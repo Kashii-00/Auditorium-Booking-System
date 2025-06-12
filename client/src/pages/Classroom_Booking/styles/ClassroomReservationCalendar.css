@@ -1,0 +1,735 @@
+/* Base variables for consistent styling */
+:root {
+  --primary-color: #3a6ea5;
+  --primary-hover: #2c5282;
+  --primary-light: #e6f0ff;
+  --secondary-color: #4caf50;
+  --secondary-hover: #388e3c;
+  --text-dark: #2c3e50;
+  --text-muted: #6c757d;
+  --bg-light: #f0f4f8; /* Slightly more blue tint */
+  --border-color: #e0e0e0;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --spacing-xs: 0.2rem;
+  --spacing-sm: 0.4rem;
+  --spacing-md: 0.8rem;
+  --spacing-lg: 1.2rem;
+  --accent-purple: #6a5acd;
+  --accent-blue: #4a6cfa;
+  --accent-teal: #20c997;
+}
+
+/* Content wrapper styles with gradient background */
+.content-wrapper-cb {
+  position: relative;
+  margin-left: 160px;
+  width: calc(100% - 160px);
+  min-height: calc(100vh - 60px);
+  padding: var(--spacing-lg);
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #f5f7fa 0%, #54657d 100%);
+  overflow-x: hidden;
+}
+
+.content-wrapper-cb h1 {
+  margin: 0 0 var(--spacing-lg) 0;
+  font-size: 1.2rem;
+  color: var(--text-dark);
+  font-weight: 600;
+  padding: 0;
+  position: relative;
+  border-left: 5px solid var(--accent-blue);
+  padding-left: 15px;
+}
+
+.content-wrapper-cb.expanded {
+  margin-left: 10px;
+  width: calc(100% - 90px);
+}
+
+/* Calendar container layout with more depth */
+.calendar-container-cb {
+  display: flex;
+  gap: var(--spacing-lg);
+  width: 100%;
+  height: calc(100vh - 160px);
+  align-items: stretch;
+  margin: 0 auto;
+
+  max-width: 1600px;
+  position: relative;
+}
+
+@media (max-width: 1024px) {
+  .calendar-container-cb {
+    flex-direction: column;
+    height: auto;
+  }
+}
+
+/* Calendar main area styling with depth */
+.calendar-main-cb {
+  flex: 1;
+  background-color: #fff;
+  min-width: 0;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  height: 90%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(58, 110, 165, 0.1);
+}
+
+@media (max-width: 1024px) {
+  .calendar-main-cb {
+    height: 600px;
+    margin-bottom: var(--spacing-lg);
+  }
+}
+
+/* FullCalendar customization */
+/* Root FullCalendar container - sets full width/height and inherits font */
+.fc {
+  height: 100% !important;
+  font-family: inherit;
+  width: 100% !important;
+  min-width: 600px;
+  min-height: 600px;
+}
+
+/* Title text in the toolbar (e.g., month/year) */
+.fc-toolbar-title {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  color: var(--accent-purple) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* All buttons in the FullCalendar toolbar */
+.fc-button {
+  background-color: var(--accent-blue) !important;
+  border-color: var(--accent-blue) !important;
+  box-shadow: none !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.7rem !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Hover effect for toolbar buttons */
+.fc-button:hover {
+  background-color: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Active state for toolbar buttons */
+.fc-button-active {
+  background-color: var(--accent-purple) !important;
+  border-color: var(--accent-purple) !important;
+}
+
+/* "Today" button styling */
+.fc-today-button {
+  background-color: var(--accent-teal) !important;
+  border-color: var(--accent-teal) !important;
+}
+
+/* "Today" button hover effect */
+.fc-today-button:hover {
+  background-color: #1ba57f !important;
+  border-color: #1ba57f !important;
+}
+
+/* Calendar view harness container - outer wrapper for calendar content */
+.fc .fc-view-harness {
+  border-radius: var(--radius-md);
+  background-color: #fff;
+  overflow: auto !important;
+  width: 100% !important;
+  min-height: 200px;
+  border: 1px solid #edf2f7;
+}
+
+/* Grid view containers (monthly, weekly, etc.) */
+.fc .fc-timegrid,
+.fc .fc-daygrid {
+  height: 100% !important;
+  min-width: 200px;
+  overflow: auto !important;
+}
+
+/* Scrollable container for time grid and day grid */
+.fc-scrollgrid {
+  width: 100% !important;
+}
+
+/* Grid body for time and day views */
+.fc-timegrid-body,
+.fc-daygrid-body {
+  overflow: visible !important;
+  min-width: 100% !important;
+}
+
+/* Each day cell in the day grid */
+.fc .fc-daygrid-day {
+  transition: background-color 0.2s;
+}
+
+/* Hover state for day cells */
+.fc .fc-daygrid-day:hover {
+  background-color: #f8fafc;
+}
+
+/* Highlight for today's cell in the day grid */
+.fc .fc-daygrid-day.fc-day-today {
+  background-color: rgba(74, 108, 250, 0.1) !important;
+}
+
+/* Day number styling (1, 2, 3, ...) in each cell */
+.fc .fc-daygrid-day-number {
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Day header text (e.g., Mon, Tue) */
+.fc .fc-col-header-cell-cushion {
+  color: var(--accent-purple);
+  font-weight: 600;
+}
+
+/* Enforce full width for calendar tables */
+.fc table {
+  width: 100% !important;
+  min-width: 400px !important;
+}
+
+/* Duplicate rule: Highlight for today's cell in day grid (refined color) */
+.fc .fc-daygrid-day.fc-day-today {
+  background-color: var(--primary-light) !important;
+}
+
+/* Handle expanded layout for content wrapper */
+.content-wrapper.expanded .calendar-main .fc-view-harness {
+  min-width: 100%;
+}
+
+/* Header cells (top row with weekdays) */
+.fc-day-header,
+.fc-col-header-cell {
+  min-width: 100px;
+  background-color: #f9f9ff;
+}
+
+/* Base styling for each calendar event */
+.fc-event {
+  border-radius: var(--radius-sm) !important;
+  padding: 4px 8px !important;
+  font-size: 0.6rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+}
+
+/* Hover state for calendar events */
+.fc-event:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Approved status color theme */
+.fc-event.status-approved {
+  background: linear-gradient(135deg, #43a047, #2e7d32) !important;
+  border-left: 3px solid #1b5e20 !important;
+}
+
+/* Pending status color theme */
+.fc-event.status-pending {
+  background: linear-gradient(135deg, #ff9800, #f57c00) !important;
+  border-left: 3px solid #e65100 !important;
+}
+
+/* Denied status color theme */
+.fc-event.status-denied {
+  background: linear-gradient(135deg, #f44336, #d32f2f) !important;
+  border-left: 3px solid #b71c1c !important;
+}
+
+/* Change height of day cells in month view */
+.fc-daygrid-day-frame {
+  min-height: 80px !important; /* adjust to desired height */
+  height: 80px;
+}
+
+/* Title text inside an event */
+.fc-event-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-tooltip {
+  position: fixed;
+  background: white;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  z-index: 9999;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  max-width: 300px;
+  pointer-events: none;
+  border-top: 3px solid var(--accent-blue);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tooltip-header {
+  font-weight: 600;
+  color: var(--accent-blue);
+  margin-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.8rem;
+}
+
+.tooltip-row {
+  display: flex;
+  margin-bottom: var(--spacing-xs);
+  color: var(--text-muted);
+  font-size: 0.775rem;
+}
+
+.tooltip-label {
+  font-weight: 500;
+  margin-right: var(--spacing-sm);
+  width: 80px;
+  color: var(--accent-purple);
+}
+
+.tooltip-status {
+  display: inline-block;
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.tooltip-status.approved {
+  background: linear-gradient(
+    135deg,
+    rgba(76, 175, 80, 0.1),
+    rgba(46, 125, 50, 0.1)
+  );
+  color: #2e7d32;
+}
+
+.tooltip-status.pending {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 152, 0, 0.1),
+    rgba(230, 81, 0, 0.1)
+  );
+  color: #e65100;
+}
+
+.tooltip-status.denied {
+  background: linear-gradient(
+    135deg,
+    rgba(244, 67, 54, 0.1),
+    rgba(183, 28, 28, 0.1)
+  );
+  color: #b71c1c;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e0e0e0;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+  border: 2px solid #e0e0e0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+@media (max-width: 768px) {
+  .content-wrapper-cb {
+    padding: var(--spacing-md);
+  }
+
+  .calendar-container-cb {
+    gap: var(--spacing-md);
+  }
+}
+
+/* Booking form styles with depth and color */
+.booking-form-cb {
+  width: 310px;
+  height: 90%;
+  padding: var(--spacing-lg);
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  border-top: 5px solid var(--accent-blue);
+  position: relative;
+}
+
+@media (max-width: 1200px) {
+  .booking-form-cb {
+    width: 260px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .booking-form-cb {
+    width: 100%;
+    height: auto;
+  }
+}
+
+.form-title-cb {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-lg);
+  color: var(--accent-blue);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid var(--accent-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.user-info-container-cb {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--accent-blue) 0%, #6a5acd 100%);
+  color: white;
+}
+
+.user-photo-cb {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: var(--spacing-md);
+  border: 2px solid white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.user-photo-cb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-details-cb {
+  flex: 1;
+}
+
+.user-detail-cb {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+  color: white;
+}
+
+.user-detail-cb span {
+  font-size: 0.8rem;
+}
+
+.detail-icon-cb {
+  margin-right: var(--spacing-sm);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.8rem;
+}
+
+.setDateTime-Dropdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-purple);
+  font-weight: 500;
+  font-size: 0.8rem;
+  margin-bottom: var(--spacing-lg);
+  margin-top: var(--spacing-sm);
+  cursor: pointer;
+}
+
+.form-group-cb {
+  margin-bottom: var(--spacing-lg);
+  position: relative;
+}
+
+.form-group-cb label {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+  color: var(--accent-purple);
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.form-group-cb .input-icon {
+  margin-right: var(--spacing-sm);
+  color: var(--accent-blue);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.form-group-cb .time-inputs {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.form-group-cb .date-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.form-group-cb .time-separator {
+  color: var(--text-muted);
+  padding: 0 var(--spacing-xs);
+  font-size: 0.8rem;
+}
+
+.form-group-cb input,
+.form-group-cb select,
+.form-group-cb textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #dde2e8;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  color: var(--text-dark);
+  transition: all 0.2s ease;
+  background-color: #f9fafc;
+}
+
+.form-group-cb select {
+  color: var(--text-dark);
+  background-color: #f9fafc;
+}
+
+.form-group-cb select:focus,
+.form-group-cb select:active {
+  background-color: #f9fafc !important;
+  color: var(--text-dark) !important;
+}
+
+.form-group-cb select option {
+  background-color: white;
+  color: var(--text-dark);
+  padding: 8px;
+}
+
+.form-group-cb select option:checked,
+select option:hover {
+  background-color: var(--accent-blue);
+  color: white;
+}
+
+.form-group-cb select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23555' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: calc(100% - 12px) center;
+  padding-right: 30px;
+}
+
+.form-group-cb select:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(74, 108, 250, 0.15);
+  background-color: white;
+}
+
+.form-group-cb select option {
+  background-color: white;
+  color: var(--text-dark);
+  padding: 8px;
+}
+
+.form-group-cb select,
+.form-group-cb select option:checked {
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.form-group-cb input:focus,
+.form-group-cb select:focus,
+.form-group-cb textarea:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(74, 108, 250, 0.15);
+  background-color: white;
+}
+
+.form-group-cb input.error,
+.form-group-cb select.error,
+.form-group-cb textarea.error {
+  border-color: #f44336;
+  background-color: rgba(244, 67, 54, 0.05);
+}
+
+.form-group-cb .error-message {
+  color: #f44336;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.submit-button-2 {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, var(--secondary-color), #388e3c);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.submit-button-2:hover {
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.submit-button:active {
+  transform: translateY(-1px);
+}
+
+.clearButton-2 {
+  margin: 10px 0;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #ff0000, #a5170d);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.clearButton-2:hover {
+  background: linear-gradient(135deg, #ca0101, #66100a);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.clearButton-2:active {
+  transform: translateY(-1px);
+}
+
+.success-message {
+  color: var(--secondary-color);
+  text-align: center;
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background: linear-gradient(
+    135deg,
+    rgba(76, 175, 80, 0.1),
+    rgba(56, 142, 60, 0.1)
+  );
+  border-radius: var(--radius-md);
+  font-weight: 500;
+}
+
+/* General input, select, and textarea styling */
+.booking-form-cb input,
+.booking-form-cb select,
+.booking-form-cb textarea {
+  font-size: 0.8rem; /* Smaller text */
+}
+
+/* Placeholder text */
+.booking-form-cb input::placeholder,
+.booking-form-cb textarea::placeholder {
+  font-size: 0.8rem;
+}
+
+/* Native select dropdown options */
+.booking-form-cb select option {
+  font-size: 0.8rem;
+}
+
+/* React Select (and CreatableSelect) styling using classNamePrefix="react-select" */
+.react-select__control {
+  font-size: 0.8rem;
+  min-height: 36px;
+}
+
+.react-select__menu {
+  font-size: 0.8rem;
+}
+
+.react-select__option {
+  font-size: 0.8rem;
+}
+
+.react-select__single-value,
+.react-select__multi-value__label,
+.react-select__placeholder {
+  font-size: 0.8rem;
+}
+
+/* Multi-value tags in React Select */
+.react-select__multi-value {
+  font-size: 0.8rem;
+}

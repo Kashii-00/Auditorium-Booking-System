@@ -60,7 +60,7 @@ const BatchStudents = React.memo(() => {
     }
 
     try {
-      const batchData = await authRequest("get", `http://10.70.4.34:5003/api/batches/${batchId}`)
+      const batchData = await authRequest("get", `http://localhost:5003/api/batches/${batchId}`)
       setBatch(batchData)
     } catch (err) {
       console.error("Error fetching batch data:", err)
@@ -79,7 +79,7 @@ const BatchStudents = React.memo(() => {
     setError(null)
 
     try {
-      const studentsData = await authRequest("get", `http://10.70.4.34:5003/api/batches/${batchId}/students`)
+      const studentsData = await authRequest("get", `http://localhost:5003/api/batches/${batchId}/students`)
       setStudents(Array.isArray(studentsData) ? studentsData : [])
     } catch (err) {
       console.error("Error fetching students:", err)
@@ -101,7 +101,7 @@ const BatchStudents = React.memo(() => {
       if (!window.confirm("Remove this student from the batch?")) return
 
       try {
-        await authRequest("delete", `http://10.70.4.34:5003/api/batches/${batchId}/students/${studentId}`)
+        await authRequest("delete", `http://localhost:5003/api/batches/${batchId}/students/${studentId}`)
         setStudents((prev) => prev.filter((s) => s.id !== studentId))
       } catch (err) {
         console.error("Error removing student:", err)

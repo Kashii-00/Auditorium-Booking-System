@@ -287,6 +287,128 @@ const schema = {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `,
 
+  user_refresh_tokens: `
+    CREATE TABLE IF NOT EXISTS user_refresh_tokens (
+      user_id INT PRIMARY KEY,
+      refresh_token VARCHAR(512) NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `,
+
+  aid_requests: `
+    CREATE TABLE IF NOT EXISTS aid_requests (
+      id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      requesting_officer_name VARCHAR(255) NOT NULL,
+      designation VARCHAR(255),
+      requesting_officer_email VARCHAR(255) NOT NULL,
+      course_name VARCHAR(255),
+      duration VARCHAR(255),
+      audience_type VARCHAR(255),
+      no_of_participants INT DEFAULT 0,
+      course_coordinator VARCHAR(255),
+      preferred_days_of_week VARCHAR(255) DEFAULT NULL,
+      date_from DATE,
+      date_to DATE,
+      time_from TIME,
+      time_to TIME,
+      signed_date DATE,
+      paid_course_or_not VARCHAR(50) DEFAULT 'No',
+      payment_status VARCHAR(100) DEFAULT 'Not Set',
+      request_status VARCHAR(100) DEFAULT 'pending',
+      classrooms_allocated TEXT DEFAULT NULL,
+      exam_or_not VARCHAR(50) DEFAULT 'No',
+      cancelled_by_requester VARCHAR(50) DEFAULT 'No',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `,
+
+  aid_items: `
+    CREATE TABLE IF NOT EXISTS aid_items (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      request_id INT UNSIGNED,
+      item_no INT,
+      description VARCHAR(255),
+      quantity INT,
+      remark TEXT,
+      md_approval_required_or_not VARCHAR(50) DEFAULT 'No',
+      md_approval_obtained VARCHAR(50) DEFAULT 'No',
+      md_approval_details TEXT DEFAULT NULL,
+      CTM_approval_obtained VARCHAR(50) DEFAULT NULL,
+      CTM_Details TEXT DEFAULT NULL,
+      FOREIGN KEY (request_id) REFERENCES aid_requests(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `,
+
+  aid_handover: `
+    CREATE TABLE IF NOT EXISTS aid_handover (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      request_id INT UNSIGNED,
+      items_taken_over TEXT,
+      items_returned TEXT,
+      receiver_name VARCHAR(255),
+      receiver_designation VARCHAR(255),
+      receiver_date DATE,
+      handover_confirmer_name VARCHAR(255),
+      handover_confirmer_designation VARCHAR(255),
+      handover_confirmer_date DATE,
+      FOREIGN KEY (request_id) REFERENCES aid_requests(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `,
+
+  aid_request_emails: `
+    CREATE TABLE IF NOT EXISTS aid_request_emails (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      request_id INT UNSIGNED NOT NULL,
+      email_type ENUM('approval', 'denial') NOT NULL,
+      email_address VARCHAR(255) NOT NULL,
+      subject VARCHAR(255),
+      body TEXT,
+      sent_status ENUM('success', 'failed') DEFAULT 'success',
+      error_message TEXT DEFAULT NULL,
+      sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (request_id) REFERENCES aid_requests(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `,
+
+  classroom_booking_calendar: `
+    CREATE TABLE IF NOT EXISTS classroom_booking_calendar (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      request_id INT UNSIGNED DEFAULT NULL,
+      date_from DATE NOT NULL,
+      date_to DATE NOT NULL,
+      time_from TIME NOT NULL,
+      time_to TIME NOT NULL,
+      course_name VARCHAR(255) NOT NULL,
+      preferred_days_of_week VARCHAR(255),
+      classes_allocated TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (request_id) REFERENCES aid_requests(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `,
+
+  classroom_booking_dates: `
+    CREATE TABLE IF NOT EXISTS classroom_booking_dates (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      calendar_id INT NOT NULL,
+      user_id INT NOT NULL,
+      request_id INT UNSIGNED DEFAULT NULL,
+      course_name VARCHAR(255) DEFAULT NULL,
+      all_dates JSON NOT NULL,
+      time_from TIME NOT NULL,
+      time_to TIME NOT NULL,
+      classes_allocated TEXT,
+      cancel_dates JSON DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (calendar_id) REFERENCES classroom_booking_calendar(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (request_id) REFERENCES aid_requests(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `,
+
 };
 
 // Promise wrapper for database queries
@@ -404,8 +526,29 @@ const createTablesInOrder = async () => {
     await queryPromise(schema.lecturer_batches);
     logger.info('Lecturer batches table ready');
   
+    await queryPromise(schema.user_refresh_tokens);
+    logger.info('user_refresh_tokens table ready');
 
-    
+    // Aid requests and related tables
+    await queryPromise(schema.aid_requests);
+    logger.info('aid_requests table ready');
+
+    await queryPromise(schema.aid_items);
+    logger.info('aid_items table ready');
+
+    await queryPromise(schema.aid_handover);
+    logger.info('aid_handover table ready');
+
+    await queryPromise(schema.aid_request_emails);
+    logger.info('aid_request_emails table ready');
+
+    // Classroom booking tables
+    await queryPromise(schema.classroom_booking_calendar);
+    logger.info('classroom_booking_calendar table ready');
+
+    await queryPromise(schema.classroom_booking_dates);
+    logger.info('classroom_booking_dates table ready');
+
     logger.info('All database tables created successfully');
     
     // Create data migration procedures if needed

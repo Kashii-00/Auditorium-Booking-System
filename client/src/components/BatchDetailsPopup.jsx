@@ -15,7 +15,7 @@ const BatchDetailsPopup = ({ batchId, onClose }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await authRequest('get', `http://10.70.4.34:5003/api/batches/details/${batchId}`);
+      const response = await authRequest('get', `http://localhost:5003/api/batches/details/${batchId}`);
       console.log("Batch details received:", response);
       setBatch(response);
     } catch (error) {

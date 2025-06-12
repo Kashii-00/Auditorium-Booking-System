@@ -31,7 +31,7 @@ console.log(`${colors.cyan}CHECKING SERVER CONNECTIVITY${colors.reset}`);
 const serverPort = process.env.PORT || 5003;
 const checkServer = () => {
   const req = http.request({
-    hostname: 'localhost',
+    hostname: 'localhost ',
     port: serverPort,
     path: '/api/health',
     method: 'GET',

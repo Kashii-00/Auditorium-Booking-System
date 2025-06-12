@@ -1,0 +1,429 @@
+/* Section container */
+.details-container {
+  background-color: rgba(0, 34, 57, 0.7);
+  padding: 5rem 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border: 5px solid rgb(255, 255, 255);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fcfcfc;
+  overflow: auto;
+}
+
+/* Headers */
+.details-container h2 {
+  color: #02f7f7;
+  margin: 0 auto;
+  margin-top: 30px;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #02f7f7aa;
+  padding-bottom: 8px;
+  width: 50%;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.details-container h3 {
+  color: #02f7f7;
+  margin: 0 auto;
+  margin-top: 30px;
+  border-bottom: 2px solid #02f7f7aa;
+  padding-bottom: 8px;
+  width: 50%;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 1rem;
+}
+
+/* Paragraphs and labels */
+.details-container p {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  color: #fcfcfc;
+  text-align: center;
+}
+
+.details-container strong {
+  color: #02f7f7;
+}
+
+.bkContainer {
+  overflow-x: auto;
+}
+/* Table styling */
+.bookingk {
+  width: 50%;
+  border-collapse: collapse;
+  margin: 0 auto;
+  font-size: 0.95rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+}
+
+/* Table headers */
+.bookingk thead {
+  background-color: rgba(2, 247, 255, 0.1);
+  color: #02f7f7;
+  background-color: #011534;
+}
+
+.bookingk th,
+.bookingk td {
+  border: 3px solid #02f7f744;
+  padding: 0.75rem;
+  font-size: 0.7rem;
+  text-align: center;
+  color: #fcfcfc;
+  background-color: rgba(0, 34, 57, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.bookingk thead tr:hover {
+  border: 3px solid rgba(2, 247, 255, 0.2);
+  padding: 0.75rem;
+  text-align: center;
+  color: #fcfcfc;
+  background-color: rgba(0, 34, 57, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.bookingk tbody tr:nth-child(even):hover,
+.bookingk tbody tr:nth-child(odd):hover {
+  background-color: rgba(2, 145, 255, 0.662);
+}
+
+.bookingk tbody tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.bookingk tbody tr:nth-child(odd) {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.request-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 0 auto;
+  margin-bottom: 2rem;
+}
+
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  padding: 1rem;
+  background-color: rgba(0, 0, 0, 0.45);
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  border: 1px solid #035d7d;
+  font-size: 0.7rem;
+}
+
+.review-grid .label {
+  grid-column: span 1;
+  font-weight: 600;
+  color: #00e1ff;
+  text-align: left;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  padding: 0.5rem 0.25rem;
+  word-break: break-word;
+  border-left: 2px solid #02c9c5;
+  border-bottom: 2px solid #02c9c5;
+  border-top: 2px solid #02c9c5;
+  box-shadow: -6px 6px 7px rgba(0, 255, 255, 0.15);
+}
+
+.review-grid .value {
+  grid-column: span 1;
+  color: #ffffff;
+  padding: 0.5rem 0.25rem;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  word-break: break-word;
+  border-right: 2px solid #02c9c5;
+  border-bottom: 2px solid #02c9c5;
+  border-top: 2px solid #02c9c5;
+  box-shadow: 6px 6px 7px rgba(0, 255, 255, 0.15);
+}
+
+/* Rounded corners for outer container */
+.review-grid {
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+}
+
+/* Responsive tweaks */
+@media (max-width: 1080px) {
+  .review-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .review-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.searchRequest-Con {
+  max-width: 550px;
+  /* background-color: black; */
+  display: flex;
+  justify-content: center;
+  margin: 0 auto;
+  /* padding: 10px; */
+}
+
+/* Wrapper for input + icon */
+.searchRequest-Con .search-bar-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+}
+
+/* Input field styling */
+.searchRequest-Con .input-field {
+  width: 100%;
+  padding: 6px 40px 6px 10px; /* leave space for icon on the right */
+  font-size: 0.85rem;
+  border: 3px solid #00a6ff9d;
+  border-radius: 6px;
+  background-color: transparent;
+  color: #02f7ff;
+  transition: border-color 0.3s ease, background-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Hover effect */
+.searchRequest-Con .input-field:hover {
+  border-color: #02f7ff;
+}
+
+/* Focus effect */
+.searchRequest-Con .input-field:focus {
+  border-color: #02f7ff;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 255, 251, 0.8);
+  text-shadow: 0 0 10px rgba(0, 255, 251, 0.6);
+}
+
+/* Placeholder text */
+.searchRequest-Con .input-field::placeholder {
+  color: #02eaff;
+  opacity: 1;
+}
+
+/* Icon button inside the input */
+.searchRequest-Con .search-icon-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #02eaff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.searchRequest-Con .search-icon-btn:hover {
+  color: #00f7ff;
+}
+
+/* SVG icon size */
+.searchRequest-Con .icon {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+p.search-TXT {
+  font-size: 0.85;
+  color: #00f7ff;
+  font-weight: bold;
+}
+
+.triangle-down {
+  width: 0;
+  height: 0;
+  margin: 1rem auto;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 15px solid #00f7ff; /* triangle color */
+}
+
+.btn-Con {
+  width: 100%;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.s_r_cancelBtn {
+  background-color: #024d769d;
+  border: none;
+  color: #e3eaf5;
+  padding: 6px 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 3px solid white;
+  font-size: 0.8rem;
+}
+
+/* Hover effect: raise the button */
+.s_r_cancelBtn:hover {
+  background-color: #0d2388;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.35);
+}
+
+/* Optional: Pressed effect */
+.s_r_cancelBtn:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+.success-popup2,
+.error-popup2 {
+  position: fixed;
+  top: 50px;
+  right: 40px;
+  border-left: 4px solid;
+  border-radius: 4px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  animation: slideIn 0.3s ease-out;
+  min-width: 250px;
+}
+
+.success-popup2 {
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  color: #155724;
+  border-color: #155724;
+}
+
+.error-popup2 {
+  background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+  color: #721c24;
+  border-color: #721c24;
+}
+
+.success-popup2 svg,
+.error-popup2 svg {
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+p.msgCancelReq {
+  color: #000000;
+  background-color: rgba(242, 255, 5, 0.6);
+  font-weight: 600;
+  display: inline-block;
+  padding: 5px;
+  justify-self: center;
+  border: 2px solid black;
+  border-radius: 5px;
+  box-shadow: 0 0 20px 1px rgba(255, 251, 0, 0.43);
+  font-size: 0.8rem;
+}
+
+p.msgCancelReq:hover {
+  box-shadow: 0 0 20px 3px rgba(255, 251, 0, 0.43);
+}
+
+.msg-Con {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.value.highlight-status {
+  font-weight: bold;
+}
+
+.value.status-A {
+  color: green;
+}
+
+.value.status-D {
+  color: red;
+}
+
+.value.status-P {
+  color: rgb(255, 238, 0);
+}
+
+.cancel-dates-toggle {
+  width: 100%;
+  padding-top: 1.3rem;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+}
+
+.cancel-btn {
+  margin: 0 auto;
+  background-color: #024d769d;
+  border: none;
+  color: #e3eaf5;
+  padding: 6px 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 3px solid white;
+  font-size: 0.8rem;
+}
+
+.cancel-btn:hover {
+  background-color: #0d2388;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.35);
+}
+
+.cancel-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+.details-container hr {
+  background-color: #02eaff;
+  margin: 0 auto;
+  margin-top: 2.5rem;
+  margin-bottom: 1.3rem;
+  border: none;
+  height: 2px;
+  width: 50%;
+}
