@@ -6967,3 +6967,31 @@
 [2025-06-11T14:35:59.591Z] INFO: Received SIGINT, gracefully shutting down...
 [2025-06-11T14:35:59.593Z] INFO: HTTP server closed
 [2025-06-11T14:35:59.602Z] INFO: Database connection closed
+[2025-06-11T15:20:44.425Z] INFO: Connected to MySQL database
+[2025-06-11T15:20:44.426Z] INFO: DB HOST: localhost
+[2025-06-11T15:20:44.426Z] INFO: DB: event_management
+[2025-06-11T15:20:44.426Z] INFO: Courses table ready
+[2025-06-11T15:20:44.428Z] INFO: Batches table ready
+[2025-06-11T15:20:44.429Z] INFO: Students table ready
+[2025-06-11T15:20:44.429Z] INFO: Student courses table ready
+[2025-06-11T15:20:44.430Z] INFO: Student batches table ready
+[2025-06-11T15:20:44.431Z] INFO: Course payments table ready
+[2025-06-11T15:20:44.432Z] INFO: Lecturers table ready
+[2025-06-11T15:20:44.433Z] INFO: Lecturer courses table ready
+[2025-06-11T15:20:44.433Z] INFO: Lecturer academic details table ready
+[2025-06-11T15:20:44.433Z] INFO: Lecturer bank details table ready
+[2025-06-11T15:20:44.434Z] INFO: Lecturer batches table ready
+[2025-06-11T15:20:44.434Z] INFO: All database tables created successfully
+[2025-06-11T15:20:44.442Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-11T15:21:16.123Z] INFO: User SuperAdmin1 logged in at: 2025-06-11 20:51:16
+[2025-06-11T17:39:17.594Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-11T19:42:29.252Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-11T20:53:07.588Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-11T22:11:31.706Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-11T23:18:20.965Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-12T00:19:26.811Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-12T01:42:13.499Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-12T02:43:40.130Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-12T03:06:55.543Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-12T03:06:55.550Z] INFO: HTTP server closed
+[2025-06-12T03:06:55.565Z] INFO: Database connection closed

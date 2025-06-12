@@ -574,7 +574,7 @@ export default function StudentManagementSystem() {
       setStudentsLoading(true)
       setStudentsError("")
 
-      const response = await authRequest("get", "http://localhost :5003/api/students")
+      const response = await authRequest("get", "http://10.70.4.34  :5003/api/students")
 
       if (response && Array.isArray(response)) {
         setStudents(response)
@@ -595,7 +595,7 @@ export default function StudentManagementSystem() {
       setCoursesLoading(true)
       setErrorMessage("")
 
-      const coursesData = await authRequest("get", "http://localhost :5003/api/students/courses")
+      const coursesData = await authRequest("get", "http://10.70.4.34  :5003/api/students/courses")
 
       if (coursesData && Array.isArray(coursesData)) {
         setCourses(coursesData)
@@ -765,7 +765,7 @@ export default function StudentManagementSystem() {
   const handleEditStudent = useCallback(async (studentId) => {
     try {
       setLoading(true)
-      const student = await authRequest("get", `http://localhost :5003/api/students/${studentId}`)
+      const student = await authRequest("get", `http://10.70.4.34  :5003/api/students/${studentId}`)
 
       if (student) {
         // Prepare selected courses
@@ -842,7 +842,7 @@ export default function StudentManagementSystem() {
       try {
         setLoading(true)
 
-        await authRequest("delete", `http://localhost :5003/api/students/${studentId}`)
+        await authRequest("delete", `http://10.70.4.34  :5003/api/students/${studentId}`)
 
         setNotificationMessage("Student deleted successfully!")
         setShowSuccessNotification(true)
@@ -1002,7 +1002,7 @@ export default function StudentManagementSystem() {
         let response
 
         if (editingStudent) {
-          response = await authRequest("put", `http://localhost :5003/api/students/${editingStudent}`, formDataObj, {
+          response = await authRequest("put", `http://10.70.4.34  :5003/api/students/${editingStudent}`, formDataObj, {
             headers: { "Content-Type": "multipart/form-data" },
           })
 
@@ -1011,7 +1011,7 @@ export default function StudentManagementSystem() {
             setShowSuccessNotification(true)
           }
         } else {
-          response = await authRequest("post", "http://localhost :5003/api/students", formDataObj, {
+          response = await authRequest("post", "http://10.70.4.34  :5003/api/students", formDataObj, {
             headers: { "Content-Type": "multipart/form-data" },
           })
 

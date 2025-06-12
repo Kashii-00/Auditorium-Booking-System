@@ -121,7 +121,7 @@
   color: #ffffff !important; /* Updated text color */
   border: none;
   padding: 8px 12px; /* Updated padding */
-  border-radius: 8px; /* Updated border radius */
+  border-radius: 20px;
   font-size: 0.875rem;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -141,21 +141,10 @@
   background-color: rgba(255, 255, 255, 0.2) !important;
   color: #fff !important;
   outline: none;
+  border-radius: 20px;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
 }
 
-.sidebar-dropdown option {
-  background-color: #2563eb;
-  color: #f3f6fa;
-  padding: 10px;
-  text-align: center;
-}
-
-.sidebar-dropdown option:checked {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  font-weight: bold;
-}
 
 .sidebar-dropdown:focus {
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);

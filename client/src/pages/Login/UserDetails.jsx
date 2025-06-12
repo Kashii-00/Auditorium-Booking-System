@@ -123,7 +123,7 @@ const UserDetails = () => {
       setIsLoading(true)
       // Add minimum loading time to show the loading screen
       const [userData] = await Promise.all([
-        authRequest("get", "http://localhost:5003/api/users"),
+        authRequest("get", "http://10.70.4.34:5003/api/users"),
         new Promise((resolve) => setTimeout(resolve, 1000)), // Minimum 1 second loading
       ])
       setUsers(userData)
@@ -207,7 +207,7 @@ const UserDetails = () => {
       }
 
       try {
-        await authRequest("delete", `http://localhost:5003/api/users/${id}`)
+        await authRequest("delete", `http://10.70.4.34:5003/api/users/${id}`)
         await fetchUsers()
       } catch (err) {
         console.error("Error deleting user:", err)

@@ -46,7 +46,7 @@ export default function LecturerView() {
       setLoading(true)
       setError(null)
       try {
-        const data = await authRequest("get", `http://localhost:5003/api/lecturer-registration/${id}`)
+        const data = await authRequest("get", `http://10.70.4.34:5003/api/lecturer-registration/${id}`)
         setLecturer(data)
       } catch (err) {
         setError("Failed to load lecturer details")
@@ -60,7 +60,7 @@ export default function LecturerView() {
   const handleDeleteLecturer = async () => {
     setDeleteLoading(true)
     try {
-      await authRequest("delete", `http://localhost:5003/api/lecturer-registration/${id}`)
+      await authRequest("delete", `http://10.70.4.34:5003/api/lecturer-registration/${id}`)
       setSuccessMessage("Lecturer deleted successfully")
       setTimeout(() => navigate("/lecturer-registration"), 1500)
     } catch (err) {

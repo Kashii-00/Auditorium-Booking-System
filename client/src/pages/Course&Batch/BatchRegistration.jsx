@@ -639,7 +639,7 @@ const BatchRegistration = () => {
   const fetchBatches = useCallback(async () => {
     try {
       dispatch({ type: "SET_LOADING", payload: true })
-      const batchesData = await authRequest("get", "http://localhost:5003/api/batches")
+      const batchesData = await authRequest("get", "http://10.70.4.34:5003/api/batches")
       dispatch({ type: "SET_BATCHES", payload: batchesData })
       dispatch({ type: "SET_ERROR", payload: "" })
     } catch (error) {
@@ -650,7 +650,7 @@ const BatchRegistration = () => {
 
   const fetchCourses = useCallback(async () => {
     try {
-      const coursesData = await authRequest("get", "http://localhost:5003/api/CourseRegistrationRoute")
+      const coursesData = await authRequest("get", "http://10.70.4.34:5003/api/CourseRegistrationRoute")
       dispatch({ type: "SET_COURSES", payload: coursesData })
     } catch (error) {
       console.error("Error fetching courses:", error)
@@ -790,10 +790,10 @@ const BatchRegistration = () => {
         setSubmitting(true)
 
         if (isEditing) {
-          await authRequest("put", `http://localhost:5003/api/batches/${currentBatchId}`, formData)
+          await authRequest("put", `http://10.70.4.34:5003/api/batches/${currentBatchId}`, formData)
           showToast("success", "Batch updated successfully!")
         } else {
-          await authRequest("post", "http://localhost:5003/api/batches", formData)
+          await authRequest("post", "http://10.70.4.34:5003/api/batches", formData)
           showToast("success", "Batch created successfully!")
         }
 
@@ -842,13 +842,13 @@ const BatchRegistration = () => {
       if (Array.isArray(batchToDelete)) {
         // Bulk delete
         await Promise.all(
-          batchToDelete.map((batch) => authRequest("delete", `http://localhost:5003/api/batches/${batch.id}`)),
+          batchToDelete.map((batch) => authRequest("delete", `http://10.70.4.34:5003/api/batches/${batch.id}`)),
         )
         showToast("success", `${batchToDelete.length} batches deleted successfully!`)
         dispatch({ type: "CLEAR_SELECTION" })
       } else {
         // Single delete
-        await authRequest("delete", `http://localhost:5003/api/batches/${batchToDelete.id}`)
+        await authRequest("delete", `http://10.70.4.34:5003/api/batches/${batchToDelete.id}`)
         showToast("success", "Batch deleted successfully!")
       }
 

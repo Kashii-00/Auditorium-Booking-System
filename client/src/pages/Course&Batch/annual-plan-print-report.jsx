@@ -50,14 +50,14 @@ const AnnualPlanPrintReport = () => {
         setLoading(true)
 
         // Fetch course details
-        const coursesData = await authRequest("get", "http://localhost:5003/api/CourseRegistrationRoute")
+        const coursesData = await authRequest("get", "http://10.70.4.34:5003/api/CourseRegistrationRoute")
         const selectedCourse = coursesData.find((c) => c.id.toString() === courseId)
         setCourse(selectedCourse)
 
         // Fetch batches
         const batchesData = await authRequest(
           "get",
-          `http://localhost:5003/api/batches?course_id=${courseId}&year=${year}`,
+          `http://10.70.4.34:5003/api/batches?course_id=${courseId}&year=${year}`,
         )
 
         if (Array.isArray(batchesData)) {
@@ -67,9 +67,9 @@ const AnnualPlanPrintReport = () => {
           const detailsPromises = batchesData.map(async (batch) => {
             try {
               const [batchDetail, students, lecturers] = await Promise.all([
-                authRequest("get", `http://localhost:5003/api/batches/${batch.id}`),
-                authRequest("get", `http://localhost:5003/api/batches/${batch.id}/students`).catch(() => []),
-                authRequest("get", `http://localhost:5003/api/batches/${batch.id}/lecturers`).catch(() => []),
+                authRequest("get", `http://10.70.4.34:5003/api/batches/${batch.id}`),
+                authRequest("get", `http://10.70.4.34:5003/api/batches/${batch.id}/students`).catch(() => []),
+                authRequest("get", `http://10.70.4.34:5003/api/batches/${batch.id}/lecturers`).catch(() => []),
               ])
 
               return {
