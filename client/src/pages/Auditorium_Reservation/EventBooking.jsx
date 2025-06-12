@@ -280,7 +280,7 @@ export default function EventBookingFull() {
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true)
-      const bookingsData = await authRequest("get", "http://10.70.4.34:5003/api/bookings")
+      const bookingsData = await authRequest("get", "http://localhost:5003/api/bookings")
       setBookings(bookingsData)
       setError(null)
     } catch (err) {
@@ -315,7 +315,7 @@ export default function EventBookingFull() {
   const updateStatus = useCallback(
     async (id, status) => {
       try {
-        await authRequest("put", `http://10.70.4.34:5003/api/bookings/${id}`, { status })
+        await authRequest("put", `http://localhost:5003/api/bookings/${id}`, { status })
 
         // Optimistic update for better UX
         setBookings((prev) => prev.map((booking) => (booking.id === id ? { ...booking, status } : booking)))
@@ -338,7 +338,7 @@ export default function EventBookingFull() {
   const deleteBooking = useCallback(
     async (id) => {
       try {
-        await authRequest("delete", `http://10.70.4.34:5003/api/bookings/${id}`)
+        await authRequest("delete", `http://localhost:5003/api/bookings/${id}`)
 
         // Optimistic update
         setBookings((prev) => prev.filter((booking) => booking.id !== id))
@@ -373,11 +373,11 @@ export default function EventBookingFull() {
         const promises = selectedBookings.map((id) => {
           switch (action) {
             case "approve":
-              return authRequest("put", `http://10.70.4.34:5003/api/bookings/${id}`, { status: "APPROVED" })
+              return authRequest("put", `http://localhost:5003/api/bookings/${id}`, { status: "APPROVED" })
             case "reject":
-              return authRequest("put", `http://10.70.4.34:5003/api/bookings/${id}`, { status: "DENIED" })
+              return authRequest("put", `http://localhost:5003/api/bookings/${id}`, { status: "DENIED" })
             case "delete":
-              return authRequest("delete", `http://10.70.4.34:5003/api/bookings/${id}`)
+              return authRequest("delete", `http://localhost:5003/api/bookings/${id}`)
             default:
               return Promise.resolve()
           }

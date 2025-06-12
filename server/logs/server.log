@@ -7435,3 +7435,29 @@
 [2025-06-12T09:08:40.109Z] INFO: classroom_booking_dates table ready
 [2025-06-12T09:08:40.109Z] INFO: All database tables created successfully
 [2025-06-12T09:08:40.114Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-12T09:08:55.350Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-12T09:08:55.361Z] INFO: HTTP server closed
+[2025-06-12T09:08:55.376Z] INFO: Database connection closed
+[2025-06-12T09:08:59.341Z] INFO: Connected to MySQL database
+[2025-06-12T09:08:59.342Z] INFO: DB HOST: localhost
+[2025-06-12T09:08:59.342Z] INFO: DB: event_management
+[2025-06-12T09:08:59.342Z] INFO: Courses table ready
+[2025-06-12T09:08:59.343Z] INFO: Batches table ready
+[2025-06-12T09:08:59.344Z] INFO: Students table ready
+[2025-06-12T09:08:59.345Z] INFO: Student courses table ready
+[2025-06-12T09:08:59.345Z] INFO: Student batches table ready
+[2025-06-12T09:08:59.346Z] INFO: Course payments table ready
+[2025-06-12T09:08:59.347Z] INFO: Lecturers table ready
+[2025-06-12T09:08:59.348Z] INFO: Lecturer courses table ready
+[2025-06-12T09:08:59.349Z] INFO: Lecturer academic details table ready
+[2025-06-12T09:08:59.350Z] INFO: Lecturer bank details table ready
+[2025-06-12T09:08:59.350Z] INFO: Lecturer batches table ready
+[2025-06-12T09:08:59.351Z] INFO: user_refresh_tokens table ready
+[2025-06-12T09:08:59.351Z] INFO: aid_requests table ready
+[2025-06-12T09:08:59.351Z] INFO: aid_items table ready
+[2025-06-12T09:08:59.352Z] INFO: aid_handover table ready
+[2025-06-12T09:08:59.352Z] INFO: aid_request_emails table ready
+[2025-06-12T09:08:59.352Z] INFO: classroom_booking_calendar table ready
+[2025-06-12T09:08:59.353Z] INFO: classroom_booking_dates table ready
+[2025-06-12T09:08:59.354Z] INFO: All database tables created successfully
+[2025-06-12T09:08:59.359Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error

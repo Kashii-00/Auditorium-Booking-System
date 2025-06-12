@@ -68,6 +68,22 @@ router.get('/', auth.authMiddleware, async (req, res) => {
     });
   }
 });
+router.get('/check/:courseId', auth.authMiddleware, async (req, res) => {
+  try {
+    const {
+      courseId
+    } = req.params;
+    const [course] = await db.queryPromise('SELECT id FROM courses WHERE courseId = ?', [courseId]);
+    res.json({
+      exists: !!course
+    });
+  } catch (error) {
+    logger.error('Error checking courseId:', error);
+    res.status(500).json({
+      error: 'Database error'
+    });
+  }
+});
 
 // Create a new course
 router.post('/', auth.authMiddleware, upload.none(), async (req, res) => {
