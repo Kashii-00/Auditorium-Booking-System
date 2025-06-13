@@ -141,7 +141,7 @@ const Login = ({ onLogin }) => {
   }
 
   return (
-    <div className="h-screen w-full bg-gradient-to-b from-blue-600 via-orange-400 to-sky-600 flex flex-col fixed inset-0 overflow-hidden">
+    <div className="h-screen w-full bg-gradient-to-b from-blue-900 to-sky-1800 flex flex-col fixed inset-0 overflow-hidden">
       {/* Main content with centered card */}
       <div className="flex-grow flex items-center justify-center px-4 pt-10 pb-16 ">
         <div className="w-full max-w-3xl shadow-xl rounded-lg overflow-hidden  flex flex-col md:flex-row bg-white transform transition-transform duration-300 hover:scale-[1.02] mb-8">

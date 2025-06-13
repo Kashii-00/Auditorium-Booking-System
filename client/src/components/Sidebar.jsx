@@ -5,7 +5,11 @@ import { Link, useNavigate, useLocation } from "react-router-dom"
 import "../styles/Sidebar.css"
 import screenshot from "../styles/MPMANew.svg"
 import calender from "../styles/calendar1.png"
-import List from "../styles/Order.png"
+import List1 from "../pages/Classroom_Booking/styles/dashboard.png"
+import List from "../styles/order.png"
+import details from "../pages/Classroom_Booking/styles/details.png"
+import Schedule from "../pages/Classroom_Booking/styles/Schedule.png"
+import addbooking from "../pages/Classroom_Booking/styles/addbooking.png"
 import Bus from "../styles/bus.png"
 import admin2 from "../styles/Admin1.png"
 import miniLogo from "../styles/MPMA.svg"
@@ -39,13 +43,11 @@ const Sidebar = ({ user, onLogout }) => {
       pathname.startsWith("/classroombookingschedule") ||
       pathname.startsWith("/classroomcalendar") ||
       pathname.startsWith("/calendarbookingtable") ||
-      pathname.startsWith("/singlebookingdetails") || 
       pathname.startsWith("/cancelRequestByUser") 
 
     )
       return "crbooking"
 
-    if (pathname.startsWith("/ClassBooking")) return "ClassRoom"
     if (pathname.startsWith("/users")) return "users"
     return "audi" // default
   }
@@ -401,11 +403,11 @@ const Sidebar = ({ user, onLogout }) => {
       { value: "bus", label: "ᴛʀᴀɴꜱᴘᴏʀᴛ ᴍᴀɴᴀɡᴇᴍᴇɴᴛ", roles: ["bus_access", "busbookings_access"] },
       {
         value: "Course",
-        label: "ᴄᴏᴜʀꜱᴇ & ʙᴀᴛᴄʜ ᴍᴀɴᴀɡᴇᴍᴇɴᴛ",
+        label: "ᴄᴏᴜʀꜱᴇ ᴀʟʟᴏᴄᴀᴛɪᴏɴ ᴘᴀɴᴇʟ",
         roles: ["course_registration_access", "student_registration_access"],
       },
       { value: "Lecturers", label: "ʟᴇᴄᴛᴜʀᴇʀꜱ ᴍᴀɴᴀɡᴇᴍᴇɴᴛ", roles: ["lecturer_management_access"] },
-      { value: "crbooking", label: "ᴄʟᴀꜱꜱ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ", roles: ["cb_Admin_access", "cb_SU_access"] },
+      { value: "crbooking", label: "ᴄʟᴀꜱꜱʀᴏᴏᴍ ʀᴇꜱᴏᴜʀᴄᴇ ʜᴜʙ", roles: ["cb_Admin_access", "cb_SU_access"] },
       { value: "users", label: "ᴀᴅᴍɪɴɪꜱᴛʀᴀᴛɪᴏɴ", roles: ["SuperAdmin"] },
     ]
 
@@ -470,44 +472,32 @@ const Sidebar = ({ user, onLogout }) => {
             <>
               {(hasRole("SuperAdmin") || hasRole("cb_SU_access") || hasRole("cb_Admin_access")) && (
                 <Link to="/classroombookingform" className={`sidebar-link ${location.pathname === "/classroombookingform" ? "active" : ""}`}>
-                  <img src={List || "/placeholder.svg"} alt="BookingList" className="sidebar-icon" />
-                  <span className="sidebar-text">CLASSROOM BOOKING FORMS</span>
+                  <img src={List1 || "/placeholder.svg"} alt="BookingList" className="sidebar-icon" />
+                  <span className="sidebar-text">ᴇᴅᴜʀᴇꜱᴏᴜʀᴄᴇ ᴅᴀꜱʜʙᴏᴀʀᴅ</span>
                 </Link>
               )}
               {(hasRole("SuperAdmin") || hasRole("cb_Admin_access")) && (
                 <Link to="/classroomcalendar" className={`sidebar-link ${location.pathname === "/classroomcalendar" ? "active" : ""}`}>
-                  <img src={calender || "/placeholder.svg"} alt="CalanderLogo" className="sidebar-icon" />
-                  <span className="sidebar-text">CB CALENDAR FORM</span>
+                  <img src={addbooking || "/placeholder.svg"} alt="CalanderLogo" className="sidebar-icon" />
+                  <span className="sidebar-text">ᴄʟᴀꜱꜱʀᴏᴏᴍ ꜱᴄʜᴇᴅᴜʟᴇʀ</span>
                 </Link>
               )}
               {(hasRole("SuperAdmin") || hasRole("cb_Admin_access")) && (
                 <Link to="/calendarbookingtable" className={`sidebar-link ${location.pathname === "/calendarbookingtable" ? "active" : ""}`}>
-                  <img src={calender || "/placeholder.svg"} alt="CalanderLogo" className="sidebar-icon" />
-                  <span className="sidebar-text">CB CALENDAR BOOKINGS TABLE</span>
+                  <img src={details || "/placeholder.svg"} alt="CalanderLogo" className="sidebar-icon" />
+                  <span className="sidebar-text">ᴄʟᴀꜱꜱʀᴏᴏᴍ ʙᴏᴏᴋɪɴɢꜱ</span>
                 </Link>
               )}
               {(hasRole("SuperAdmin") || hasRole("cb_Admin_access")) && (
                 <Link to="/classroombooking" className={`sidebar-link ${location.pathname === "/classroombooking" ? "active" : ""}`}>
-                  <img src={List || "/placeholder.svg"} alt="BookingList" className="sidebar-icon" />
-                  <span className="sidebar-text">CB DETAILS TABLE</span>
+                  <img src={details || "/placeholder.svg"} alt="BookingList" className="sidebar-icon" />
+                  <span className="sidebar-text">ᴄʙ ᴅᴇᴛᴀɪʟꜱ ᴛᴀʙʟᴇ</span>
                 </Link>
               )}
               {(hasRole("SuperAdmin") || hasRole("cb_Admin_access") || hasRole("cb_SU_access")) && (
                 <Link to="/classroombookingschedule" className={`sidebar-link ${location.pathname === "/classroombookingschedule" ? "active" : ""}`}>
-                  <img src={List || "/placeholder.svg"} alt="BookingList" className="sidebar-icon" />
-                  <span className="sidebar-text">CB SCHEDULE</span>
-                </Link>
-              )}
-              {(hasRole("SuperAdmin") || hasRole("cb_Admin_access") || hasRole("cb_SU_access")) && (
-                <Link to="/singlebookingdetails" className={`sidebar-link ${location.pathname === "/singlebookingdetails" ? "active" : ""}`}>
-                  <img src={List || "/placeholder.svg"} alt="BookingList" className="sidebar-icon" />
-                  <span className="sidebar-text">Single Booking Details</span>
-                </Link>
-              )}
-              {(hasRole("SuperAdmin") || hasRole("cb_Admin_access") || hasRole("cb_SU_access")) && (
-                <Link to="/cancelRequestByUser" className={`sidebar-link ${location.pathname === "/cancelRequestByUser" ? "active" : ""}`}>
-                  <img src={List || "/placeholder.svg"} alt="BookingList" className="sidebar-icon" />
-                  <span className="sidebar-text">Cancel Request</span>
+                  <img src={Schedule || "/placeholder.svg"} alt="BookingList" className="sidebar-icon" />
+                  <span className="sidebar-text">ᴄʟᴀꜱꜱʀᴏᴏᴍ ꜱᴄʜᴇᴅᴜʟᴇ</span>
                 </Link>
               )}
             </>

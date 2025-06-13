@@ -53,6 +53,13 @@ const CreateUser = () => {
     { id: "bookings_access", label: "Auditorium Bookings Access", description: "Manage auditorium bookings" },
     { id: "bus_access", label: "Bus Calendar Access", description: "View and manage bus calendar" },
     { id: "busbookings_access", label: "Bus Bookings Access", description: "Manage bus bookings" },
+
+
+    { id: "ccb_Admin_access", label: "Classroom Admin Access", description: "Full access to manage classroom bookings and schedules" },
+    { id: "cb_SU_access", label: "Classroom User Access", description: "View-only access to classroom bookings and schedules" },
+
+
+    
     {
       id: "course_registration_access",
       label: "Course Registration Access",
@@ -63,7 +70,6 @@ const CreateUser = () => {
       label: "Student Registration Access",
       description: "Manage student registrations",
     },
-    { id: "class_request_access", label: "Class Booking Access", description: "Manage class bookings" },
     {
       id: "lecturer_management_access",
       label: "Lecturer Management Access",

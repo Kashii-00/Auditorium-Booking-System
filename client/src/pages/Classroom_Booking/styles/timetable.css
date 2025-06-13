@@ -1,240 +1,105 @@
-.timeTable-container {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 50;
-  background-color: rgb(255, 255, 255);
-  padding: 1.5rem;
-  max-width: 90%;
-  max-height: 90vh;
-  overflow: auto;
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.table-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
+/* Timetable Styles */
+.timetable-container {
   width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 40;
-}
-
-.timeTable-container table {
-  width: 100%;
-  table-layout: auto;
   overflow-x: auto;
 }
 
-th,
-td {
+.timetable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.timetable th,
+.timetable td {
+  border: 1px solid #e2e8f0;
   padding: 0.5rem;
 }
 
-@media (max-width: 768px) {
-  .timeTable-container {
-    max-width: 95%;
-    padding: 1rem;
-  }
-
-  th,
-  td {
-    font-size: 0.85rem;
-  }
-}
-
-.canvas-outer {
-  width: 100%;
-  overflow: auto;
-}
-
-.ttbtns {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  padding: 0;
-}
-
-.ttclose {
-  background: linear-gradient(135deg, #ff5202, #ca0101);
-  background-size: 200%;
-  background-position: left;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin-right: 10px;
-  margin-left: 10px;
-  font-weight: 500;
-  letter-spacing: 0.3px;
-  transition: background-position 0.4s ease, transform 0.2s, box-shadow 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  border: none;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  margin: 0;
-}
-
-.ttclose:hover {
-  background-position: right;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(211, 47, 47, 0.2);
-}
-
-.ttdownload {
-  background: linear-gradient(135deg, #800080, #191970);
-  background-size: 200%;
-  background-position: left;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-weight: 500;
-  letter-spacing: 0.3px;
-  transition: background-position 0.4s ease, transform 0.2s, box-shadow 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  border: none;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  margin: 0;
-}
-
-.ttdownload:hover {
-  background-position: right;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(211, 47, 47, 0.2);
-}
-
-.canvas-outer {
-  padding: 15px;
-  background-color: aliceblue;
-}
-
-.first-column-first-th {
-  background-color: #064c8e;
-  color: white;
-  font-weight: 500;
-  font-size: 0.5rem;
-}
-
-.first-cell {
-  background-color: #0184fe;
-  color: white;
-  font-weight: 500;
-  font-size: 0.5rem;
-}
-
-.second-th {
-  background-color: #032666;
-  color: white;
-  font-weight: 500;
-}
-
-@media print {
-  .ttbtns {
-    display: none !important;
-  }
-  .timeTable-container {
-    box-shadow: none;
-    padding: 0;
-  }
-}
-
-.wk-data-con {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-div.wkdata {
-  background-color: aquamarine;
-  padding: 2px;
-  margin: 2px;
-  width: fit-content;
-}
-
-td.wk-data div {
-  margin-bottom: 4px;
-  line-height: 1.2;
-  font-size: 0.5rem;
+.timetable th {
+  background-color: #f8fafc;
   font-weight: 600;
+  text-align: center;
 }
 
-td.wk-data small {
-  font-size: 0.4rem;
-  color: #000000;
-}
-
-/* Add borders to table, th, and td */
-.timeTable-container table,
-.timeTable-container th,
-.timeTable-container td {
-  border: 1px solid #ccc;
-  border-collapse: collapse;
-}
-
-/* Optional: remove double border effect */
-.timeTable-container table {
-  border-spacing: 0;
-  border-collapse: collapse;
-}
-
-/* Force time column width */
-th.first-cell,
-td.first-column-first-th {
-  width: 110px;
-  min-width: 100px;
-  max-width: 120px;
-  white-space: nowrap;
-}
-
-/* Force fixed width for each day column */
-th.first-column-first-th:not(.first-cell) {
-  width: 130px;
-  max-width: 130px;
-  word-wrap: break-word;
-  word-break: break-word;
+.timetable td {
   vertical-align: top;
 }
 
-.wkdata {
-  background-color: #a3f7bf; /* same mint green */
-  padding: 4px;
-  margin-bottom: 4px;
-  border-radius: 4px;
+.timetable-time {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.timetable-entry {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  margin-bottom: 0.25rem;
   font-size: 0.75rem;
-  line-height: 1rem;
-  word-wrap: break-word;
-  word-break: break-word;
 }
 
-.course-acronyms {
+.timetable-entry:last-child {
+  margin-bottom: 0;
+}
+
+.timetable-entry-title {
+  font-weight: 600;
+}
+
+.timetable-entry-room {
+  font-size: 0.7rem;
+  color: #4b5563;
+}
+
+/* Acronym Legend Styles */
+.acronym-legend {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 8px 24px;
-  font-size: 12px;
-  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+  font-size: 0.75rem;
 }
 
-.pdf-descrip-sub {
-  background-color: #ffffff;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  padding: 5px;
+.acronym-item {
+  display: flex;
 }
 
-.pdf-descrip h4 {
-  text-align: center;
-  text-decoration: underline;
+.acronym-key {
+  font-weight: 600;
+  margin-right: 0.25rem;
 }
 
-.Acronym-pdf {
-  background-color: aliceblue;
-  padding: 10px;
-  margin-top: 5px;
+/* Animation for highlighted row */
+@keyframes highlight-pulse {
+  0% {
+    background-color: #dbeafe;
+  }
+  50% {
+    background-color: #93c5fd;
+  }
+  100% {
+    background-color: #dbeafe;
+  }
+}
+
+.highlight-pulse {
+  animation: highlight-pulse 1s ease-in-out;
+}
+
+/* Print styles */
+@media print {
+  .timetable {
+    font-size: 8pt;
+  }
+
+  .timetable th,
+  .timetable td {
+    padding: 2pt;
+  }
+
+  .acronym-legend {
+    font-size: 7pt;
+    page-break-before: always;
+  }
 }

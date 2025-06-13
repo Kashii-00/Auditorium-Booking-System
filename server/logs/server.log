@@ -7461,3 +7461,58 @@
 [2025-06-12T09:08:59.353Z] INFO: classroom_booking_dates table ready
 [2025-06-12T09:08:59.354Z] INFO: All database tables created successfully
 [2025-06-12T09:08:59.359Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-12T09:25:13.988Z] INFO: User SuperAdmin1 logged in at: 2025-06-12 14:55:13
+[2025-06-12T09:45:18.908Z] INFO: User SuperAdmin1 logged in at: 2025-06-12 15:15:18
+[2025-06-12T10:08:59.299Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-12T10:16:52.274Z] INFO: User SuperAdmin1 logged in at: 2025-06-12 15:46:52
+[2025-06-12T10:37:10.697Z] INFO: Booking detail created at 2025-06-12 16:07:10 for calendar ID 2
+[2025-06-12T10:54:24.880Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-12T10:54:24.884Z] INFO: HTTP server closed
+[2025-06-12T10:54:24.889Z] INFO: Database connection closed
+[2025-06-12T13:40:53.041Z] ERROR: Error creating database tables:
+[2025-06-12T13:41:15.236Z] INFO: Received SIGINT, gracefully shutting down...
+[2025-06-12T13:41:20.121Z] INFO: Connected to MySQL database
+[2025-06-12T13:41:20.122Z] INFO: DB HOST: localhost
+[2025-06-12T13:41:20.123Z] INFO: DB: event_management
+[2025-06-12T13:41:20.123Z] INFO: Courses table ready
+[2025-06-12T13:41:20.125Z] INFO: Batches table ready
+[2025-06-12T13:41:20.126Z] INFO: Students table ready
+[2025-06-12T13:41:20.127Z] INFO: Student courses table ready
+[2025-06-12T13:41:20.128Z] INFO: Student batches table ready
+[2025-06-12T13:41:20.129Z] INFO: Course payments table ready
+[2025-06-12T13:41:20.130Z] INFO: Lecturers table ready
+[2025-06-12T13:41:20.131Z] INFO: Lecturer courses table ready
+[2025-06-12T13:41:20.132Z] INFO: Lecturer academic details table ready
+[2025-06-12T13:41:20.132Z] INFO: Lecturer bank details table ready
+[2025-06-12T13:41:20.133Z] INFO: Lecturer batches table ready
+[2025-06-12T13:41:20.133Z] INFO: user_refresh_tokens table ready
+[2025-06-12T13:41:20.134Z] INFO: aid_requests table ready
+[2025-06-12T13:41:20.134Z] INFO: aid_items table ready
+[2025-06-12T13:41:20.135Z] INFO: aid_handover table ready
+[2025-06-12T13:41:20.135Z] INFO: aid_request_emails table ready
+[2025-06-12T13:41:20.136Z] INFO: classroom_booking_calendar table ready
+[2025-06-12T13:41:20.136Z] INFO: classroom_booking_dates table ready
+[2025-06-12T13:41:20.136Z] INFO: All database tables created successfully
+[2025-06-12T13:41:20.147Z] ERROR: Error creating or executing data migration procedures: ER_COL_COUNT_DOESNT_MATCH_PLEASE_UPDATE: Column count of mysql.proc is wrong. Expected 21, found 20. Created with MariaDB 100108, now running 100428. Please use mysql_upgrade to fix this error
+[2025-06-12T13:41:34.894Z] INFO: User SuperAdmin1 logged in at: 2025-06-12 19:11:34
+[2025-06-12T13:50:00.661Z] INFO: User SuperAdmin1 logged in at: 2025-06-12 19:20:00
+[2025-06-12T14:20:34.158Z] INFO: User SuperAdmin1 logged in at: 2025-06-12 19:50:34
+[2025-06-12T14:41:19.900Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-12T15:06:47.058Z] INFO: User SuperAdmin1 logged in at: 2025-06-12 20:36:47
+[2025-06-12T15:41:19.986Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-12T17:00:26.599Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-12T18:11:12.661Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-12T19:50:51.131Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-12T21:31:02.971Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-12T23:09:18.287Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-13T00:35:46.784Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-13T01:59:42.726Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-13T03:03:54.497Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-13T03:36:45.761Z] INFO: User SuperAdmin1 logged in at: 2025-06-13 09:06:45
+[2025-06-13T03:59:28.322Z] INFO: User SuperAdmin1 logged in at: 2025-06-13 09:29:28
+[2025-06-13T04:03:53.681Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-13T04:23:10.595Z] INFO: User SuperAdmin1 logged in at: 2025-06-13 09:53:10
+[2025-06-13T04:28:53.515Z] INFO: User SuperAdmin1 logged in at: 2025-06-13 09:58:53
+[2025-06-13T04:32:34.311Z] INFO: User SuperAdmin1 logged in at: 2025-06-13 10:02:34
+[2025-06-13T05:03:53.775Z] INFO: Rate limiting data cleaned up successfully
+[2025-06-13T05:11:45.300Z] INFO: User SuperAdmin1 logged in at: 2025-06-13 10:41:45

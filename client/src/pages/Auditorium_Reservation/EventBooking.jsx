@@ -1,5 +1,4 @@
 "use client"
-
 import { useEffect, useState, useCallback, useMemo, memo, lazy, Suspense } from "react"
 import {
   Search,
