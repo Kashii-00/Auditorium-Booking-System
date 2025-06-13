@@ -1114,15 +1114,6 @@ const ClassroomBooking = () => {
           </Alert>
         )}
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 xl:gap-6">
-          <StatCard title="Total Requests" value={stats.total} icon={Building} color="blue" />
-          <StatCard title="Pending" value={stats.pending} icon={Clock} color="yellow" />
-          <StatCard title="Approved" value={stats.approved} icon={CheckCircle} color="green" />
-          <StatCard title="Denied" value={stats.denied} icon={XCircle} color="red" />
-          <StatCard title="This Month" value={stats.thisMonth} icon={CalendarDays} color="purple" />
-        </div>
-
         {/* Main Content */}
         <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-xl relative z-10">
           <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">

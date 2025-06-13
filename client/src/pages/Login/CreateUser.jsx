@@ -55,7 +55,7 @@ const CreateUser = () => {
     { id: "busbookings_access", label: "Bus Bookings Access", description: "Manage bus bookings" },
 
 
-    { id: "ccb_Admin_access", label: "Classroom Admin Access", description: "Full access to manage classroom bookings and schedules" },
+    { id: "cb_Admin_access", label: "Classroom Admin Access", description: "Full access to manage classroom bookings and schedules" },
     { id: "cb_SU_access", label: "Classroom User Access", description: "View-only access to classroom bookings and schedules" },
 
 
