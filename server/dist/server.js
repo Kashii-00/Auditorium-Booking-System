@@ -21,6 +21,12 @@ const {
   requestMonitor
 } = require("./utils/monitorServer");
 
+// Import routes
+const {
+  studentAuthRouter
+} = require('./routes/studentAuthRoutes');
+const studentPaymentRoutes = require('./routes/studentPaymentRoutes');
+
 // Import the batch routes
 const batchRoutes = require('./routes/batchRoutes');
 const emailRoutes = require("./routes/email");
@@ -99,6 +105,10 @@ app.use("/api/aidrequests", aidRequestRoutes);
 app.use("/api/aidhandover", aidHandoverRoutes);
 app.use("/api/classroom-calendar", classroomCalendarRoutes);
 app.use("/api/email", emailRoutes);
+
+// Student authentication routes
+app.use('/api/student-auth', studentAuthRouter);
+app.use('/api/student-payments', studentPaymentRoutes);
 
 // Stats endpoint (admin only)
 app.get('/api/stats', (req, res) => {

@@ -1,4 +1,10 @@
 # Dependency directories
 node_modules/
+dist/
+# Build output
+build/
+# Logs
+logs/
+
 
 

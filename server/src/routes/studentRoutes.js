@@ -8,6 +8,9 @@ const db = require('../db');
 const auth = require('../auth');
 const logger = require('../logger');
 const moment = require('moment');
+const bcrypt = require('bcryptjs');
+const { sendEmail } = require('../utils/emailService');
+const crypto = require('crypto');
 
 // Ensure uploads directory exists
 const baseUploadDir = path.join(__dirname, '../../uploads/students');
@@ -52,6 +55,16 @@ function parseStudent(row) {
     try { row.driving_details = JSON.parse(row.driving_details); } catch {}    
   }
   return row;
+}
+
+// Helper to generate a secure temporary password
+function generateTemporaryPassword(length = 10) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  let password = '';
+  for (let i = 0; i < length; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
 }
 
 // GET /students/courses
@@ -137,12 +150,62 @@ router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
       );
     }
 
+    // Create student login credentials with temporary password
+    const tempPassword = generateTemporaryPassword();
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    
+    // Insert into student_users table
+    await conn.queryPromise(
+      `INSERT INTO student_users (student_id, email, password, is_temp_password, status)
+       VALUES (?, ?, ?, TRUE, 'ACTIVE')`,
+      [insertId, data.email, hashedPassword]
+    );
+
     await conn.commitPromise();
+    
+    // Send welcome email with login credentials
+    try {
+      const emailResult = await sendEmail({
+        to: data.email,
+        subject: 'Welcome to Maritime Training Center - Your Account Details',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <h2 style="color: #3b82f6;">Welcome to Maritime Training Center!</h2>
+            <p>Dear ${data.full_name},</p>
+            <p>Your student account has been created successfully. You can now access the student portal using the following credentials:</p>
+            <div style="background-color: #f8fafc; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <p><strong>Email:</strong> ${data.email}</p>
+              <p><strong>Temporary Password:</strong> ${tempPassword}</p>
+              <p style="color: #ef4444; font-size: 14px;">Important: You will be required to change this password on your first login.</p>
+            </div>
+            <p>You can access the student portal at: <a href="http://localhost:3000/student-login" style="color: #3b82f6;">Student Portal</a></p>
+            <p>If you have any questions or need assistance, please contact our support team.</p>
+            <p>Thank you,<br>Maritime Training Center Team</p>
+          </div>
+        `
+      });
+      
+      if (emailResult.success) {
+        logger.info(`Welcome email sent to student: ${data.email}`);
+      } else {
+        logger.warn(`Welcome email could not be sent to: ${data.email}, but registration completed successfully`);
+      }
+    } catch (emailErr) {
+      logger.error('Failed to send welcome email:', emailErr);
+      // Continue despite email failure - don't fail the registration
+    }
+
     res.status(201).json({ success:true, studentId: insertId });
   } catch (err) {
-    if (conn) await conn.rollbackPromise();
+    if (conn) {
+      try {
+        await conn.rollbackPromise();
+      } catch (rollbackErr) {
+        logger.error('Error during rollback:', rollbackErr);
+      }
+    }
     logger.error('POST /students', err);
-    res.status(500).json({ error:'Failed to register', details: err.message });
+    res.status(500).json({ error: 'Failed to register student', details: err.message });
   } finally {
     if (conn) conn.release();
   }
@@ -206,30 +269,76 @@ router.put('/:id', auth.authMiddleware, uploadFields, async (req, res) => {
     if (files.nic_document) { fields.push('nic_document_path=?'); vals.push(files.nic_document[0].path); }
     if (files.passport_document) { fields.push('passport_document_path=?'); vals.push(files.passport_document[0].path); }
     if (files.photo) { fields.push('photo_path=?'); vals.push(files.photo[0].path); }
+    
     if (fields.length) {
-      fields.push('updated_at=NOW()');
+      fields.push('updated_at=CURRENT_TIMESTAMP()');
+      const sql = `UPDATE students SET ${fields.join(',')} WHERE id=?`;
       vals.push(req.params.id);
-      await conn.queryPromise(`UPDATE students SET ${fields.join(',')} WHERE id = ?`, vals);
+      await conn.queryPromise(sql, vals);
     }
 
     // update enrollments
-    const courseIds = Array.isArray(data.course_ids)?data.course_ids:JSON.parse(data.course_ids||'[]');
-    if (!courseIds.length) return res.status(400).json({error:'Courses required'});
-    await conn.queryPromise('DELETE FROM student_courses WHERE student_id=?',[req.params.id]);
-    for (let i=0;i<courseIds.length;i++) {
+    const courseIds = Array.isArray(data.course_ids) ? data.course_ids : JSON.parse(data.course_ids || '[]');
+    if (!courseIds.length) {
+      return res.status(400).json({ error: 'At least one course required' });
+    }
+    
+    // Get current course enrollments
+    const currentEnrollments = await conn.queryPromise(
+      'SELECT course_id, primary_course FROM student_courses WHERE student_id=?',
+      [req.params.id]
+    );
+    
+    // Track which courses to add, update, or keep as is
+    const currentCourseIds = currentEnrollments.map(e => e.course_id);
+    const newCourseIds = courseIds.filter(id => !currentCourseIds.includes(id));
+    const removedCourseIds = currentCourseIds.filter(id => !courseIds.includes(id));
+    
+    // Remove courses not in the updated list
+    if (removedCourseIds.length) {
       await conn.queryPromise(
-        `INSERT INTO student_courses (student_id,course_id,enrollment_date,primary_course,status)
-         VALUES (?, ?, CURDATE(), ?, 'Active')`,
-        [req.params.id, courseIds[i], i===0?1:0]
+        'DELETE FROM student_courses WHERE student_id=? AND course_id IN (?)',
+        [req.params.id, removedCourseIds]
       );
     }
-
+    
+    // Add new courses
+    for (let i=0; i<newCourseIds.length; i++) {
+      const isPrimary = !currentEnrollments.length && i === 0;
+      await conn.queryPromise(
+        `INSERT INTO student_courses (student_id, course_id, enrollment_date, primary_course, status)
+         VALUES (?, ?, CURDATE(), ?, ?)`,
+        [req.params.id, newCourseIds[i], isPrimary ? 1 : 0, 'Active']
+      );
+    }
+    
+    // Update primary course if specified
+    if (data.primary_course_id) {
+      // First, set all to non-primary
+      await conn.queryPromise(
+        'UPDATE student_courses SET primary_course=0 WHERE student_id=?',
+        [req.params.id]
+      );
+      
+      // Then set the specified one as primary
+      await conn.queryPromise(
+        'UPDATE student_courses SET primary_course=1 WHERE student_id=? AND course_id=?',
+        [req.params.id, data.primary_course_id]
+      );
+    }
+    
     await conn.commitPromise();
-    res.json({ success:true, message:'Student updated' });
+    res.json({ success: true });
   } catch (err) {
-    if (conn) await conn.rollbackPromise();
+    if (conn) {
+      try {
+        await conn.rollbackPromise();
+      } catch (rollbackErr) {
+        logger.error('Error during rollback:', rollbackErr);
+      }
+    }
     logger.error('PUT /students/:id', err);
-    res.status(500).json({ error:'Update failed', details:err.message });
+    res.status(500).json({ error: 'Database error', details: err.message });
   } finally {
     if (conn) conn.release();
   }

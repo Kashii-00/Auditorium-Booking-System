@@ -42,6 +42,24 @@ const db = mysql.createPool({
 
 // Database schema - organized by entity relationships
 const schema = {
+  users: `
+    CREATE TABLE IF NOT EXISTS users (
+    id int(11) NOT NULL,
+    name varchar(100) NOT NULL,
+    email varchar(100) NOT NULL,
+    phone varchar(50) DEFAULT NULL,
+    password text NOT NULL,
+    role longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '["USER"],["SuperAdmin"],["ADMIN"]',
+    status enum('ACTIVE','INACTIVE') DEFAULT 'ACTIVE'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    `,
+  user_refresh_tokens: `
+    CREATE TABLE IF NOT EXISTS user_refresh_tokens (
+    user_id int(11) NOT NULL,
+    refresh_token varchar(512) NOT NULL,
+    updated_at datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `,
   // Course management tables
   courses: `
     CREATE TABLE IF NOT EXISTS courses (
@@ -397,6 +415,25 @@ const schema = {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (request_id) REFERENCES aid_requests(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `,
+  // Student authentication table
+  student_users: `
+    CREATE TABLE IF NOT EXISTS student_users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      student_id INT NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      password VARCHAR(255) NOT NULL,
+      status ENUM('ACTIVE', 'INACTIVE') DEFAULT 'ACTIVE',
+      is_temp_password BOOLEAN DEFAULT TRUE,
+      reset_token VARCHAR(255) DEFAULT NULL,
+      reset_token_expires DATETIME DEFAULT NULL,
+      last_login DATETIME DEFAULT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+      UNIQUE KEY (email),
+      INDEX idx_student_users_email (email)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `
 };
 
@@ -479,10 +516,18 @@ const createTablesInOrder = async () => {
     logger.info('Courses table ready');
     await queryPromise(schema.batches);
     logger.info('Batches table ready');
+    await queryPromise(schema.users);
+    logger.info('users table ready');
+    await queryPromise(schema.user_refresh_tokens);
+    logger.info('user_refresh_tokens table ready');
 
     // Student management
     await queryPromise(schema.students);
     logger.info('Students table ready');
+
+    // Student authentication
+    await queryPromise(schema.student_users);
+    logger.info('Student users table ready');
     await queryPromise(schema.student_courses);
     logger.info('Student courses table ready');
     await queryPromise(schema.student_batches);

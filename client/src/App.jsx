@@ -34,6 +34,12 @@ import ScheduleChecker from "./pages/Classroom_Booking/ScheduleChecker"
 import SingleBookingFullDetails from "./pages/Classroom_Booking/SingleBookingFullDetails"
 import CancelRequestForm from "./pages/Classroom_Booking/CancelRequestForm"
 
+// Import the new student portal components
+import StudentLogin from "./pages/StudentPortal/StudentLogin"
+import StudentChangePassword from "./pages/StudentPortal/StudentChangePassword"
+import StudentForgotPassword from "./pages/StudentPortal/StudentForgotPassword"
+import StudentDashboard from "./pages/StudentPortal/StudentDashboard"
+
 import "./styles/App.css"
 import "./styles/global.css"
 
@@ -238,11 +244,18 @@ function App() {
       )}
       <div className={loggedInUser ? "main-content" : ""}>
         <Routes>
-          <Route path="/login" element={loggedInUser ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
+          <Route
+            path="/login"
+            element={
+              loggedInUser ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
+            }
+          />
 
           <Route
             path="/"
-            element={!loggedInUser ? <Login onLogin={handleLogin} /> : <Navigate to={getDefaultRoute()} />}
+            element={
+              !loggedInUser ? <Login onLogin={handleLogin} /> : <Navigate to={getDefaultRoute()} />
+            }
           />
 
           <Route
@@ -445,6 +458,12 @@ function App() {
             path="/lecturer/:id"
             element={<ProtectedRouteWithErrorBoundary element={LecturerView} canAccess={canAccessLecturerView} />}
           />
+
+          {/* Student Portal Routes */}
+          <Route path="/student-login" element={<Navigate to="/?type=student" replace />} />
+          <Route path="/student-dashboard" element={<StudentDashboard />} />
+          <Route path="/student-change-password" element={<StudentChangePassword />} />
+          <Route path="/student-forgot-password" element={<StudentForgotPassword />} />
 
           <Route path="*" element={<AccessDenied />} />
         </Routes>
