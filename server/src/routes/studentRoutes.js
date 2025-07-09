@@ -178,7 +178,7 @@ router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
               <p><strong>Temporary Password:</strong> ${tempPassword}</p>
               <p style="color: #ef4444; font-size: 14px;">Important: You will be required to change this password on your first login.</p>
             </div>
-            <p>You can access the student portal at: <a href="http://localhost:3000/student-login" style="color: #3b82f6;">Student Portal</a></p>
+            <p>You can access the student portal at: <a href="http://localhost:5003/student-login" style="color: #3b82f6;">Student Portal</a></p>
             <p>If you have any questions or need assistance, please contact our support team.</p>
             <p>Thank you,<br>Maritime Training Center Team</p>
           </div>

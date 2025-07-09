@@ -54,7 +54,7 @@ const sendWelcomeEmail = async (email, fullName, tempPassword) => {
           <p style="font-size: 16px; line-height: 1.5;">For security reasons, you will be required to change your password upon first login.</p>
           
           <div style="text-align: center; margin-top: 30px;">
-            <a href="${process.env.CLIENT_URL || 'http://localhost:3000'}/student-login" style="background-color: #1e40af; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Login to Student Portal</a>
+            <a href="${process.env.CLIENT_URL || 'http://localhost:5003'}/student-login" style="background-color: #1e40af; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Login to Student Portal</a>
           </div>
           
           <p style="font-size: 14px; color: #666; margin-top: 30px; text-align: center;">If you have any questions, please contact our support team.</p>
@@ -269,7 +269,7 @@ const sendPasswordResetEmail = async (email, fullName, tempPassword) => {
           <p style="font-size: 16px; line-height: 1.5;">For security reasons, you will be required to change your password upon login.</p>
           
           <div style="text-align: center; margin-top: 30px;">
-            <a href="${process.env.CLIENT_URL || 'http://localhost:3000'}/student-login" style="background-color: #1e40af; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Login to Student Portal</a>
+            <a href="${process.env.CLIENT_URL || 'http://localhost:5003'}/student-login" style="background-color: #1e40af; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Login to Student Portal</a>
           </div>
           
           <p style="font-size: 14px; color: #666; margin-top: 30px; text-align: center;">If you did not request a password reset, please contact our support team immediately.</p>

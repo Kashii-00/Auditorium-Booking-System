@@ -10,6 +10,10 @@ const fs = require('fs');
 const logger = require('../logger');
 const auth = require('../auth');
 const moment = require('moment');
+const bcrypt = require('bcryptjs');
+const {
+  sendEmail
+} = require('../utils/emailService');
 
 // Setup upload directory
 const uploadDir = path.join(__dirname, '../../uploads/lecturers');
@@ -38,6 +42,17 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024
   }
 });
+
+// Generate a random temporary password
+const generateTempPassword = () => {
+  const length = 10;
+  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
+  let password = '';
+  for (let i = 0; i < length; i++) {
+    password += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  return password;
+};
 
 // GET /lecturers/courses
 router.get('/courses', auth.authMiddleware, async (req, res) => {
@@ -208,6 +223,45 @@ router.post('/', auth.authMiddleware, upload.fields([{
       await conn.queryPromise(`INSERT INTO lecturer_courses
             (lecturer_id,course_id,primary_course,stream,module)
            VALUES (?,?,?,?,?)`, [lecturerId, courseIds[i], i === 0 ? 1 : 0, req.body.stream || null, req.body.module || null]);
+    }
+
+    // Create lecturer user account with temporary password
+    const tempPassword = generateTempPassword();
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    const insertLecturerUser = `
+        INSERT INTO lecturer_users
+        (lecturer_id, email, password, status, is_temp_password)
+        VALUES (?, ?, ?, 'ACTIVE', TRUE)
+      `;
+    await conn.queryPromise(insertLecturerUser, [lecturerId, email, hashedPassword]);
+
+    // Send email with temporary password
+    try {
+      await sendEmail({
+        to: email,
+        subject: 'Welcome to Maritime Training Center - Your Lecturer Account',
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+              <h2 style="color: #3b82f6;">Welcome to Maritime Training Center</h2>
+              <p>Dear ${fullName},</p>
+              <p>Your lecturer account has been successfully created. Here are your login credentials:</p>
+              <div style="background-color: #f0f9ff; padding: 20px; border-radius: 5px; margin: 20px 0;">
+                <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
+                <p style="margin: 5px 0;"><strong>Temporary Password:</strong> <code style="background-color: #e0e0e0; padding: 5px 10px; border-radius: 3px; font-family: monospace;">${tempPassword}</code></p>
+              </div>
+              <p><strong>Important:</strong> You will be required to change this temporary password when you first log in.</p>
+              <p>To access your account, please visit: <a href="http://localhost:5003/lecturer-login" style="color: #3b82f6;">Lecturer Portal</a></p>
+              <div style="background-color: #fee2e2; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <p style="margin: 0; color: #dc2626;"><strong>Security Notice:</strong> Please keep your login credentials confidential. Do not share your password with anyone.</p>
+              </div>
+              <p>If you have any questions or need assistance, please contact our support team.</p>
+              <p>Best regards,<br>Maritime Training Center Team</p>
+            </div>
+          `
+      });
+    } catch (emailError) {
+      logger.error('Failed to send lecturer welcome email:', emailError);
+      // Don't fail the registration if email fails
     }
     await conn.commitPromise();
     res.status(201).json({
@@ -445,6 +499,9 @@ router.delete('/:id', auth.authMiddleware, async (req, res) => {
   const conn = await db.getConnectionPromise();
   try {
     await conn.beginTransactionPromise();
+
+    // Delete from lecturer_users first (due to foreign key constraint)
+    await conn.queryPromise(`DELETE FROM lecturer_users WHERE lecturer_id = ?`, [req.params.id]);
 
     // Delete from lecturer_courses
     await conn.queryPromise(`DELETE FROM lecturer_courses WHERE lecturer_id = ?`, [req.params.id]);

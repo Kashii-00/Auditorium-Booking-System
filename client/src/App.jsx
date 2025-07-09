@@ -39,6 +39,14 @@ import StudentLogin from "./pages/StudentPortal/StudentLogin"
 import StudentChangePassword from "./pages/StudentPortal/StudentChangePassword"
 import StudentForgotPassword from "./pages/StudentPortal/StudentForgotPassword"
 import StudentDashboard from "./pages/StudentPortal/StudentDashboard"
+import StudentProfile from "./pages/StudentPortal/StudentProfile"
+import StudentPreferences from "./pages/StudentPortal/StudentPreferences"
+
+// Import the new lecturer portal components
+import LecturerChangePassword from "./pages/LecturerPortal/LecturerChangePassword"
+import LecturerDashboard from "./pages/LecturerPortal/LecturerDashboard"
+import BatchDetail from "./pages/LecturerPortal/BatchDetail"
+import LecturerForgotPassword from "./pages/LecturerPortal/LecturerForgotPassword"
 
 import "./styles/App.css"
 import "./styles/global.css"
@@ -464,6 +472,15 @@ function App() {
           <Route path="/student-dashboard" element={<StudentDashboard />} />
           <Route path="/student-change-password" element={<StudentChangePassword />} />
           <Route path="/student-forgot-password" element={<StudentForgotPassword />} />
+          <Route path="/student-profile" element={<StudentProfile />} />
+          <Route path="/student-preferences" element={<StudentPreferences />} />
+
+          {/* Lecturer Portal Routes */}
+                  <Route path="/lecturer-login" element={<Navigate to="/?type=lecturer" replace />} />
+        <Route path="/lecturer-dashboard" element={<LecturerDashboard />} />
+        <Route path="/lecturer/batch/:batchId" element={<BatchDetail />} />
+        <Route path="/lecturer-change-password" element={<LecturerChangePassword />} />
+        <Route path="/lecturer-forgot-password" element={<LecturerForgotPassword />} />
 
           <Route path="*" element={<AccessDenied />} />
         </Routes>

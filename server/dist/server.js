@@ -110,6 +110,12 @@ app.use("/api/email", emailRoutes);
 app.use('/api/student-auth', studentAuthRouter);
 app.use('/api/student-payments', studentPaymentRoutes);
 
+// Lecturer authentication routes  
+const lecturerAuthRoutes = require('./routes/lecturerAuthRoutes');
+app.use('/api/lecturer-auth', lecturerAuthRoutes);
+
+// Lecturer dashboard routes removed - will be rebuilt from scratch
+
 // Stats endpoint (admin only)
 app.get('/api/stats', (req, res) => {
   // In production, this should be protected by admin authentication

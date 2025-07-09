@@ -6,5 +6,7 @@ build/
 # Logs
 logs/
 
+.DS_Store
+
 
 

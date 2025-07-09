@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import MPMA from "./MPMA.png"
 
-import { login, checkServerStatus } from "../../services/authService"
-import { studentLogin } from "../../services/studentAuthService"
+import { login, checkServerStatus } from "@/services/authService"
+import { studentLogin } from "@/services/studentAuthService"
+import { lecturerLogin } from "@/services/lecturerAuthService"
 
 // MPMA Loading Animation Component
 const MPMALoadingScreen = () => {
@@ -167,6 +168,32 @@ const Login = ({ onLogin }) => {
           console.error("Student login error:", err)
           setError(err.message || "Invalid email or password")
         }
+      } else if (loginType === "lecturer") {
+        // Lecturer login
+        try {
+          const response = await lecturerLogin(email, password)
+          console.log("Lecturer login response:", response);
+          
+          if (response && response.token) {
+            // Store token and user info
+            localStorage.setItem("lecturerToken", response.token)
+            localStorage.setItem("lecturerRefreshToken", response.refreshToken || "")
+            localStorage.setItem("lecturerUser", JSON.stringify(response.user || {}))
+            
+            // Redirect based on temporary password status
+            if (response.user?.is_temp_password) {
+              navigate("/lecturer-change-password")
+            } else {
+              navigate("/lecturer-dashboard")
+            }
+          } else {
+            // No token in the response
+            setError("Authentication failed. Server did not return a valid token.")
+          }
+        } catch (err) {
+          console.error("Lecturer login error:", err)
+          setError(err.message || "Invalid email or password")
+        }
       }
     } catch (err) {
       console.error("Login error:", err)
@@ -242,7 +269,7 @@ const Login = ({ onLogin }) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
               >
-                {loginType === "lecturer" ? "Lecturer Portal" : "Login to access the system"}
+                Login to access the system
               </motion.p>
               
               {/* Enhanced Login Type Toggle with Animation */}
@@ -291,93 +318,8 @@ const Login = ({ onLogin }) => {
             </div>
 
             <AnimatePresence mode="wait">
-              {/* Show Maintenance Content for Lecturer */}
-              {loginType === "lecturer" ? (
-                <motion.div
-                  key="maintenance"
-                  className="space-y-6"
-                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -20 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                >
-                  {/* Maintenance Icon and Status */}
-                  <motion.div 
-                    className="text-center"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                  >
-                    <div className="relative inline-block mb-4">
-                      <motion.div
-                        className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto shadow-lg"
-                        animate={{ rotate: [0, 5, -5, 0] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                      >
-                        <FaWrench className="text-3xl text-white" />
-                      </motion.div>
-                      <motion.div
-                        className="absolute -top-2 -right-2"
-                        animate={{ 
-                          scale: [1, 1.2, 1],
-                          rotate: [0, 180, 360]
-                        }}
-                        transition={{ 
-                          scale: { duration: 1.5, repeat: Infinity },
-                          rotate: { duration: 2, repeat: Infinity, ease: "linear" }
-                        }}
-                      >
-                        <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
-                          <FaCog className="text-sm text-white" />
-                        </div>
-                      </motion.div>
-                    </div>
-                    
-                    <motion.h2 
-                      className="text-xl font-bold text-gray-800 mb-2"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                    >
-                      Under Maintenance
-                    </motion.h2>
-                    
-                    <motion.p 
-                      className="text-gray-600 text-sm leading-relaxed"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                    >
-                      The Lecturer Portal is currently under development. We're working hard to bring you 
-                      an enhanced experience for course management.
-                    </motion.p>
-                  </motion.div>
-
-                  
-
-                  {/* Expected Launch */}
-                  <motion.div 
-                    className="text-center"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.0 }}
-                  >
-                    <div className="inline-flex items-center space-x-2 bg-white border border-gray-200 rounded-full px-4 py-2 shadow-sm">
-                      <motion.div
-                        className="w-2 h-2 bg-green-500 rounded-full"
-                        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
-                      <span className="text-xs text-gray-600 font-medium">Expected Launch: Q2 2024</span>
-                    </div>
-                  </motion.div>
-
-                  {/* Action Button */}
-                  
-                </motion.div>
-              ) : (
-                /* Regular Login Form */
-                <motion.div
+              {/* Login Form for all user types */}
+              <motion.div
                   key="loginForm"
                   initial={{ opacity: 0, scale: 0.95, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -477,7 +419,7 @@ const Login = ({ onLogin }) => {
                       </div>
                       <div className="mt-2 text-right">
                         <a 
-                          href={loginType === "student" ? "/student-forgot-password" : ""} 
+                          href={loginType === "student" ? "/student-forgot-password" : loginType === "lecturer" ? "/lecturer-forgot-password" : ""} 
                           className="text-sm text-blue-600 hover:underline transition-colors duration-200"
                         >
                           Forgot your password?
@@ -506,7 +448,7 @@ const Login = ({ onLogin }) => {
                             Logging in...
                           </>
                         ) : (
-                          `Login as ${loginType === "staff" ? "Staff" : "Student"}`
+                          `Login as ${loginType === "staff" ? "Staff" : loginType === "student" ? "Student" : "Lecturer"}`
                         )}
                       </Button>
                     </motion.div>
@@ -537,7 +479,6 @@ const Login = ({ onLogin }) => {
                     </p>
                   </motion.div>
                 </motion.div>
-              )}
             </AnimatePresence>
           </motion.div>
         </motion.div>
