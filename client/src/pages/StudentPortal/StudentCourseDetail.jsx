@@ -41,6 +41,7 @@ import {
   getModuleAssignments,
   getAssignmentDetails,
   submitAssignment,
+  downloadSubmission,
   getCourseAnnouncements,
   getCourseAttendance,
   updateModuleProgress
@@ -128,6 +129,15 @@ const StudentCourseDetail = () => {
 
   const handleDownloadMaterial = (materialId) => {
     downloadMaterial(materialId)
+  }
+
+  const handleDownloadSubmission = async (submissionId) => {
+    try {
+      await downloadSubmission(submissionId)
+    } catch (error) {
+      console.error('Error downloading submission:', error)
+      setError('Failed to download submission')
+    }
   }
 
   const handleViewAssignment = async (assignment) => {
@@ -378,7 +388,17 @@ const StudentCourseDetail = () => {
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2 mb-2">
                                         <h4 className="font-medium">{assignment.title}</h4>
-                                        <Badge variant="outline">{assignment.points} points</Badge>
+                                        {assignment.grade !== null && assignment.grade !== undefined ? (
+                                          <Badge variant="default" className="bg-blue-100 text-blue-800">
+                                            {assignment.grade}/{assignment.points}
+                                          </Badge>
+                                        ) : assignment.submission_status === 'submitted' ? (
+                                          <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                                            Not graded ({assignment.points} points)
+                                          </Badge>
+                                        ) : (
+                                          <Badge variant="outline">{assignment.points} points</Badge>
+                                        )}
                                         {assignment.submission_status === 'submitted' && (
                                           <Badge variant="success" className="bg-green-100 text-green-800">
                                             Submitted
@@ -717,9 +737,22 @@ const StudentCourseDetail = () => {
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <p className="text-sm whitespace-pre-wrap">{selectedAssignment.submission_text}</p>
                       {selectedAssignment.submission_file_name && (
-                        <div className="mt-3 flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm text-blue-600">{selectedAssignment.submission_file_name}</span>
+                        <div className="mt-3 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm text-blue-600">{selectedAssignment.submission_file_name}</span>
+                          </div>
+                          {selectedAssignment.submission_id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadSubmission(selectedAssignment.submission_id)}
+                              className="flex items-center gap-1 text-xs"
+                            >
+                              <Download className="w-3 h-3" />
+                              Download
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>

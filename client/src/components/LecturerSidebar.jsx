@@ -59,9 +59,7 @@ const LecturerSidebar = ({
   const navigationItems = [
     { id: "overview", label: "Overview", icon: User },
     { id: "courses", label: "My Courses", icon: BookOpen },
-    { id: "batches", label: "My Batches", icon: Calendar },
-    { id: "students", label: "Students", icon: Users },
-    { id: "materials", label: "Materials", icon: FileText },
+    { id: "batches", label: "My Batches", icon: Calendar }
   ];
 
   const sidebarVariants = {

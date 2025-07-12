@@ -226,7 +226,8 @@ router.get('/assignments/:assignmentId', studentAuthMiddleware, async (req, res)
               s.grade,
               s.feedback,
               s.file_path as submission_file_path,
-              s.file_name as submission_file_name
+              s.file_name as submission_file_name,
+              s.submission_text
        FROM course_assignments a
        LEFT JOIN assignment_submissions s ON a.id = s.assignment_id AND s.student_id = ?
        WHERE a.id = ? AND a.is_published = true`,
@@ -684,6 +685,113 @@ router.post('/submissions', studentAuthMiddleware, upload.single('submission'), 
   } catch (error) {
     logger.error('Error submitting assignment:', error);
     res.status(500).json({ error: 'Failed to submit assignment' });
+  }
+});
+
+/**
+ * Download student's own submission file
+ */
+router.get('/submissions/:submissionId/download', studentAuthMiddleware, async (req, res) => {
+  try {
+    const { submissionId } = req.params;
+    const studentId = req.student.studentId;
+    
+    // Get submission and verify ownership
+    const submission = await db.queryPromise(`
+      SELECT 
+        asub.*,
+        a.title as assignment_title
+      FROM assignment_submissions asub
+      JOIN course_assignments a ON asub.assignment_id = a.id
+      WHERE asub.id = ? AND asub.student_id = ?
+    `, [submissionId, studentId]);
+    
+    if (submission.length === 0) {
+      return res.status(404).json({ error: 'Submission not found or access denied' });
+    }
+    
+    const submissionFile = submission[0];
+    
+    if (!submissionFile.file_path) {
+      return res.status(404).json({ error: 'No file attached to this submission' });
+    }
+    
+    // Check if file exists on server
+    const fs = require('fs');
+    if (!fs.existsSync(submissionFile.file_path)) {
+      logger.error(`Student submission file not found at path: ${submissionFile.file_path}`);
+      return res.status(404).json({ error: 'File not found on server' });
+    }
+    
+    // Prepare download filename (use original name or assignment title)
+    const downloadFileName = submissionFile.file_name || `${submissionFile.assignment_title}_submission`;
+    
+    // Get file stats and determine content type
+    const fileStats = fs.statSync(submissionFile.file_path);
+    const path = require('path');
+    const fileExtension = path.extname(submissionFile.file_name || '').toLowerCase();
+    
+    // Set proper Content-Type based on file extension
+    let contentType = 'application/octet-stream'; // default
+    switch (fileExtension) {
+      case '.pdf':
+        contentType = 'application/pdf';
+        break;
+      case '.doc':
+        contentType = 'application/msword';
+        break;
+      case '.docx':
+        contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        break;
+      case '.txt':
+        contentType = 'text/plain';
+        break;
+      case '.jpg':
+      case '.jpeg':
+        contentType = 'image/jpeg';
+        break;
+      case '.png':
+        contentType = 'image/png';
+        break;
+      case '.zip':
+        contentType = 'application/zip';
+        break;
+      case '.rar':
+        contentType = 'application/x-rar-compressed';
+        break;
+    }
+    
+    // Set comprehensive headers for proper file download
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${downloadFileName}"`);
+    res.setHeader('Content-Length', fileStats.size);
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    // Create read stream with proper options
+    const fileStream = fs.createReadStream(submissionFile.file_path, {
+      highWaterMark: 16 * 1024 // 16KB chunks
+    });
+    
+    fileStream.on('error', (err) => {
+      logger.error('File stream error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Error streaming file' });
+      }
+    });
+    
+    fileStream.on('end', () => {
+      logger.info(`Student ${studentId} successfully downloaded submission ${submissionId}`);
+    });
+    
+    // Pipe the file to response
+    fileStream.pipe(res);
+    
+  } catch (error) {
+    logger.error('Error downloading student submission:', error);
+    res.status(500).json({ error: 'Failed to download submission' });
   }
 });
 

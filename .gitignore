@@ -10,3 +10,10 @@ logs/
 
 .idea/
 
+.server/generateTestToken.js
+.server/generateTestTokenLecturer.js
+.server/test_lms_setup.js
+.server/uploads
+
+.uploads
+

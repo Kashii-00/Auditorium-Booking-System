@@ -106,11 +106,17 @@ app.use("/api/email", emailRoutes);
 app.use('/api/student-auth', studentAuthRouter);
 app.use('/api/student-payments', studentPaymentRoutes);
 
+// Student batch routes
+const studentBatchRoutes = require('./routes/studentBatchRoutes');
+app.use('/api/student-batches', studentBatchRoutes);
+
 // Lecturer authentication routes  
 const lecturerAuthRoutes = require('./routes/lecturerAuthRoutes');
 app.use('/api/lecturer-auth', lecturerAuthRoutes);
 
-// Lecturer dashboard routes removed - will be rebuilt from scratch
+// Lecturer batch management routes
+const lecturerBatchRoutes = require('./routes/lecturer_batchRoutes');
+app.use('/api/lecturer-batches', lecturerBatchRoutes);
 
 // Stats endpoint (admin only)
 app.get('/api/stats', (req, res) => {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback, memo, lazy, Suspense, useRef } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import axios from "axios"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
@@ -57,6 +57,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import StudentSidebar from "@/components/StudentSidebar"
+import StudentNotifications from "@/components/StudentNotifications"
 import LoadingScreen from "@/pages/LoadingScreen/LoadingScreen"
 
 const API_URL = "http://localhost:5003/api"
@@ -176,8 +177,8 @@ const QuickAction = memo(({ action, onClick, shouldAnimate }) => {
   )
 })
 
-// Responsive BatchCard component
-const BatchCard = memo(({ batch, index, shouldAnimate }) => {
+// Enhanced BatchCard component matching the new design
+const BatchCard = memo(({ batch, index, shouldAnimate, onClick, variant = "full" }) => {
   const prefersReducedMotion = useReducedMotion()
   
   const cardVariants = shouldAnimate && !prefersReducedMotion ? {
@@ -188,40 +189,217 @@ const BatchCard = memo(({ batch, index, shouldAnimate }) => {
 
   const CardComponent = shouldAnimate && !prefersReducedMotion ? motion.div : 'div'
 
-  return (
-    <CardComponent
-      {...cardVariants}
-      className="p-3 sm:p-4 border border-slate-200 rounded-xl hover:bg-green-50 hover:border-green-200 transition-colors duration-150 cursor-pointer group"
-    >
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm sm:text-base text-slate-800 group-hover:text-green-700 transition-colors duration-150 truncate">
+  // Calculate or set default values for the new design
+  const enrolledStudents = batch.enrolledStudents || 0
+  const maxStudents = batch.maxStudents || 30
+  const courseProgress = batch.courseProgress || 5
+  const completedModules = batch.completedModules || 1
+  const totalModules = batch.totalModules || 20
+  const remainingModules = totalModules - completedModules
+
+  // Format dates
+  const formatDate = (dateString) => {
+    if (!dateString) return 'TBD'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    })
+  }
+
+  // Get progress status text
+  const getProgressStatus = (progress) => {
+    if (progress <= 10) return 'Just Started'
+    if (progress <= 25) return 'Getting Started'
+    if (progress <= 50) return 'In Progress'
+    if (progress <= 75) return 'Well Underway'
+    if (progress < 100) return 'Almost Complete'
+    return 'Completed'
+  }
+
+  // Get status badge styling
+  const getStatusBadge = () => {
+    if (batch.status === "Active" || batch.category === "active") {
+      return {
+        text: "Active Now",
+        className: "bg-green-100 text-green-800 border-green-200"
+      }
+    }
+    if (batch.category === "upcoming") {
+      return {
+        text: "Starting Soon", 
+        className: "bg-blue-100 text-blue-800 border-blue-200"
+      }
+    }
+    if (batch.category === "completed") {
+      return {
+        text: "Completed",
+        className: "bg-slate-100 text-slate-700 border-slate-200"
+      }
+    }
+    return {
+      text: batch.status || "Inactive",
+      className: "bg-gray-100 text-gray-600 border-gray-200"
+    }
+  }
+
+  // Check if batch is completed
+  const isCompleted = batch.category === "completed"
+
+  // Get card colors based on status
+  const getCardColors = () => {
+    if (isCompleted) {
+      return {
+        duration: "bg-slate-50 border-slate-100",
+        durationIcon: "bg-slate-400",
+        students: "bg-slate-50 border-slate-100", 
+        studentsIcon: "bg-slate-400",
+        progress: "bg-slate-50 border-slate-100",
+        progressIcon: "bg-slate-400"
+      }
+    }
+    return {
+      duration: "bg-blue-50 border-blue-100",
+      durationIcon: "bg-blue-500",
+      students: "bg-purple-50 border-purple-100",
+      studentsIcon: "bg-purple-500", 
+      progress: "bg-green-50 border-green-100",
+      progressIcon: "bg-green-500"
+    }
+  }
+
+  const cardColors = getCardColors()
+
+  const statusBadge = getStatusBadge()
+
+      return (
+      <CardComponent
+        {...cardVariants}
+        className="w-full max-w-none bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
+        onClick={() => onClick && onClick(batch)}
+      >
+      {/* Header with batch name and status */}
+      <div className={`${variant === "simple" ? "p-3 sm:p-4" : "p-4 sm:p-5"} pb-3`}>
+        <div className={`flex items-start justify-between ${variant === "simple" ? "mb-2" : "mb-3"}`}>
+          <h3 className={`${variant === "simple" ? "text-base sm:text-lg" : "text-lg sm:text-xl"} font-bold text-gray-900 group-hover:text-blue-600 transition-colors`}>
             {batch.batchName}
-          </p>
-          <p className="text-xs sm:text-sm text-slate-500 truncate">{batch.courseName}</p>
+          </h3>
+          <Badge 
+            variant="outline" 
+            className={`px-2 py-0.5 text-xs font-medium ${statusBadge.className} flex-shrink-0`}
+          >
+            {statusBadge.text}
+          </Badge>
         </div>
-        <Badge
-          variant={
-            batch.status === "Active"
-              ? "default"
-              : batch.category === "upcoming"
-                ? "secondary"
-                : "outline"
-          }
-          className="shrink-0 text-xs"
-        >
-          {batch.status}
-        </Badge>
-      </div>
-      {batch.attendancePercentage && (
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs sm:text-sm">
-            <span className="text-slate-600">Attendance</span>
-            <span className="font-medium">{batch.attendancePercentage}%</span>
+        <p className={`text-gray-600 ${variant === "simple" ? "text-xs sm:text-sm mb-3" : "text-sm sm:text-base mb-4 sm:mb-5"}`}>{batch.courseName}</p>
+
+        {/* Show simplified version for dashboard, full version for batch page */}
+        {variant === "simple" ? (
+          /* Simple version - only progress bar and duration */
+          <div>
+            {/* Duration as text */}
+            <div className="mb-2">
+              <p className="text-xs text-gray-600">
+                {formatDate(batch.startDate)} - {formatDate(batch.endDate)}
+              </p>
+            </div>
+
+            {/* Course Progress Section - only show for non-completed batches */}
+            {!isCompleted && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-semibold text-gray-900">Course Progress</h4>
+                  <span className="text-xl font-bold text-blue-600">{courseProgress}%</span>
+                </div>
+                
+                {/* Progress bar */}
+                <div className="mb-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gray-900 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${courseProgress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-          <Progress value={batch.attendancePercentage} className="h-1.5 sm:h-2" />
-        </div>
-      )}
+        ) : (
+          /* Full version with all cards */
+          <>
+            {/* Three info cards */}
+            <div className={`grid gap-3 sm:gap-4 ${isCompleted ? 'grid-cols-1 sm:grid-cols-2 mb-4' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-4 sm:mb-5'}`}>
+              {/* Duration Card */}
+              <div className={`${cardColors.duration} rounded-lg p-3 sm:p-4 border`}>
+                <div className="flex items-center mb-2">
+                  <div className={`w-6 sm:w-8 h-6 sm:h-8 ${cardColors.durationIcon} rounded-lg flex items-center justify-center`}>
+                    <Calendar className="w-3 sm:w-4 h-3 sm:h-4 text-white" />
+                  </div>
+                </div>
+                <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1">Duration</h4>
+                <p className="text-xs sm:text-sm text-gray-600 leading-tight">
+                  {formatDate(batch.startDate)} - {formatDate(batch.endDate)}
+                </p>
+              </div>
+
+              {/* Enrolled Students Card */}
+              <div className={`${cardColors.students} rounded-lg p-3 sm:p-4 border`}>
+                <div className="flex items-center mb-2">
+                  <div className={`w-6 sm:w-8 h-6 sm:h-8 ${cardColors.studentsIcon} rounded-lg flex items-center justify-center`}>
+                    <Users className="w-3 sm:w-4 h-3 sm:h-4 text-white" />
+                  </div>
+                </div>
+                <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1">Enrolled Students</h4>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  {enrolledStudents} / {maxStudents}
+                </p>
+              </div>
+
+              {/* Progress Card - only show for non-completed batches */}
+              {!isCompleted && (
+                <div className={`${cardColors.progress} rounded-lg p-3 sm:p-4 border sm:col-span-2 lg:col-span-1`}>
+                  <div className="flex items-center mb-2">
+                    <div className={`w-6 sm:w-8 h-6 sm:h-8 ${cardColors.progressIcon} rounded-lg flex items-center justify-center`}>
+                      <BarChart3 className="w-3 sm:w-4 h-3 sm:h-4 text-white" />
+                    </div>
+                  </div>
+                  <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1">Progress</h4>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    {getProgressStatus(courseProgress)}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Course Progress Section - only show for non-completed batches */}
+            {!isCompleted && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900">Course Progress</h4>
+                  <span className="text-2xl sm:text-3xl font-bold text-blue-600">{courseProgress}%</span>
+                </div>
+                
+                {/* Progress bar */}
+                <div className="mb-3 sm:mb-4">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gray-900 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${courseProgress}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Module completion info */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-xs sm:text-sm text-gray-600">
+                  <span>{completedModules} of {totalModules} modules completed</span>
+                  <span>{remainingModules} modules remaining</span>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </CardComponent>
   )
 })
@@ -234,7 +412,9 @@ const StudentDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [notificationCount, setNotificationCount] = useState(3)
+  const [batchFilter, setBatchFilter] = useState("all")
   const navigate = useNavigate()
+  const location = useLocation()
   const fetchTimeoutRef = useRef(null)
   const prefersReducedMotion = useReducedMotion()
 
@@ -312,6 +492,10 @@ const StudentDashboard = () => {
     })
   }, [navigate])
 
+  const handleBatchClick = useCallback((batch) => {
+    navigate(`/student-batch-detail/${batch.id}`)
+  }, [navigate])
+
   const getInitials = useCallback((name) => {
     if (!name) return ""
     return name
@@ -346,14 +530,24 @@ const StudentDashboard = () => {
   }, [student?.courses])
 
   const batchData = useMemo(() => {
-    if (!student?.batches) return { activeBatches: 0, completedBatches: 0, recentBatches: [] }
+    if (!student?.batches) return { activeBatches: 0, completedBatches: 0, recentBatches: [], filteredBatches: [] }
     
     const activeBatches = student.batches.filter((b) => b.category === "active").length
     const completedBatches = student.batches.filter((b) => b.category === "completed").length
     const recentBatches = student.batches.slice(0, 3)
     
-    return { activeBatches, completedBatches, recentBatches }
-  }, [student?.batches])
+    // Apply filter for dashboard
+    let filteredBatches = student.batches
+    if (batchFilter === "active") {
+      filteredBatches = student.batches.filter((b) => b.category === "active")
+    } else if (batchFilter === "completed") {
+      filteredBatches = student.batches.filter((b) => b.category === "completed")
+    } else if (batchFilter === "upcoming") {
+      filteredBatches = student.batches.filter((b) => b.category === "upcoming")
+    }
+    
+    return { activeBatches, completedBatches, recentBatches, filteredBatches }
+  }, [student?.batches, batchFilter])
 
   // Memoized quick actions data
   const quickActions = useMemo(() => [
@@ -423,6 +617,15 @@ const StudentDashboard = () => {
       setLoading(false)
     }
   }, [navigate])
+
+  // Handle navigation state for tab switching
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab)
+      // Clear the state to prevent unwanted tab switches on future navigations
+      navigate(location.pathname, { replace: true })
+    }
+  }, [location.state, navigate, location.pathname])
 
   useEffect(() => {
     // Clear any existing timeout
@@ -645,9 +848,8 @@ const StudentDashboard = () => {
 
               {/* Right Section - User Menu and Actions */}
               <div className="flex items-center space-x-2 sm:space-x-3 mr-[-80px]">
-                
-
-                
+                {/* Notifications */}
+                <StudentNotifications />
 
                 {/* User Profile Dropdown */}
                 <DropdownMenu>
@@ -684,21 +886,7 @@ const StudentDashboard = () => {
                       <User className="w-4 h-4 mr-2" />
                       Profile Settings
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer">
-                      <FileText className="w-4 h-4 mr-2" />
-                      My Documents
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer">
-                      <Download className="w-4 h-4 mr-2" />
-                      Download Reports
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      className="cursor-pointer"
-                      onClick={() => navigate("/student-preferences")}
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Preferences
-                    </DropdownMenuItem>
+
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
                       className="cursor-pointer text-red-600 hover:text-red-700"
@@ -748,7 +936,7 @@ const StudentDashboard = () => {
         sidebarOpen && !screenSize.isMobile && !screenSize.isTablet ? 'lg:pl-80' : 'lg:pl-20'
       }`}>
         <div className="min-h-screen pt-20 sm:pt-24 pb-8">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-none">
             <motion.div variants={itemVariants}>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 {/* Mobile Tab Navigation */}
@@ -869,22 +1057,55 @@ const StudentDashboard = () => {
                           </Button>
                         </CardHeader>
                         <CardContent>
-                          {batchData.recentBatches.length > 0 ? (
-                            <div className="space-y-4 sm:space-y-6">
-                              {batchData.recentBatches.map((batch, index) => (
+                          {/* Filter navbar */}
+                          <div className="flex space-x-1 mb-4 bg-gray-100 rounded-lg p-1">
+                            {[
+                              { id: "all", label: "All" },
+                              { id: "active", label: "Current" },
+                              { id: "completed", label: "Completed" },
+                              { id: "upcoming", label: "Upcoming" }
+                            ].map((filter) => (
+                              <button
+                                key={filter.id}
+                                onClick={() => setBatchFilter(filter.id)}
+                                className={`flex-1 py-1.5 px-3 text-xs font-medium rounded-md transition-colors duration-200 ${
+                                  batchFilter === filter.id
+                                    ? "bg-white text-gray-900 shadow-sm"
+                                    : "text-gray-600 hover:text-gray-900"
+                                }`}
+                              >
+                                {filter.label}
+                              </button>
+                            ))}
+                          </div>
+                        </CardContent>
+                        <CardContent className="pt-0">
+                          {batchData.filteredBatches.length > 0 ? (
+                            <div className="space-y-3 sm:space-y-4">
+                              {batchData.filteredBatches.map((batch, index) => (
                                 <BatchCard 
                                   key={batch.id}
                                   batch={batch} 
                                   index={index}
                                   shouldAnimate={shouldAnimate}
+                                  onClick={() => handleBatchClick(batch)}
+                                  variant="simple"
                                 />
                               ))}
                   </div>
                           ) : (
-                            <div className="text-center py-8 sm:py-12">
-                              <Calendar className="w-12 h-12 sm:w-16 sm:h-16 text-slate-300 mx-auto mb-4" />
-                              <p className="text-slate-500 text-base sm:text-lg">No batches assigned</p>
-                              <p className="text-slate-400 text-sm sm:text-base mt-1">You'll be assigned when courses start</p>
+                                                      <div className="text-center py-8 sm:py-12">
+                            <Calendar className="w-12 h-12 sm:w-16 sm:h-16 text-slate-300 mx-auto mb-4" />
+                            <p className="text-slate-500 text-base sm:text-lg">
+                              {batchFilter === "all" 
+                                ? "No batches assigned" 
+                                : `No ${batchFilter} batches found`}
+                            </p>
+                            <p className="text-slate-400 text-sm sm:text-base mt-1">
+                              {batchFilter === "all" 
+                                ? "You'll be assigned when courses start" 
+                                : "Try selecting a different filter"}
+                            </p>
                           </div>
                           )}
                         </CardContent>
@@ -1129,165 +1350,138 @@ const StudentDashboard = () => {
                         <CardDescription className="text-xs sm:text-sm">View your batch assignments and attendance records</CardDescription>
                       </CardHeader>
                       <CardContent>
-              {student.batches && student.batches.length > 0 ? (
-                <div className="space-y-8">
+                        {/* Filter navbar */}
+                        <div className="flex space-x-1 mb-6 bg-gray-100 rounded-lg p-1">
+                          {[
+                            { id: "all", label: "All" },
+                            { id: "active", label: "Current" },
+                            { id: "completed", label: "Completed" },
+                            { id: "upcoming", label: "Upcoming" }
+                          ].map((filter) => (
+                            <button
+                              key={filter.id}
+                              onClick={() => setBatchFilter(filter.id)}
+                              className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 ${
+                                batchFilter === filter.id
+                                  ? "bg-white text-gray-900 shadow-sm"
+                                  : "text-gray-600 hover:text-gray-900"
+                              }`}
+                            >
+                              {filter.label}
+                            </button>
+                          ))}
+                        </div>
+                      </CardContent>
+                                            <CardContent className="pt-0">
+              {(batchFilter === "all" && student.batches && student.batches.length > 0) || 
+               (batchFilter !== "all" && batchData.filteredBatches.length > 0) ? (
+                <div className="space-y-6 sm:space-y-8">
                             <AnimatePresence>
-                              {/* Upcoming Batches */}
-                              {student.batches.filter((batch) => batch.category === "upcoming").length > 0 && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: 20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -20 }}
-                                >
-                      <h3 className="font-bold text-lg text-blue-700 mb-4 flex items-center">
-                                    <Clock className="w-5 h-5 mr-2" />
-                        Upcoming Batches
-                      </h3>
-                      <div className="space-y-4">
-                        {student.batches
-                                      .filter((batch) => batch.category === "upcoming")
-                                      .map((batch, index) => (
-                                        <motion.div
-                                          key={batch.id}
-                                          className="border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-6 hover:shadow-lg transition-all duration-300"
-                                          initial={{ opacity: 0, x: -20 }}
-                                          animate={{ opacity: 1, x: 0 }}
-                                          transition={{ delay: index * 0.1 }}
-                                          whileHover={{ scale: 1.01 }}
-                                        >
-                                          <div className="flex flex-col lg:flex-row justify-between lg:items-center">
-                                <div>
-                                              <h3 className="font-bold text-xl text-slate-800 mb-2">{batch.batchName}</h3>
-                                              <p className="text-slate-600 mb-3">Course: {batch.courseName}</p>
-                                              <div className="flex items-center text-sm text-slate-600">
-                                                <Calendar className="w-4 h-4 mr-2 text-slate-400" />
-                                                Starts: {new Date(batch.startDate).toLocaleDateString()}
-                                  </div>
-                                </div>
-                                            <div className="mt-4 lg:mt-0 flex flex-col items-start lg:items-end space-y-2">
-                                              <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
-                                    Upcoming
-                                              </Badge>
-                                              <Badge variant="outline">
-                                    Enrolled: {new Date(batch.enrollmentDate).toLocaleDateString()}
-                                              </Badge>
-                                </div>
-                              </div>
-                                        </motion.div>
-                          ))}
-                      </div>
-                                </motion.div>
+                              {batchFilter === "all" && (
+                                <>
+                                  {/* Upcoming Batches */}
+                                  {student.batches.filter((batch) => batch.category === "upcoming").length > 0 && (
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 20 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: -20 }}
+                                    >
+                          <h3 className="font-bold text-lg text-blue-700 mb-4 flex items-center">
+                                        <Clock className="w-5 h-5 mr-2" />
+                            Upcoming Batches
+                          </h3>
+                                            <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
+                                {student.batches
+                                          .filter((batch) => batch.category === "upcoming")
+                                          .map((batch, index) => (
+                                            <BatchCard 
+                                              key={batch.id}
+                                              batch={batch} 
+                                              index={index}
+                                              shouldAnimate={shouldAnimate}
+                                              onClick={() => handleBatchClick(batch)}
+                                            />
+                              ))}
+                            </div>
+                                    </motion.div>
+                                  )}
+
+                                  {/* Active Batches */}
+                                  {student.batches.filter((batch) => batch.category === "active").length > 0 && (
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 20 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: -20 }}
+                                    >
+                          <h3 className="font-bold text-lg text-green-700 mb-4 flex items-center">
+                                        <Users className="w-5 h-5 mr-2" />
+                            Current Active Batches
+                          </h3>
+                                            <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
+                                {student.batches
+                                          .filter((batch) => batch.category === "active")
+                                          .map((batch, index) => (
+                                            <BatchCard 
+                                              key={batch.id}
+                                              batch={batch} 
+                                              index={index}
+                                              shouldAnimate={shouldAnimate}
+                                              onClick={() => handleBatchClick(batch)}
+                                            />
+                              ))}
+                            </div>
+                                    </motion.div>
+                                  )}
+
+                                  {/* Completed Batches */}
+                                  {student.batches.filter((batch) => batch.category === "completed").length > 0 && (
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 20 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: -20 }}
+                                    >
+                                      <h3 className="font-bold text-lg text-slate-700 mb-4 flex items-center">
+                                        <Award className="w-5 h-5 mr-2" />
+                                        Completed Batches
+                          </h3>
+                                            <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
+                                {student.batches
+                                          .filter((batch) => batch.category === "completed")
+                                          .map((batch, index) => (
+                                            <BatchCard 
+                                              key={batch.id}
+                                              batch={batch} 
+                                              index={index}
+                                              shouldAnimate={shouldAnimate}
+                                              onClick={() => handleBatchClick(batch)}
+                                            />
+                              ))}
+                            </div>
+                                    </motion.div>
+                      )}
+                                </>
                               )}
 
-                              {/* Active Batches */}
-                              {student.batches.filter((batch) => batch.category === "active").length > 0 && (
+                              {/* Filtered Batches */}
+                              {batchFilter !== "all" && (
                                 <motion.div
                                   initial={{ opacity: 0, y: 20 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   exit={{ opacity: 0, y: -20 }}
                                 >
-                      <h3 className="font-bold text-lg text-green-700 mb-4 flex items-center">
-                                    <Users className="w-5 h-5 mr-2" />
-                        Current Active Batches
-                      </h3>
-                      <div className="space-y-4">
-                        {student.batches
-                                      .filter((batch) => batch.category === "active")
-                                      .map((batch, index) => (
-                                        <motion.div
-                                          key={batch.id}
-                                          className="border-l-4 border-green-500 bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-6 hover:shadow-lg transition-all duration-300"
-                                          initial={{ opacity: 0, x: -20 }}
-                                          animate={{ opacity: 1, x: 0 }}
-                                          transition={{ delay: index * 0.1 }}
-                                          whileHover={{ scale: 1.01 }}
-                                        >
-                                          <div className="flex flex-col lg:flex-row justify-between lg:items-center mb-4">
-                                <div>
-                                              <h3 className="font-bold text-xl text-slate-800 mb-2">{batch.batchName}</h3>
-                                              <p className="text-slate-600 mb-3">Course: {batch.courseName}</p>
-                                              <div className="flex items-center text-sm text-slate-600">
-                                                <Calendar className="w-4 h-4 mr-2 text-slate-400" />
-                                                {new Date(batch.startDate).toLocaleDateString()} -{" "}
-                                                {new Date(batch.endDate).toLocaleDateString()}
+                                  <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
+                                    {batchData.filteredBatches.map((batch, index) => (
+                                      <BatchCard 
+                                        key={batch.id}
+                                        batch={batch} 
+                                        index={index}
+                                        shouldAnimate={shouldAnimate}
+                                        onClick={() => handleBatchClick(batch)}
+                                      />
+                                    ))}
                                   </div>
-                                </div>
-                                            <Badge className="bg-green-100 text-green-800 hover:bg-green-200 mt-4 lg:mt-0">
-                                    Active Now
-                                            </Badge>
-                              </div>
-                              
-                                          {batch.attendancePercentage && (
-                                            <div className="bg-white/60 p-4 rounded-lg">
-                                              <div className="flex justify-between items-center mb-2">
-                                                <span className="text-sm font-medium text-slate-700">
-                                                  Attendance Progress
-                                                </span>
-                                                <span className="text-sm font-bold text-slate-800">
-                                                  {batch.attendancePercentage}%
-                                                </span>
-                                </div>
-                                              <Progress value={batch.attendancePercentage} className="h-3" />
-                                              <p className="text-xs text-slate-500 mt-1">
-                                                {batch.attendancePercentage >= 75
-                                                  ? "Excellent attendance!"
-                                      : batch.attendancePercentage >= 50
-                                                    ? "Good attendance"
-                                                    : "Attendance needs improvement"}
-                                              </p>
-                                  </div>
-                                          )}
-                                        </motion.div>
-                          ))}
-                      </div>
                                 </motion.div>
                               )}
-
-                              {/* Completed Batches */}
-                              {student.batches.filter((batch) => batch.category === "completed").length > 0 && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: 20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -20 }}
-                                >
-                                  <h3 className="font-bold text-lg text-slate-700 mb-4 flex items-center">
-                                    <Award className="w-5 h-5 mr-2" />
-                                    Completed Batches
-                      </h3>
-                      <div className="space-y-4">
-                        {student.batches
-                                      .filter((batch) => batch.category === "completed")
-                                      .map((batch, index) => (
-                                        <motion.div
-                                          key={batch.id}
-                                          className="border-l-4 border-slate-400 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg p-6 hover:shadow-lg transition-all duration-300"
-                                          initial={{ opacity: 0, x: -20 }}
-                                          animate={{ opacity: 1, x: 0 }}
-                                          transition={{ delay: index * 0.1 }}
-                                          whileHover={{ scale: 1.01 }}
-                                        >
-                                          <div className="flex flex-col lg:flex-row justify-between lg:items-center">
-                                <div>
-                                              <h3 className="font-bold text-xl text-slate-800 mb-2">{batch.batchName}</h3>
-                                              <p className="text-slate-600 mb-3">Course: {batch.courseName}</p>
-                                              <div className="flex items-center text-sm text-slate-600">
-                                                <Calendar className="w-4 h-4 mr-2 text-slate-400" />
-                                                {new Date(batch.startDate).toLocaleDateString()} -{" "}
-                                                {new Date(batch.endDate).toLocaleDateString()}
-                                  </div>
-                                </div>
-                                            <div className="mt-4 lg:mt-0 flex flex-col items-start lg:items-end space-y-2">
-                                              <Badge variant="secondary">Completed</Badge>
-                                              <Badge variant="outline">
-                                    Final Attendance: {batch.attendancePercentage}%
-                                              </Badge>
-                                </div>
-                              </div>
-                                        </motion.div>
-                          ))}
-                      </div>
-                                </motion.div>
-                  )}
                             </AnimatePresence>
                 </div>
               ) : (
@@ -1299,7 +1493,11 @@ const StudentDashboard = () => {
                             >
                               <Calendar className="w-16 h-16 text-slate-300 mx-auto mb-4" />
                             </motion.div>
-                            <p className="text-slate-500 text-lg">You are not assigned to any batches yet.</p>
+                            <p className="text-slate-500 text-lg">
+                              {batchFilter === "all" 
+                                ? "You are not assigned to any batches yet." 
+                                : `No ${batchFilter} batches found.`}
+                            </p>
                 </div>
               )}
                       </CardContent>

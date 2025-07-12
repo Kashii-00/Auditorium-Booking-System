@@ -399,16 +399,38 @@ router.get('/profile', lecturerAuthMiddleware, async (req, res) => {
     
     const lecturer = lecturers[0];
     
-    // Get courses the lecturer is teaching
+    // Get courses the lecturer is teaching with student counts
     const coursesQuery = `
       SELECT c.id, c.courseName, c.courseId, c.stream, c.status,
-             lc.primary_course, lc.module, lc.assignment_date
+             lc.primary_course, lc.module, lc.assignment_date,
+             COALESCE(course_stats.total_students, 0) as student_count,
+             COALESCE(course_stats.avg_completion, 0) as completion_percentage
       FROM lecturer_courses lc
       JOIN courses c ON lc.course_id = c.id
+      LEFT JOIN (
+        SELECT 
+          b.course_id,
+          SUM(COALESCE(sb_count.student_count, 0)) as total_students,
+          AVG(CASE 
+            WHEN DATEDIFF(NOW(), b.start_date) <= 0 THEN 0
+            WHEN DATEDIFF(b.end_date, NOW()) <= 0 THEN 100
+            ELSE ROUND((DATEDIFF(NOW(), b.start_date) / DATEDIFF(b.end_date, b.start_date)) * 100)
+          END) as avg_completion
+        FROM batches b
+        JOIN lecturer_batches lb ON b.id = lb.batch_id
+        LEFT JOIN (
+          SELECT batch_id, COUNT(*) as student_count
+          FROM student_batches 
+          WHERE status = 'Active'
+          GROUP BY batch_id
+        ) sb_count ON b.id = sb_count.batch_id
+        WHERE lb.lecturer_id = ? AND lb.status IN ('Assigned', 'Active')
+        GROUP BY b.course_id
+      ) course_stats ON course_stats.course_id = c.id
       WHERE lc.lecturer_id = ? AND lc.status = 'Active'
     `;
     
-    const courses = await db.queryPromise(coursesQuery, [lecturerId]);
+    const courses = await db.queryPromise(coursesQuery, [lecturerId, lecturerId]);
     
     // Get batches the lecturer is assigned to
     const batchesQuery = `
@@ -465,7 +487,11 @@ router.get('/profile', lecturerAuthMiddleware, async (req, res) => {
         primary_course: course.primary_course === 1,
         module: course.module,
         assignment_date: course.assignment_date,
-        status: course.status
+        status: course.status,
+        student_count: course.student_count || 0,
+        enrolledStudents: course.student_count || 0, // Add alias for frontend compatibility
+        completion_percentage: Math.round(course.completion_percentage || 0),
+        progress: Math.round(course.completion_percentage || 0) // Add alias for frontend compatibility
       })),
       batches: batches.map(batch => ({
         id: batch.id,
@@ -500,7 +526,7 @@ router.get('/students', lecturerAuthMiddleware, async (req, res) => {
     const { batchId, courseId } = req.query;
     
     let query = `
-      SELECT DISTINCT s.id, s.full_name, s.email, s.phone, s.id_number,
+      SELECT DISTINCT s.id, s.full_name, s.email, s.emergency_contact_number as phone, s.id_number,
              sb.batch_id, b.batch_name, c.courseName,
              sb.attendance_percentage, sb.status as enrollment_status
       FROM students s
