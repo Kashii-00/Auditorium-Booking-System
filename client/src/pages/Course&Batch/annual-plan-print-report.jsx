@@ -308,7 +308,7 @@ const AnnualPlanPrintReport = () => {
                   <div className="flex items-center justify-between flex-wrap gap-4">
                     <div>
                       <CardTitle className="text-2xl font-bold text-gray-900 print:text-xl">
-                        {batch.batch_name}
+                        {batch.batch_code}
                       </CardTitle>
                       <div className="flex items-center gap-4 mt-2 flex-wrap">
                         <div className="flex items-center gap-2 text-gray-600">

@@ -185,9 +185,13 @@ const StudentProfile = () => {
                   </Badge>
                   <Separator className="my-4" />
                   <div className="space-y-2 text-left">
+                    <div className="flex items-center text-sm text-slate-600 bg-slate-50 p-2 rounded">
+                      <CreditCard className="w-4 h-4 mr-2 text-slate-600" />
+                      <span className="font-semibold text-slate-700">Student ID: {student?.id}</span>
+                    </div>
                     <div className="flex items-center text-sm text-slate-600">
                       <CreditCard className="w-4 h-4 mr-2" />
-                      ID: {student?.id_number}
+                      NIC/Passport: {student?.id_number}
                     </div>
                     <div className="flex items-center text-sm text-slate-600">
                       <Shield className="w-4 h-4 mr-2" />

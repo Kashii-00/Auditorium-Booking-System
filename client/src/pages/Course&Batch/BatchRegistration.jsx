@@ -223,7 +223,7 @@ const BatchCard = memo(({ batch, isSelected, onSelect, onEdit, onDelete, onView 
             />
             <div className="flex-1">
               <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
-                {batch.batch_name}
+                {batch.batch_code}
               </h3>
               <BatchStatus batch={batch} />
             </div>

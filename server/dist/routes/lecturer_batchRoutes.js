@@ -99,7 +99,7 @@ router.get('/batches/:lecturerId', lecturerAuthMiddleware, async (req, res) => {
     }
     let query = `
       SELECT 
-        b.id, b.batch_name, b.start_date, b.end_date, b.location, b.capacity,
+        b.id, b.batch_name,b.batch_code,b.start_date, b.end_date, b.location, b.capacity,
         b.materials_count, b.assignments_count, b.announcements_count,
         b.completion_percentage, b.description,
         c.id as course_id, c.courseName, c.courseId, c.stream,

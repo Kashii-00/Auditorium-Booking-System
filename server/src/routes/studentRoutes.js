@@ -11,6 +11,7 @@ const moment = require('moment');
 const bcrypt = require('bcryptjs');
 const { sendEmail } = require('../utils/emailService');
 const crypto = require('crypto');
+const studentIdGenerator = require('../services/studentIdGenerator');
 
 // Ensure uploads directory exists
 const baseUploadDir = path.join(__dirname, '../../uploads/students');
@@ -141,13 +142,19 @@ router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
     ];
     const { insertId } = await conn.queryPromise(sqlIns, vals);
 
-    // enroll courses
+    // enroll courses (no student codes yet - those are assigned when student joins a batch)
     for (let i=0; i<courseIds.length; i++) {
+      const courseId = courseIds[i];
+      const isPrimary = i === 0; // First course is primary
+      
+      // Insert course enrollment WITHOUT student code
       await conn.queryPromise(
         `INSERT INTO student_courses (student_id,course_id,enrollment_date,primary_course,status)
          VALUES (?,?,CURDATE(),?,?)`,
-        [insertId, courseIds[i], i===0?1:0, 'Active']
+        [insertId, courseId, isPrimary ? 1 : 0, 'Active']
       );
+      
+      console.log(`Enrolled student in course ${courseId}`);
     }
 
     // Create student login credentials with temporary password
@@ -174,10 +181,12 @@ router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
             <p>Dear ${data.full_name},</p>
             <p>Your student account has been created successfully. You can now access the student portal using the following credentials:</p>
             <div style="background-color: #f8fafc; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <p><strong>Student ID:</strong> ${insertId}</p>
               <p><strong>Email:</strong> ${data.email}</p>
               <p><strong>Temporary Password:</strong> ${tempPassword}</p>
               <p style="color: #ef4444; font-size: 14px;">Important: You will be required to change this password on your first login.</p>
             </div>
+            <p>Your Primary Student Code <strong>${primaryStudentCode}</strong> will be your unique identifier for your primary course. You will receive additional codes for any additional courses you enroll in.</p>
             <p>You can access the student portal at: <a href="http://localhost:5003/student-login" style="color: #3b82f6;">Student Portal</a></p>
             <p>If you have any questions or need assistance, please contact our support team.</p>
             <p>Thank you,<br>Maritime Training Center Team</p>
@@ -195,7 +204,12 @@ router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
       // Continue despite email failure - don't fail the registration
     }
 
-    res.status(201).json({ success:true, studentId: insertId });
+    console.log(`Student registered successfully with ID: ${insertId}`);
+    res.status(201).json({ 
+      success: true, 
+      studentId: insertId, 
+      message: `Student registered successfully with ID: ${insertId}` 
+    });
   } catch (err) {
     if (conn) {
       try {

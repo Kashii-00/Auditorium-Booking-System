@@ -48,6 +48,13 @@ const Sidebar = ({ user, onLogout }) => {
     )
       return "crbooking"
 
+      if (
+        pathname.startsWith("/coursecost") ||
+        pathname.startsWith("/PaymentTable") ||
+        pathname.startsWith("/editpanel")
+      )
+        return "finance"
+
     if (pathname.startsWith("/users")) return "users"
     return "audi" // default
   }
@@ -67,32 +74,7 @@ const Sidebar = ({ user, onLogout }) => {
 
   const TIMEOUT_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 
-  // Function to determine the default section and navigate to the first accessible page
-  const getDefaultSectionAndNavigate = () => {
-    if (!user?.role || user.role.length === 0) return // Wait until roles are loaded
-    if (hasRole("SuperAdmin") || hasRole("calendar_access")) {
-      if (hasRole("calendar_access")) navigate("/calendar") // Navigate only if the user has access
-      return "audi"
-    }
-    if (hasRole("bus_access") || hasRole("busbookings_access")) {
-      navigate(hasRole("bus_access") ? "/bus" : "/busbookings")
-      return "bus"
-    }
-    if (hasRole("course_registration_access")) {
-      navigate("/courseregistration")
-      return "Course"
-    }
-    if (hasRole("lecturer_management_access")) {
-      navigate("/lecturer-registration")
-      return "Lecturers"
-    }
-    if (hasRole("class_request_access")) {
-      navigate("/ClassBooking")
-      return "ClassRoom"
-    }
-    navigate("/access-denied") // If no access, navigate to Access Denied
-    return "audi" // Default to 'audi'
-  }
+
 
   // Set the default section and navigate to the first accessible page
   useEffect(() => {
@@ -381,6 +363,14 @@ const Sidebar = ({ user, onLogout }) => {
       return null
     },
     ClassRoom: () => (hasRole("SuperAdmin") || hasRole("class_request_access") ? "/ClassBooking" : null),
+
+    finance: () => {
+      if (hasRole("SuperAdmin") || hasRole("finance_manager") || hasRole("SU_finance_access"))
+        return "/coursecost"
+      if (hasRole("finance_manager")) return "/editpanel"
+      return null
+    },
+    
   }
 
   // Handle dropdown change: navigate to first link if exists
@@ -409,6 +399,8 @@ const Sidebar = ({ user, onLogout }) => {
       { value: "Lecturers", label: "ʟᴇᴄᴛᴜʀᴇʀꜱ ᴍᴀɴᴀɡᴇᴍᴇɴᴛ", roles: ["lecturer_management_access"] },
       { value: "crbooking", label: "ᴄʟᴀꜱꜱʀᴏᴏᴍ ʀᴇꜱᴏᴜʀᴄᴇ ʜᴜʙ", roles: ["cb_Admin_access", "cb_SU_access"] },
       { value: "users", label: "ᴀᴅᴍɪɴɪꜱᴛʀᴀᴛɪᴏɴ", roles: ["SuperAdmin"] },
+
+      { value: "finance", label: "ꜰɪɴᴀɴᴄᴇ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ", roles: ["finance_manager", "SU_finance_access"] },
     ]
 
     // Ensure SuperAdmin has access to all options
@@ -509,6 +501,40 @@ const Sidebar = ({ user, onLogout }) => {
               <span className="sidebar-text">ᴀᴄᴄᴇꜱꜱ ᴄᴏɴᴛʂᴏʀʟ</span>
             </Link>
           )}
+
+          {selectedSection === "finance" && (
+            <>
+              {(hasRole("SuperAdmin") || hasRole("finance_manager") || hasRole("SU_finance_access")) && (
+                <Link
+                  to="/coursecost"
+                  className={`sidebar-link ${location.pathname === "/coursecost" ? "active" : ""}`}
+                >
+                  <img src={List || "/placeholder.svg"} alt="Finances Form" className="sidebar-icon" />
+                  <span className="sidebar-text">Finances Form</span>
+                </Link>
+              )}
+              {(hasRole("SuperAdmin") || hasRole("finance_manager") || hasRole("SU_finance_access")) && (
+                <Link
+                  to="/PaymentTable"
+                  className={`sidebar-link ${location.pathname === "/PaymentTable" ? "active" : ""}`}
+                >
+                  <img src={List || "/placeholder.svg"} alt="Finance Records Table" className="sidebar-icon" />
+                  <span className="sidebar-text">Finances Records Table</span>
+                </Link>
+              )}
+              {(hasRole("SuperAdmin") || hasRole("finance_manager")) && (
+                <Link
+                  to="/editpanel"
+                  className={`sidebar-link ${location.pathname === "/editpanel" ? "active" : ""}`}
+                >
+                  <img src={List || "/placeholder.svg"} alt="Finance Rates Table" className="sidebar-icon" />
+                  <span className="sidebar-text">Finances Rates Table</span>
+                </Link>
+              )}
+            </>
+          )}
+
+
           {selectedSection === "Course" && (
             <>
               {(hasRole("SuperAdmin") || hasRole("course_registration_access")) && (

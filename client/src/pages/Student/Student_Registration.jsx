@@ -185,7 +185,11 @@ const StudentRow = memo(({ student, onView, onEdit, onDelete, confirmDeleteId, l
           </Avatar>
           <div>
             <div className="font-bold text-slate-900">{student.full_name}</div>
-            <div className="text-sm text-slate-500 font-semibold">ID: {student.id}</div>
+            <div className="text-sm text-slate-500 font-semibold">
+              <span className="text-slate-400">
+                ID: {student.id}
+              </span>
+            </div>
           </div>
         </div>
       </td>
@@ -507,6 +511,9 @@ export default function StudentManagementSystem() {
   const [sortField, setSortField] = useState("full_name")
   const [sortDirection, setSortDirection] = useState("asc")
   const [currentPage, setCurrentPage] = useState(1)
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false)
+  const [searchSuggestions, setSearchSuggestions] = useState([])
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1)
   // Change studentsPerPage from 10 to 2
   const recordsPerPageOptions = [2, 5, 10, 25, 50]
   const [studentsPerPage, setStudentsPerPage] = useState(2)
@@ -517,6 +524,8 @@ export default function StudentManagementSystem() {
   const courseOptionsRef = useRef(null)
   const courseInputRef = useRef(null)
   const tableRef = useRef(null)
+  const searchInputRef = useRef(null)
+  const searchSuggestionsRef = useRef(null)
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
@@ -616,9 +625,10 @@ export default function StudentManagementSystem() {
     fetchStudents()
   }, [fetchCourses, fetchStudents])
 
-  // Click outside to close course dropdown
+  // Click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Close course dropdown
       if (
         courseOptionsRef.current &&
         !courseOptionsRef.current.contains(event.target) &&
@@ -626,6 +636,16 @@ export default function StudentManagementSystem() {
         !courseInputRef.current.contains(event.target)
       ) {
         setShowCourseOptions(false)
+      }
+      
+      // Close search suggestions
+      if (
+        searchSuggestionsRef.current &&
+        !searchSuggestionsRef.current.contains(event.target) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target)
+      ) {
+        setShowSearchSuggestions(false)
       }
     }
 
@@ -1016,8 +1036,17 @@ export default function StudentManagementSystem() {
           })
 
           if (response.success) {
-            setNotificationMessage("Student registered successfully!")
+            const studentMessage = response.studentId 
+              ? `Student registered successfully!\nStudent ID: ${response.studentId}\n\nStudent will receive a formatted code when assigned to a batch.`
+              : "Student registered successfully!";
+            
+            setNotificationMessage(studentMessage)
             setShowSuccessNotification(true)
+            
+            // Also log the student ID for easy copying
+            if (response.studentId) {
+              console.log(`🎓 New Student ID: ${response.studentId}`);
+            }
           }
         }
 
@@ -1104,6 +1133,123 @@ export default function StudentManagementSystem() {
       return sortDirection === "asc" ? a[sortField] - b[sortField] : b[sortField] - a[sortField]
     })
   }, [students, searchTerm, sortField, sortDirection])
+
+  // Generate search suggestions
+  const generateSearchSuggestions = useCallback((term) => {
+    if (!term || term.length < 2) return []
+    
+    const suggestions = []
+    const lowerTerm = term.toLowerCase()
+    
+    students.forEach(student => {
+
+      
+      // Add name suggestions
+      if (student.full_name && student.full_name.toLowerCase().includes(lowerTerm)) {
+        suggestions.push({
+          type: 'name',
+          value: student.full_name,
+          label: `Name: ${student.full_name}`,
+          student: student,
+          icon: 'user'
+        })
+      }
+      
+      // Add email suggestions
+      if (student.email && student.email.toLowerCase().includes(lowerTerm)) {
+        suggestions.push({
+          type: 'email',
+          value: student.email,
+          label: `Email: ${student.email}`,
+          student: student,
+          icon: 'mail'
+        })
+      }
+      
+      // Add ID number suggestions
+      if (student.id_number && student.id_number.toLowerCase().includes(lowerTerm)) {
+        suggestions.push({
+          type: 'id_number',
+          value: student.id_number,
+          label: `${student.identification_type}: ${student.id_number}`,
+          student: student,
+          icon: 'card'
+        })
+      }
+    })
+    
+    // Remove duplicates and limit to 8 suggestions
+    const uniqueSuggestions = suggestions.filter((suggestion, index, self) => 
+      index === self.findIndex(s => s.value === suggestion.value && s.type === suggestion.type)
+    )
+    
+    return uniqueSuggestions.slice(0, 8)
+  }, [students])
+
+  // Handle search input change with suggestions
+  const handleSearchChange = useCallback((e) => {
+    const value = e.target.value
+    setSearchTerm(value)
+    setSelectedSuggestionIndex(-1) // Reset selection when typing
+    
+    if (value.length >= 2) {
+      const suggestions = generateSearchSuggestions(value)
+      setSearchSuggestions(suggestions)
+      setShowSearchSuggestions(suggestions.length > 0)
+    } else {
+      setShowSearchSuggestions(false)
+      setSearchSuggestions([])
+    }
+  }, [generateSearchSuggestions])
+
+  // Handle suggestion selection
+  const handleSuggestionSelect = useCallback((suggestion) => {
+    setSearchTerm(suggestion.value)
+    setShowSearchSuggestions(false)
+    setSearchSuggestions([])
+    setSelectedSuggestionIndex(-1)
+    setCurrentPage(1)
+  }, [])
+
+  // Handle search input focus
+  const handleSearchFocus = useCallback(() => {
+    if (searchTerm.length >= 2) {
+      const suggestions = generateSearchSuggestions(searchTerm)
+      setSearchSuggestions(suggestions)
+      setShowSearchSuggestions(suggestions.length > 0)
+      setSelectedSuggestionIndex(-1)
+    }
+  }, [searchTerm, generateSearchSuggestions])
+
+  // Handle keyboard navigation for search suggestions
+  const handleSearchKeyDown = useCallback((e) => {
+    if (!showSearchSuggestions || searchSuggestions.length === 0) return
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        setSelectedSuggestionIndex(prev => 
+          prev < searchSuggestions.length - 1 ? prev + 1 : 0
+        )
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        setSelectedSuggestionIndex(prev => 
+          prev > 0 ? prev - 1 : searchSuggestions.length - 1
+        )
+        break
+      case 'Enter':
+        e.preventDefault()
+        if (selectedSuggestionIndex >= 0) {
+          handleSuggestionSelect(searchSuggestions[selectedSuggestionIndex])
+        }
+        break
+      case 'Escape':
+        setShowSearchSuggestions(false)
+        setSelectedSuggestionIndex(-1)
+        break
+    }
+  }, [showSearchSuggestions, searchSuggestions, selectedSuggestionIndex, handleSuggestionSelect])
 
   // Pagination
   const indexOfLastStudent = currentPage * studentsPerPage
@@ -1935,13 +2081,89 @@ export default function StudentManagementSystem() {
               </CardTitle>
               <div className="flex items-center gap-3">
                 <div className="relative flex-1 lg:w-80">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 z-10" />
                   <Input
-                    placeholder="Search students by name, email, ID, or courses..."
+                    ref={searchInputRef}
+                    placeholder="Search by name, email, ID number, or courses..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 border-2 border-slate-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl font-semibold"
+                    onChange={handleSearchChange}
+                    onFocus={handleSearchFocus}
+                    onKeyDown={handleSearchKeyDown}
+                    className="pl-10 pr-10 border-2 border-slate-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl font-semibold"
+                    autoComplete="off"
                   />
+                  {searchTerm && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSearchTerm("")
+                        setShowSearchSuggestions(false)
+                        setSearchSuggestions([])
+                        setSelectedSuggestionIndex(-1)
+                        setCurrentPage(1)
+                      }}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-slate-100 rounded-full"
+                    >
+                      <X className="w-4 h-4 text-slate-400" />
+                    </Button>
+                  )}
+                  
+                  {/* Search Suggestions Dropdown */}
+                  {showSearchSuggestions && searchSuggestions.length > 0 && (
+                    <div
+                      ref={searchSuggestionsRef}
+                      className="absolute z-50 w-full mt-1 bg-white/95 backdrop-blur-xl border-2 border-slate-200 rounded-xl shadow-2xl max-h-64 overflow-auto"
+                    >
+                      <div className="p-2">
+                        <div className="text-xs text-slate-500 font-semibold mb-2 px-2">Search Suggestions</div>
+                        {searchSuggestions.map((suggestion, index) => (
+                          <div
+                            key={`${suggestion.type}-${suggestion.value}-${index}`}
+                            className={cn(
+                              "flex items-center gap-3 p-3 cursor-pointer rounded-lg transition-all duration-200",
+                              index === selectedSuggestionIndex
+                                ? "bg-gradient-to-r from-blue-100 to-indigo-100 border-2 border-blue-300"
+                                : "hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50"
+                            )}
+                            onClick={() => handleSuggestionSelect(suggestion)}
+                          >
+                            <div className="flex-shrink-0">
+                              {suggestion.icon === 'id' && <CreditCard className="w-4 h-4 text-blue-600" />}
+                              {suggestion.icon === 'user' && <User className="w-4 h-4 text-green-600" />}
+                              {suggestion.icon === 'mail' && <Mail className="w-4 h-4 text-purple-600" />}
+                              {suggestion.icon === 'card' && <CreditCard className="w-4 h-4 text-orange-600" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-semibold text-slate-800 truncate">
+                                {suggestion.label}
+                              </div>
+                              <div className="text-xs text-slate-500 truncate">
+                                {suggestion.student.full_name}
+                                {suggestion.student.primary_student_code && ` • ${suggestion.student.primary_student_code}`}
+                              </div>
+                            </div>
+                            <div className="flex-shrink-0">
+                              <div className={cn(
+                                "w-2 h-2 rounded-full",
+                                suggestion.type === 'student_code' ? "bg-blue-500" :
+                                suggestion.type === 'name' ? "bg-green-500" :
+                                suggestion.type === 'email' ? "bg-purple-500" : "bg-orange-500"
+                              )} />
+                                                         </div>
+                           </div>
+                         ))}
+                         
+                         {/* Keyboard Navigation Hint */}
+                         <div className="border-t border-slate-100 px-3 py-2 mt-1">
+                           <div className="text-xs text-slate-400 font-medium">
+                             Use ↑↓ to navigate, Enter to select, Esc to close
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   )}
                 </div>
                 <Button
                   variant="outline"

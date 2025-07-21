@@ -584,9 +584,9 @@ const BatchDetail = () => {
           <div className="min-h-screen pt-20 sm:pt-24 pb-8">
             <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
               <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent mx-auto mb-4"></div>
-                  <p className="text-emerald-600 font-medium">Loading batch details...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-emerald-600 font-medium">Loading batch details...</p>
                 </div>
               </div>
             </div>
@@ -639,9 +639,9 @@ const BatchDetail = () => {
           <div className="min-h-screen pt-20 sm:pt-24 pb-8">
             <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
               <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="text-center">
-                  <div className="text-red-500 text-6xl mb-4">⚠️</div>
-                  <p className="text-red-600 font-medium">{error}</p>
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <p className="text-red-600 font-medium">{error}</p>
                   <Button 
                     onClick={() => navigate('/lecturer-dashboard', { state: { activeTab: 'batches' } })}
                     className="mt-4 bg-emerald-600 hover:bg-emerald-700"
@@ -700,9 +700,9 @@ const BatchDetail = () => {
           <div className="min-h-screen pt-20 sm:pt-24 pb-8">
             <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
               <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="text-center">
-                  <div className="text-gray-500 text-6xl mb-4">🚫</div>
-                  <p className="text-gray-600 font-medium">Batch not found</p>
+        <div className="text-center">
+          <div className="text-gray-500 text-6xl mb-4">🚫</div>
+          <p className="text-gray-600 font-medium">Batch not found</p>
                 </div>
               </div>
             </div>
@@ -762,8 +762,8 @@ const BatchDetail = () => {
                     variant="ghost"
                     onClick={() => navigate('/lecturer-dashboard', { state: { activeTab: 'batches' } })}
                     className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 w-fit"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
                     Back to Batches
                   </Button>
                 </div>
@@ -772,10 +772,10 @@ const BatchDetail = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
                       <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
-                        {batch.batch_name}
+                        {batch.batch_code}
                       </CardTitle>
                       <Badge className={`${getStatusColor(batch.status)} text-xs sm:text-sm px-2 sm:px-3 py-1 w-fit`}>
-                        {batch.status?.charAt(0).toUpperCase() + batch.status?.slice(1)}
+                    {batch.status?.charAt(0).toUpperCase() + batch.status?.slice(1)}
                       </Badge>
                     </div>
                     <p className="text-gray-600 mb-3 text-base sm:text-lg truncate">{batch.courseName}</p>
@@ -783,32 +783,32 @@ const BatchDetail = () => {
                       <span className="flex items-center">
                         <Calendar className="w-4 h-4 mr-1 flex-shrink-0" />
                         <span className="truncate">
-                          {formatDate(batch.start_date)} - {formatDate(batch.end_date)}
-                        </span>
+                    {formatDate(batch.start_date)} - {formatDate(batch.end_date)}
+                  </span>
                       </span>
                       <span className="flex items-center">
                         <Users className="w-4 h-4 mr-1 flex-shrink-0" />
-                        {batch.stats?.students_count || 0} Students
-                      </span>
-                    </div>
-                  </div>
+                    {batch.stats?.students_count || 0} Students
+                  </span>
+                </div>
+              </div>
 
                   {/* Stats Badges - Responsive */}
                   <div className="flex flex-col sm:flex-row lg:flex-row gap-2 sm:gap-3 lg:ml-8">
                     <div className="bg-emerald-100 text-emerald-800 rounded-lg px-3 sm:px-4 py-2 text-center min-w-[70px] sm:min-w-[80px]">
                       <div className="text-lg sm:text-xl lg:text-2xl font-bold">{batch.stats?.materials_count || 2}</div>
                       <div className="text-xs font-medium">Materials</div>
-                    </div>
+                  </div>
                     <div className="bg-blue-100 text-blue-800 rounded-lg px-3 sm:px-4 py-2 text-center min-w-[70px] sm:min-w-[80px]">
                       <div className="text-lg sm:text-xl lg:text-2xl font-bold">{batch.stats?.assignments_count || 1}</div>
                       <div className="text-xs font-medium">Assignments</div>
-                    </div>
+                  </div>
                     <div className="bg-purple-100 text-purple-800 rounded-lg px-3 sm:px-4 py-2 text-center min-w-[70px] sm:min-w-[80px]">
                       <div className="text-lg sm:text-xl lg:text-2xl font-bold">{batch.stats?.announcements_count || 1}</div>
                       <div className="text-xs font-medium">Announcements</div>
-                    </div>
                   </div>
                 </div>
+              </div>
               </CardHeader>
             </Card>
 
@@ -820,45 +820,45 @@ const BatchDetail = () => {
                 <nav className="relative">
                   <div className="flex justify-center">
                     <div className="flex space-x-4 sm:space-x-6 lg:space-x-8 overflow-x-auto scrollbar-hide min-w-0 max-w-full">
-                      {tabs.map((tab) => {
-                        const Icon = tab.icon;
-                        return (
-                          <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center space-x-1 sm:space-x-2 py-3 px-2 sm:px-3 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap min-w-0 ${
-                              activeTab === tab.id
-                                ? 'border-emerald-500 text-emerald-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                            }`}
-                          >
+                      activeTab === tab.id
+                        ? 'border-emerald-500 text-emerald-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
                             <Icon className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                             <span className="truncate">{tab.label}</span>
-                          </button>
-                        );
-                      })}
+                  </button>
+                );
+              })}
                     </div>
                   </div>
-                </nav>
-              </div>
+            </nav>
+          </div>
 
               <CardContent className="p-3 sm:p-6">
                 {/* Overview Tab Content */}
-                {activeTab === 'overview' && (
+              {activeTab === 'overview' && (
                   <div className="space-y-4 sm:space-y-6">
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                       className="space-y-4 sm:space-y-6"
-                    >
+                >
                       {/* Top Row: Batch Information and Progress Overview */}
                       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-                        {/* Batch Information */}
+                    {/* Batch Information */}
                         <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg p-4 sm:p-5">
                           <div className="flex items-center mb-2">
                             <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 mr-2" />
                             <h3 className="text-base sm:text-lg font-semibold text-gray-900">Batch Information</h3>
-                          </div>
+                        </div>
                           <div className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-5">Course details and enrollment information</div>
                           
                           <div className="space-y-3 sm:space-y-4">
@@ -866,12 +866,12 @@ const BatchDetail = () => {
                               <div>
                                 <div className="text-xs sm:text-sm text-gray-500 mb-1">Course Code</div>
                                 <div className="text-sm sm:text-base font-semibold text-gray-900">{batch.courseId || 'KS189C'}</div>
-                              </div>
+                        </div>
                               <div>
                                 <div className="text-xs sm:text-sm text-gray-500 mb-1">Stream</div>
                                 <div className="text-sm sm:text-base font-semibold text-gray-900">{batch.stream || 'MARITIME'}</div>
-                              </div>
-                            </div>
+                        </div>
+                        </div>
                             
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                               <div>
@@ -896,10 +896,10 @@ const BatchDetail = () => {
                                 style={{ width: `${Math.round(((batch.stats?.students_count || 3) / (batch.capacity || 30)) * 100)}%` }}
                               />
                             </div>
-                          </div>
-                        </div>
+                      </div>
+                    </div>
 
-                        {/* Progress Overview */}
+                    {/* Progress Overview */}
                         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 sm:p-5">
                           <div className="flex items-center mb-2">
                             <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 mr-2" />
@@ -908,27 +908,27 @@ const BatchDetail = () => {
                           <div className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-5">Course completion and timeline</div>
                           
                           <div className="space-y-4 sm:space-y-6">
-                            <div>
+                        <div>
                               <div className="flex justify-between items-center mb-3">
                                 <span className="text-xs sm:text-sm text-gray-500">Course Progress</span>
                                 <span className="text-xl sm:text-2xl font-bold text-emerald-600">{batch.completion_percentage || 5}%</span>
-                              </div>
-                              <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div 
-                                  className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
                                   style={{ width: `${batch.completion_percentage || 5}%` }}
-                                />
-                              </div>
-                            </div>
+                            />
+                          </div>
+                        </div>
                             
                             <div className="space-y-2 sm:space-y-3">
                               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
                                 <div className="flex items-center">
                                   <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 mr-2" />
                                   <span className="text-xs sm:text-sm text-gray-500">Start Date</span>
-                                </div>
+                          </div>
                                 <span className="text-xs sm:text-sm font-semibold text-gray-900 ml-5 sm:ml-0">Jul 1, 2025, 05:30 AM</span>
-                              </div>
+                          </div>
                               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
                                 <div className="flex items-center">
                                   <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 mr-2" />
@@ -936,17 +936,17 @@ const BatchDetail = () => {
                                 </div>
                                 <span className="text-xs sm:text-sm font-semibold text-gray-900 ml-5 sm:ml-0">Dec 31, 2025, 05:30 AM</span>
                               </div>
-                            </div>
-                          </div>
                         </div>
                       </div>
+                    </div>
+                  </div>
 
                       {/* Full Width Recent Activity Section */}
                       <div className="w-full">
                         <div className="flex items-center mb-2">
                           <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 mr-2" />
                           <h3 className="text-base sm:text-lg font-semibold text-gray-900">Recent Activity</h3>
-                        </div>
+                      </div>
                         <div className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">Latest updates and changes</div>
                         
                         <div className="space-y-2">
@@ -966,8 +966,8 @@ const BatchDetail = () => {
                                   <div className="flex-1 min-w-0">
                                     <div className="font-medium text-gray-900 text-xs sm:text-sm truncate">{activity.title}</div>
                                     <div className="text-xs text-gray-500 mt-0.5">{getRelativeTime(activity.date)}</div>
-                                  </div>
-                                </div>
+                      </div>
+                      </div>
                               </div>
                             ))
                           ) : (
@@ -977,28 +977,28 @@ const BatchDetail = () => {
                               <div className="text-gray-400 text-xs mt-1">Activity will appear here when you add materials, assignments, or announcements</div>
                             </div>
                           )}
-                        </div>
-                      </div>
-                    </motion.div>
+                    </div>
                   </div>
-                )}
+                </motion.div>
+                  </div>
+              )}
 
                 {/* Materials Tab Content */}
-                {activeTab === 'materials' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+              {activeTab === 'materials' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   >
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
                       <h3 className="text-base sm:text-lg font-semibold text-gray-900">Course Materials</h3>
                       <Button
-                        onClick={() => setShowMaterialModal(true)}
+                      onClick={() => setShowMaterialModal(true)}
                         className="flex items-center justify-center px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm w-full sm:w-auto"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Material
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Material
                       </Button>
-                    </div>
+                  </div>
 
                     {loadingMaterials ? (
                       <div className="text-center py-8 sm:py-12">
@@ -1010,10 +1010,10 @@ const BatchDetail = () => {
                         <FileText className="w-12 sm:w-16 h-12 sm:h-16 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-500 text-base sm:text-lg">No materials uploaded yet</p>
                         <p className="text-gray-400 mt-1 text-sm">Upload your first course material to get started</p>
-                      </div>
-                    ) : (
+                    </div>
+                  ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                        {materials.map((material) => (
+                      {materials.map((material) => (
                           <motion.div 
                             key={material.id} 
                             initial={{ opacity: 0, y: 20 }}
@@ -1035,7 +1035,7 @@ const BatchDetail = () => {
                                   ) : (
                                     <FileText className="w-5 sm:w-6 h-5 sm:h-6 text-emerald-600" />
                                   )}
-                                </div>
+                              </div>
                                 <div className="flex-1 min-w-0">
                                   <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-emerald-700 transition-colors text-sm sm:text-base truncate">{material.title}</h4>
                                   <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${
@@ -1045,9 +1045,9 @@ const BatchDetail = () => {
                                   }`}>
                                     {material.material_type || 'lecture'}
                                   </span>
-                                </div>
-                              </div>
                             </div>
+                            </div>
+                          </div>
 
                             {/* Description */}
                             <div className="mb-4">
@@ -1058,14 +1058,14 @@ const BatchDetail = () => {
                                 <div className="flex items-center">
                                   <Clock className="w-3 h-3 mr-1" />
                                   {formatDate(material.upload_date || material.created_at)}
-                                </div>
+                          </div>
                                 <div className="flex items-center">
                                   {material.file_size && (
                                     <span className="bg-gray-100 px-2 py-1 rounded text-xs">
                                       {formatFileSize(material.file_size)}
                                     </span>
                                   )}
-                                </div>
+                        </div>
                               </div>
                             </div>
 
@@ -1097,38 +1097,38 @@ const BatchDetail = () => {
                               </Button>
                             </div>
                           </motion.div>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
 
-                {/* Assignments Tab */}
-                {activeTab === 'assignments' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+              {/* Assignments Tab */}
+              {activeTab === 'assignments' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   >
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
                       <h3 className="text-base sm:text-lg font-semibold text-gray-900">Assignments</h3>
                       <Button
-                        onClick={() => setShowAssignmentModal(true)}
+                      onClick={() => setShowAssignmentModal(true)}
                         className="flex items-center justify-center px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm w-full sm:w-auto"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Assignment
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Assignment
                       </Button>
-                    </div>
+                  </div>
 
-                    {assignments.length === 0 ? (
+                  {assignments.length === 0 ? (
                       <div className="text-center py-8 sm:py-12">
                         <Edit3 className="w-12 sm:w-16 h-12 sm:h-16 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-500 text-base sm:text-lg">No assignments created yet</p>
                         <p className="text-gray-400 mt-1 text-sm">Create your first assignment to track student progress</p>
-                      </div>
-                    ) : (
+                    </div>
+                  ) : (
                       <div className="space-y-4 sm:space-y-6">
-                        {assignments.map((assignment) => (
+                      {assignments.map((assignment) => (
                           <motion.div 
                             key={assignment.id} 
                             initial={{ opacity: 0, y: 20 }}
@@ -1152,47 +1152,47 @@ const BatchDetail = () => {
                                     }`}>
                                       {assignment.status || 'Published'}
                                     </span>
-                                  </div>
+                                </div>
                                   <p className="text-gray-600 mb-3 line-clamp-2 text-xs sm:text-sm">{assignment.description}</p>
                                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-sm">
                                     <div className="flex items-center text-gray-500">
                                       <Calendar className="w-3 sm:w-4 h-3 sm:h-4 mr-2 text-blue-500 flex-shrink-0" />
                                       <span className="truncate">Due: {formatDate(assignment.due_date)}</span>
-                                    </div>
+                                </div>
                                     <div className="flex items-center text-gray-500">
                                       <Target className="w-3 sm:w-4 h-3 sm:h-4 mr-2 text-green-500 flex-shrink-0" />
                                       <span>{assignment.max_marks || assignment.max_points} points</span>
-                                    </div>
+                              </div>
                                     <div className="flex items-center text-gray-500">
                                       <Users className="w-3 sm:w-4 h-3 sm:h-4 mr-2 text-purple-500 flex-shrink-0" />
                                       <span>{assignment.submission_count || 0} submissions</span>
-                                    </div>
-                                  </div>
-                                </div>
+                            </div>
+                            </div>
+                          </div>
                               </div>
                             </div>
 
                             {/* Action Buttons */}
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-gray-200 gap-3 sm:gap-4">
                               <div className="text-xs sm:text-sm text-gray-500">
-                                Created {formatDate(assignment.created_at)}
+                              Created {formatDate(assignment.created_at)}
                               </div>
                               
                               <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
                                 {/* Due Date Status */}
                                 <div className="flex items-center justify-center sm:justify-start">
-                                  {calculateDaysRemaining(assignment.due_date) > 0 ? (
+                              {calculateDaysRemaining(assignment.due_date) > 0 ? (
                                     <span className="flex items-center text-xs sm:text-sm text-green-600 bg-green-50 px-2 py-1 rounded-full">
                                       <Clock className="w-3 h-3 mr-1" />
                                       {calculateDaysRemaining(assignment.due_date)} days left
-                                    </span>
-                                  ) : (
+                                </span>
+                              ) : (
                                     <span className="flex items-center text-xs sm:text-sm text-red-600 bg-red-50 px-2 py-1 rounded-full">
                                       <AlertCircle className="w-3 h-3 mr-1" />
                                       Overdue
                                     </span>
-                                  )}
-                                </div>
+                              )}
+                            </div>
 
                                 {/* Action Buttons */}
                                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
@@ -1210,57 +1210,57 @@ const BatchDetail = () => {
                                     <Edit3 className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
                                     Edit
                                   </Button>
-                                </div>
-                              </div>
+                          </div>
+                        </div>
                             </div>
                           </motion.div>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
 
-                {/* Announcements Tab */}
-                {activeTab === 'announcements' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+              {/* Announcements Tab */}
+              {activeTab === 'announcements' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   >
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
                       <h3 className="text-base sm:text-lg font-semibold text-gray-900">Announcements</h3>
                       <Button
-                        onClick={() => setShowAnnouncementModal(true)}
+                      onClick={() => setShowAnnouncementModal(true)}
                         className="flex items-center justify-center px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm w-full sm:w-auto"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Post Announcement
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Post Announcement
                       </Button>
-                    </div>
+                  </div>
 
-                    {announcements.length === 0 ? (
+                  {announcements.length === 0 ? (
                       <div className="text-center py-8 sm:py-12">
                         <MessageSquare className="w-12 sm:w-16 h-12 sm:h-16 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-500 text-base sm:text-lg">No announcements posted yet</p>
                         <p className="text-gray-400 mt-1 text-sm">Keep your students informed with important updates</p>
-                      </div>
-                    ) : (
+                    </div>
+                  ) : (
                       <div className="space-y-3 sm:space-y-4">
-                        {announcements.map((announcement) => (
+                      {announcements.map((announcement) => (
                           <div key={announcement.id} className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
                             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3 sm:gap-4">
                               <div className="flex-1 min-w-0">
                                 <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-2">
                                   <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{announcement.title}</h4>
                                   <span className={`px-2 py-1 text-xs font-medium rounded-full w-fit ${getPriorityColor(announcement.priority)}`}>
-                                    {announcement.priority}
-                                  </span>
-                                </div>
+                                  {announcement.priority}
+                                </span>
+                              </div>
                                 <p className="text-gray-600 mb-3 text-xs sm:text-sm">{announcement.content}</p>
                                 <div className="flex items-center text-xs sm:text-sm text-gray-500">
                                   <Clock className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                                  Posted {formatDate(announcement.created_at)}
-                                </div>
+                                Posted {formatDate(announcement.created_at)}
                               </div>
+                            </div>
                               <div className="flex flex-row sm:flex-col space-x-2 sm:space-x-0 sm:space-y-2 flex-shrink-0">
                                 <Button 
                                   onClick={() => handleEditAnnouncement(announcement)}
@@ -1276,76 +1276,76 @@ const BatchDetail = () => {
                                 >
                                   <Trash2 className="w-3 sm:w-4 h-3 sm:h-4" />
                                 </Button>
-                              </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
-                )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
 
-                {/* Students Tab */}
-                {activeTab === 'students' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+              {/* Students Tab */}
+              {activeTab === 'students' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   >
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
                       <h3 className="text-base sm:text-lg font-semibold text-gray-900">Enrolled Students ({batch.stats?.students_count || 0})</h3>
                       <Button className="flex items-center justify-center px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm w-full sm:w-auto">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Student
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Student
                       </Button>
-                    </div>
+                  </div>
 
-                    {(!students || students.length === 0) ? (
+                  {(!students || students.length === 0) ? (
                       <div className="text-center py-8 sm:py-12">
                         <Users className="w-12 sm:w-16 h-12 sm:h-16 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-500 text-base sm:text-lg">No students enrolled yet</p>
                         <p className="text-gray-400 mt-1 text-sm">Students will appear here once they enroll in this batch</p>
-                      </div>
-                    ) : (
+                    </div>
+                  ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                        {students.map((student) => (
+                      {students.map((student) => (
                           <div key={student.id} className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow">
-                            <div className="flex items-center space-x-3 mb-4">
+                          <div className="flex items-center space-x-3 mb-4">
                               <div className="w-10 sm:w-12 h-10 sm:h-12 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
                                 <User className="w-5 sm:w-6 h-5 sm:h-6 text-emerald-600" />
-                              </div>
+                            </div>
                               <div className="flex-1 min-w-0">
                                 <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{student.student_name}</h4>
                                 <p className="text-xs sm:text-sm text-gray-600 truncate">{student.student_email}</p>
-                              </div>
                             </div>
+                          </div>
                             <div className="space-y-2 text-xs sm:text-sm">
-                              <div className="flex items-center justify-between">
-                                <span className="text-gray-600">Status:</span>
-                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                  student.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {student.status || 'Active'}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-gray-600">Enrolled:</span>
-                                <span className="text-gray-900 text-xs">{formatDate(student.enrollment_date)}</span>
-                              </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-600">Status:</span>
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                student.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {student.status || 'Active'}
+                              </span>
                             </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-600">Enrolled:</span>
+                                <span className="text-gray-900 text-xs">{formatDate(student.enrollment_date)}</span>
+                            </div>
+                          </div>
                             <div className="mt-4 pt-3 border-t border-gray-200">
                               <Button 
                                 onClick={() => handleViewStudentProfile(student)}
                                 className="w-full px-3 py-2 text-xs sm:text-sm bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors font-medium"
                               >
-                                View Profile
+                              View Profile
                               </Button>
-                            </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
-                )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
               </CardContent>
             </Card>
           </div>

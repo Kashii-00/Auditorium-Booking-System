@@ -281,3 +281,11 @@ export const handoverFields = [
   { label: "Confirmer Designation", key: "handover_confirmer_designation" },
   { label: "Confirmation Date", key: "handover_confirmer_date" },
 ];
+
+// Convert groupedCourseOptions into a map: courseName -> stream
+export const courseToStreamMap = groupedCourseOptions.reduce((map, group) => {
+  group.options.forEach((course) => {
+    map[course.value] = group.label;
+  });
+  return map;
+}, {});

@@ -1,0 +1,117 @@
+| Security Measure               | Description                                                  |
+| ------------------------------ | ------------------------------------------------------------ |
+| Authentication                 | Only authenticated users can access routes                   |
+| Rate Limiting                  | Limits requests per user/IP to prevent abuse                 |
+| Role-Based Access Control      | Permissions based on user roles for update/delete actions    |
+| Ownership Check                | Only owners or privileged roles can modify or delete records |
+| Input Validation               | Joi schemas validate request payloads                        |
+| Field-Level Update Restriction | Users can only update fields allowed by their role           |
+| Output Sanitization            | Sensitive fields hidden from non-privileged users            |
+| Error Handling & Logging       | Safe error messages & audit logging                          |
+| Parameterized Queries          | Prevents SQL injection                                       |
+
+
+No let me explain the logic:
+
+we have three variables which is used to calculate cost:
+cost = required_quantity × required_hours × hourly_rate
+
+below is what combination of request body and authority leads to in calculations of cost:
+
+Always check for item in rates before moving on to the checks done below:
+
+
+required_quantity, required_hours, hourly_rate(optional), cost, non-privileged, rate available in rates table, Quantity_Hourly = calculate cost based on rate from rates table.
+required_quantity, required_hours, hourly_rate, cost, privileged, rate available in rates table, Quantity_Hourly = calculate cost based on rate provided by user.
+required_quantity, required_hours, hourly_rate not given, cost, privileged, rate available in rates table, Quantity_Hourly = calculate cost based on rate in rate table.
+cost, non-privileged or privileged, rate available in rates table, Full Payment = user provided cost
+cost, non-privileged or privileged, rate not available in rates table = cost accepted
+
+| Condition                                                | Cost Calculation / Acceptance                                                                                        | Result          |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------- |
+| **Rate not found + cost provided**          Y             | Accept user cost as-is                                                                                               | Insert succeeds |
+| **Rate not found + no cost**                             | Reject                                                                                                               | 403 error       |
+| **Rate found (Full Payment) + cost provided**            | Accept user cost as-is                                                                                               | Insert succeeds |
+| **Rate found (Full Payment) + no cost**                  | Reject                                                                                                               | 400 error       |
+| **Rate found (Quantity\_Hourly) + qty & hours provided** | Calculate cost (qty × hours × rate)<br>- Privileged user: user hourly\_rate if provided<br>- Otherwise: rate from DB | Insert succeeds |
+| **Rate found (Quantity\_Hourly) + missing qty or hours** | Reject                                                                                                               | 400 error       |
+| **Rate found + unsupported rate\_type**                  | Reject                                                                                                               | 400 error       |
+
+
+
+
+
+const createCourseDevelopmentWorkTableQuery = `
+  CREATE TABLE IF NOT EXISTS course_development_work (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    payments_main_details_id INT NOT NULL,
+
+    no_of_panel_meetings INT,
+    total_cost DECIMAL(10,2),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`;
+
+const createCourseDevelopmentWorkExpensesTableQuery = `
+  CREATE TABLE IF NOT EXISTS course_development_work_expenses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course_development_work_id INT NOT NULL,
+
+    item_description VARCHAR(255) NOT NULL,
+    required_quantity INT,
+    rate DECIMAL(10,2),
+    amount DECIMAL(10,2),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_course_dev_work
+    FOREIGN KEY (course_development_work_id)
+    REFERENCES course_development_work(id)
+    ON DELETE CASCADE
+  )
+`;
+
+const createPanelMeetingParticipantsTableQuery = `
+  CREATE TABLE IF NOT EXISTS panel_meeting_participants (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course_development_work_id INT NOT NULL,
+
+    participant_type VARCHAR(100) NOT NULL,
+    nos INT,
+    rate_per_hour DECIMAL(10,2),
+    smes VARCHAR(255), --Subject Matter experts
+    amount DECIMAL(10,2),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_course_dev_work
+    FOREIGN KEY (course_development_work_id)
+    REFERENCES course_development_work(id)
+    ON DELETE CASCADE
+  )
+`;
+
+The above three tables work together. The course_development_work table is like the parent of the other two. 
+we are going to creat only one set of endpoints for all three tables(post, get, and delete), this means the 
+user will call the endpoint with data enough to create records in all three tables. The parent table will store 
+two main details (the no.of meeting conducted and total cost). The course_development_work_expenses table will 
+store expense data (item_description, required quantity, rate, and amount), for this table we use the item_description and the category "Course Development Work"
+with rates to search
+
+
+| #  | `item_description` exists in `rates`? | `rate_type` in `rates` | User Type  | Provided Fields | Expected Behavior                                     | Allowed? |
+| -- | ------------------------------------- | ---------------------- | ---------- | --------------- | ----------------------------------------------------- | -------- |
+| 1  | ✅ Yes                                 | `Quantity`             | Normal     | rate, quantity  | Use rate from DB, ignore given rate, calculate amount | ✅        |
+| 2  | ✅ Yes                                 | `Quantity`             | Normal     | amount only     | ❌ Must provide quantity                               | ❌        |
+| 3  | ✅ Yes                                 | `Quantity`             | Normal     | rate + amount   | ❌ Must provide quantity                               | ❌        |
+| 4  | ✅ Yes                                 | `Quantity`             | Privileged | rate, quantity  | Use provided rate, calculate amount                   | ✅        |
+| 5  | ✅ Yes                                 | `Quantity`             | Privileged | amount only     | ❌ Must provide quantity                               | ❌        |
+| 6  | ✅ Yes                                 | `Full Payment`         | Normal     | amount          | Use provided amount                                   | ✅        |
+| 7  | ✅ Yes                                 | `Full Payment`         | Normal     | rate only       | ❌ Must provide amount                                 | ❌        |
+| 8  | ✅ Yes                                 | `Full Payment`         | Privileged | amount only     | Accept amount                                         | ✅        |
+| 9  | ✅ Yes                                 | `Full Payment`         | Privileged | rate only       | ❌ Must provide amount                                 | ❌        |
+| 10 | ❌ No                                  | —                      | Normal     | amount only     | ❌ Must also provide rate + quantity                   | ❌        |
+| 11 | ❌ No                                  | —                      | Normal     | rate + quantity | Accept and calculate amount                           | ✅        |
+| 12 | ❌ No                                  | —                      | Normal     | rate only       | ❌ Not enough data                                     | ❌        |
+| 13 | ❌ No                                  | —                      | Privileged | amount only     | Accept amount as is                                   | ✅        |
+| 14 | ❌ No                                  | —                      | Privileged | rate + quantity | Calculate amount                                      | ✅        |
+| 15 | ❌ No                                  | —                      | Privileged | rate only       | ❌ Not enough data                                     | ❌        |

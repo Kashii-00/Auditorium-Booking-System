@@ -194,7 +194,7 @@ const BatchAddLecturers = React.memo(({ onLecturersAdded }) => {
           <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-t-lg">
             <CardTitle className="flex items-center space-x-3">
               <FaUserTie className="h-6 w-6" />
-              <span>Add Lecturers to {batch?.batch_name || "Batch"}</span>
+              <span>Add Lecturers to {batch?.batch_code || "Batch"}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">

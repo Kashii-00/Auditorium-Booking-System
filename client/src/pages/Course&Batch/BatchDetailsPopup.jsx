@@ -223,7 +223,7 @@ const BatchDetailsPopup = React.memo(({ batchId, onClose }) => {
                         <FaBook className="h-4 w-4 text-blue-600" />
                         Batch Name
                       </div>
-                      <p className="font-semibold text-gray-900">{batchDetails.batch_name}</p>
+                      <p className="font-semibold text-gray-900">{batchDetails.batch_code}</p>
                     </div>
 
                     <div className="space-y-2">

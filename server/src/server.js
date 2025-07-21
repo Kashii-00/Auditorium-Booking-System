@@ -13,9 +13,32 @@ const CourseRegistrationRoute = require('./routes/CourseRegistrationRoute');
 const PayCourseRoute = require('./routes/PayCourseRoute');
 const lecturerRegistrationRoutes = require('./routes/lecturerRegistration');
 const studentRoutes = require('./routes/studentRoutes'); // Make sure this is imported
+const studentIdRoutes = require('./routes/studentIdRoutes');
 const aidRequestRoutes = require("./routes/aidRequests");
 const aidHandoverRoutes = require("./routes/aidHandover");
 const classroomCalendarRoutes = require("./routes/classroomCalendarRoutes");
+
+//payment
+const ratesRoutes = require("./routes/PayMain/rates");
+const paymentsRouter = require("./routes/PayMain/coursePaymentsMaindetails");
+const paymentCourseMaterials = require("./routes/PayMain/courseMaterials");
+const paymentCourseTrainingTeachingAids = require("./routes/PayMain/courseTrainingTAid");
+const paymentCourseTrainingEnvironments = require("./routes/PayMain/courseTrainingEnvironments");
+const paymentCourseOverheads = require("./routes/PayMain/courseOverheads");
+const paymentCDWParticipants = require("./routes/PayMain/panelMeetingParticipants");
+const paymentCDWExpenses = require("./routes/PayMain/CDWExpenses");
+const paymentCDW = require("./routes/PayMain/courseDevWork");
+const paymentCDWFull = require("./routes/PayMain/CDWFull");
+const paymentCDHRItems = require("./routes/PayMain/CourseDeliveryItems");
+const paymentCDC = require("./routes/PayMain/CourseDCost");
+const paymentCDCFull = require("./routes/PayMain/CDCFull");
+const paymentCOHFull = require("./routes/PayMain/COHFull");
+const paymentFinalReport = require("./routes/PayMain/course_cost_summary");
+const paymentsSFDisplay = require("./routes/PayMain/FullPaymentsGet");
+const StudentPayments = require("./routes/PayMain/StudentPayments");
+const LecturerAttendance = require("./routes/PayMain/lecturer_attendance");
+const LecturerPayments = require("./routes/PayMain/lecturerPayments");
+
 const { requestMonitor } = require("./utils/monitorServer");
 
 // Import routes
@@ -54,7 +77,7 @@ const corsOptions = {
     }
   },
   credentials: true, // Required for cookies
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200
 };
@@ -95,10 +118,32 @@ app.use('/api/CourseRegistrationRoute', CourseRegistrationRoute);
 app.use('/api/course-payments', PayCourseRoute);
 app.use('/api/lecturer-registration', lecturerRegistrationRoutes);
 app.use('/api/students', studentRoutes); // Make sure this route is registered
+app.use('/api/student-ids', studentIdRoutes); // Student ID management routes
 app.use('/api/batches', batchRoutes); // Add batch routes
 app.use("/api/aidrequests", aidRequestRoutes);
 app.use("/api/aidhandover", aidHandoverRoutes);
 app.use("/api/classroom-calendar", classroomCalendarRoutes);
+
+//Payment 
+app.use("/api/rates", ratesRoutes);
+app.use("/api/payments", paymentsRouter);
+app.use("/api/course-materials", paymentCourseMaterials);
+app.use("/api/course-training-teaching-aids",paymentCourseTrainingTeachingAids);
+app.use("/api/course-training-teaching-envs",paymentCourseTrainingEnvironments);
+app.use("/api/course-overheads", paymentCourseOverheads);
+app.use("/api/panel-participants", paymentCDWParticipants);
+app.use("/api/cdw-expenses", paymentCDWExpenses);
+app.use("/api/cdw", paymentCDW);
+app.use("/api/course-development-work", paymentCDWFull);
+app.use("/api/course-delivery-items", paymentCDHRItems);
+app.use("/api/course-delivery-cost", paymentCDC);
+app.use("/api/course-delivery-cost-full", paymentCDCFull);
+app.use("/api/course-overheads-cost", paymentCOHFull);
+app.use("/api/payment-course-final-summary", paymentFinalReport);
+app.use("/api/payment-sf-display", paymentsSFDisplay);
+app.use("/api/student-payments", StudentPayments);
+app.use("/api/lecturer-attendance", LecturerAttendance);
+app.use("/api/lecturer-payments", LecturerPayments);
 
 app.use("/api/email", emailRoutes);
 

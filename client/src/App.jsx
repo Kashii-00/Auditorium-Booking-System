@@ -35,7 +35,6 @@ import SingleBookingFullDetails from "./pages/Classroom_Booking/SingleBookingFul
 import CancelRequestForm from "./pages/Classroom_Booking/CancelRequestForm"
 
 // Import the new student portal components
-import StudentLogin from "./pages/StudentPortal/StudentLogin"
 import StudentChangePassword from "./pages/StudentPortal/StudentChangePassword"
 import StudentForgotPassword from "./pages/StudentPortal/StudentForgotPassword"
 import StudentDashboard from "./pages/StudentPortal/StudentDashboard"
@@ -49,6 +48,12 @@ import LecturerDashboard from "./pages/LecturerPortal/LecturerDashboard"
 import BatchDetail from "./pages/LecturerPortal/BatchDetail"
 import LecturerForgotPassword from "./pages/LecturerPortal/LecturerForgotPassword"
 import LecturerProfile from "./pages/LecturerPortal/LecturerProfile"
+
+//Import the new Finance Function components 
+import EditRatesPanel from "./pages/Accounts_section/EditRatesPanel";
+import CourseCostForm from "./pages/Accounts_section/CourseCostForm";
+import PaymentsDetailsTable from "./pages/Accounts_section/PaymentsDetailsTable";
+import PaymentSingleDetails from "./pages/Accounts_section/PaymentsSingleDetails";
 
 import "./styles/App.css"
 import "./styles/global.css"
@@ -184,6 +189,10 @@ function App() {
   const canAccess_CB_ADMIN = hasRole("SuperAdmin") || hasRole("cb_Admin_access")
   const canAccess_CB_COMMON = hasRole("SuperAdmin") || hasRole("cb_Admin_access") || hasRole("cb_SU_access")
 
+  //Finance
+  const canAccessFinanceCommon =hasRole("SuperAdmin") ||hasRole("finance_manager") ||hasRole("SU_finance_access");
+  const canAccessFinanceManager =hasRole("SuperAdmin") || hasRole("finance_manager");
+
   // Add a permission for the print report page (reuse annual plan permission)
   const canAccessAnnualPlanPrint = canAccessAnnualPlan;
 
@@ -200,6 +209,9 @@ function App() {
     if (userRoles.includes("course_registration_access")) return "/courseregistration"
     if (userRoles.includes("student_registration_access")) return "/student-registration"
     if (userRoles.includes("lecturer_management_access")) return "/lecturer-registration"
+    if (userRoles.includes("finance_manager")) return "/coursecost"
+    if (userRoles.includes("SU_finance_access")) return "/coursecost"
+
 
     if (userRoles.includes("SuperAdmin")) {
       return "/calendar"
@@ -334,6 +346,50 @@ function App() {
             path="/lecturer-registration"
             element={
               <ProtectedRouteWithErrorBoundary element={lecturerRegistration} canAccess={canAccessLecturerManagement} />
+            }
+          />
+
+          < Route
+            path="/coursecost"
+            element={
+              <ProtectedRoute
+                element={CourseCostForm}
+                canAccess={canAccessFinanceCommon}
+                user={loggedInUser}
+              />
+            }
+          />
+
+          < Route
+            path="/editpanel"
+            element={
+              <ProtectedRoute
+                element={EditRatesPanel}
+                canAccess={canAccessFinanceManager}
+                user={loggedInUser}
+              />
+            }
+          />
+
+          <Route
+            path="/PaymentTable"
+            element={
+              <ProtectedRoute
+                element={PaymentsDetailsTable}
+                canAccess={canAccessFinanceCommon}
+                user={loggedInUser}
+              />
+            }
+          />
+
+          <Route
+            path="/PaymentSingleDetails"
+            element={
+              <ProtectedRoute
+                element={PaymentSingleDetails}
+                canAccess={canAccessFinanceCommon}
+                user={loggedInUser}
+              />
             }
           />
 

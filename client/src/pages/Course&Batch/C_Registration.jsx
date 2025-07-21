@@ -748,7 +748,7 @@ function CourseDashboard({ courses: initialCourses, setCourses, onRegisterClick,
         />
         <StatCard
           title="Total Revenue"
-          value={`$${totalRevenue.toLocaleString()}`}
+          value={`Rs.${totalRevenue.toLocaleString()}`}
           subtext="From all courses"
           icon={DollarSign}
           color="yellow"
@@ -893,7 +893,7 @@ function CourseDashboard({ courses: initialCourses, setCourses, onRegisterClick,
                           </Badge>
                         </TableCell>
                         <TableCell className="font-bold text-slate-900 py-4">
-                          ${Number.parseFloat(course.fees || 0).toLocaleString()}
+                          Rs.{Number.parseFloat(course.fees || 0).toLocaleString()}
                         </TableCell>
                         <TableCell className="text-right py-4">
                           <div className="flex justify-end gap-2">
@@ -959,13 +959,13 @@ function CourseDashboard({ courses: initialCourses, setCourses, onRegisterClick,
                                   <div className="grid grid-cols-[120px_1fr] items-center gap-4">
                                     <Label className="text-right text-slate-500 font-bold">Fee:</Label>
                                     <div className="font-bold text-lg">
-                                      ${Number.parseFloat(course.fees || 0).toLocaleString()}
+                                      Rs.{Number.parseFloat(course.fees || 0).toLocaleString()}
                                     </div>
                                   </div>
                                   <div className="grid grid-cols-[120px_1fr] items-center gap-4">
                                     <Label className="text-right text-slate-500 font-bold">Reg. Fee:</Label>
                                     <div className="font-semibold">
-                                      ${Number.parseFloat(course.registrationFee || 0).toLocaleString()}
+                                      Rs.{Number.parseFloat(course.registrationFee || 0).toLocaleString()}
                                     </div>
                                   </div>
                                   <div className="grid grid-cols-[120px_1fr] items-start gap-4">
@@ -1602,7 +1602,7 @@ function CourseRegistrationForm({ onBack, onSuccess }) {
               </Label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                  <span className="text-slate-500 font-bold">$</span>
+                  <span className="text-slate-500 font-bold">Rs.</span>
                 </div>
                 <Input
                   id="fees"
@@ -1631,12 +1631,12 @@ function CourseRegistrationForm({ onBack, onSuccess }) {
                 </Label>
                 <div className="text-sm font-semibold text-slate-500">
                   Total Course Fee:{" "}
-                  <span className="text-blue-700">${Number(formData.fees || 0).toLocaleString()}</span>
+                  <span className="text-blue-700">Rs.{Number(formData.fees || 0).toLocaleString()}</span>
                 </div>
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                  <span className="text-slate-500 font-bold">$</span>
+                  <span className="text-slate-500 font-bold">Rs.</span>
                 </div>
                 <Input
                   id="registrationFee"
@@ -1720,7 +1720,7 @@ function CourseRegistrationForm({ onBack, onSuccess }) {
                           </Label>
                           <div className="relative">
                             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                              <span className="text-slate-500 font-bold">$</span>
+                              <span className="text-slate-500 font-bold">Rs.</span>
                             </div>
                             <Input
                               id={`installment-amount-${idx}`}
@@ -1767,18 +1767,18 @@ function CourseRegistrationForm({ onBack, onSuccess }) {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-slate-600 font-semibold">Total Course Fee:</span>
-                  <span className="font-bold text-lg">${Number(formData.fees || 0).toLocaleString()}</span>
+                  <span className="font-bold text-lg">Rs.{Number(formData.fees || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-600 font-semibold">Registration Fee:</span>
-                  <span className="font-bold">${Number(formData.registrationFee || 0).toLocaleString()}</span>
+                  <span className="font-bold">Rs.{Number(formData.registrationFee || 0).toLocaleString()}</span>
                 </div>
                 {installments
                   .filter((inst) => inst.enabled)
                   .map((inst, idx) => (
                     <div key={`summary-${idx}`} className="flex justify-between items-center">
                       <span className="text-slate-600 font-semibold">{inst.label}:</span>
-                      <span className="font-bold">${Number(inst.value || 0).toLocaleString()}</span>
+                      <span className="font-bold">Rs.{Number(inst.value || 0).toLocaleString()}</span>
                     </div>
                   ))}
                 <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
@@ -1788,7 +1788,7 @@ function CourseRegistrationForm({ onBack, onSuccess }) {
                       getRemaining() === 0 ? "text-emerald-600" : getRemaining() < 0 ? "text-red-600" : "text-blue-700"
                     }`}
                   >
-                    ${getRemaining().toLocaleString()}
+                    Rs.{getRemaining().toLocaleString()}
                   </span>
                 </div>
               </div>

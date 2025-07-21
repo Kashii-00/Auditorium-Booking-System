@@ -1301,7 +1301,7 @@ const BatchManagementTab = () => {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <h3 className="font-semibold text-slate-900 text-lg mb-1">
-                      {batch.batch_name}
+                      {batch.batch_code}
                     </h3>
                     <p className="text-slate-600 text-sm mb-2">{batch.courseName}</p>
                     <div className="flex items-center space-x-2">
