@@ -48,11 +48,8 @@ class StudentIdGenerator {
         }
       }
 
-      // Get or create sequence record
-      const sequenceId = await this.getOrCreateSequence(courseId, batchId, currentYear, batchNumber);
-      
-      // Get next sequence number
-      const nextSequence = await this.getNextSequenceNumber(sequenceId);
+      // Get next available sequence number (fills gaps automatically)
+      const nextSequence = await this.getNextAvailableSequence(courseId, batchId, currentYear, batchNumber);
       
       // Format sequence number with leading zeros (001, 002, etc.)
       const sequenceStr = nextSequence.toString().padStart(3, '0');
@@ -369,6 +366,66 @@ class StudentIdGenerator {
       
     } catch (error) {
       console.error('Error getting student code stats:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get next available sequence number, filling gaps if they exist
+   * @param {number} courseId - Course ID
+   * @param {number} batchId - Batch ID  
+   * @param {number} year - Year
+   * @param {number} batchNumber - Batch number
+   * @returns {Promise<number>} Next available sequence number
+   */
+  async getNextAvailableSequence(courseId, batchId, year, batchNumber) {
+    try {
+      // Get the course code for building the pattern
+      const courseQuery = `SELECT courseId FROM courses WHERE id = ?`;
+      const courseResult = await db.queryPromise(courseQuery, [courseId]);
+      const courseCode = courseResult[0].courseId.replace('MP-', '');
+      const shortYear = year.toString().slice(-2);
+      
+      // Build the student code pattern
+      const codePattern = `MP-${courseCode}${shortYear}.${batchNumber}-%`;
+      
+      // Get all existing codes for this course/batch/year combination
+      const existingCodesQuery = `
+        SELECT student_code 
+        FROM student_courses 
+        WHERE course_id = ? 
+          AND student_code LIKE ? 
+          AND student_code IS NOT NULL
+        ORDER BY student_code
+      `;
+      
+      const existingCodes = await db.queryPromise(existingCodesQuery, [courseId, codePattern]);
+      
+      // Extract sequence numbers from existing codes
+      const existingSequences = existingCodes
+        .map(row => {
+          const match = row.student_code.match(/-(\d+)$/);
+          return match ? parseInt(match[1]) : null;
+        })
+        .filter(num => num !== null)
+        .sort((a, b) => a - b);
+      
+      // Find the first gap or return the next number
+      let nextSequence = 1;
+      for (const seq of existingSequences) {
+        if (seq === nextSequence) {
+          nextSequence++;
+        } else if (seq > nextSequence) {
+          // Found a gap, use the current nextSequence
+          break;
+        }
+      }
+      
+      console.log(`Next available sequence for ${codePattern}: ${nextSequence}`);
+      return nextSequence;
+      
+    } catch (error) {
+      console.error('Error getting next available sequence:', error);
       throw error;
     }
   }

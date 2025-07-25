@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState, useCallback, useMemo, memo, lazy, Suspense } from "react"
+import { useEffect, useState, useCallback, useMemo, memo, lazy, Suspense, useLayoutEffect } from "react"
 import {
   Search,
   Filter,
@@ -44,40 +44,115 @@ const SuccessPopup = memo(({ message }) => (
 
 SuccessPopup.displayName = "SuccessPopup"
 
-// Optimized StatCard with explicit dimensions to prevent CLS
-const StatCard = memo(({ title, value, icon: Icon, color = "blue" }) => {
-  const colorClasses = useMemo(
+// Circular progress ring StatCard with our color palette
+const StatCard = memo(({ title, value, icon: Icon, color = "blue", progress = 75 }) => {
+  const colorConfig = useMemo(
     () => ({
-      blue: "bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 text-blue-700 border-blue-300 shadow-blue-200/50",
-      green:
-        "bg-gradient-to-br from-emerald-100 via-green-100 to-teal-100 text-emerald-700 border-emerald-300 shadow-emerald-200/50",
-      yellow:
-        "bg-gradient-to-br from-amber-100 via-yellow-100 to-orange-100 text-amber-700 border-amber-300 shadow-amber-200/50",
-      red: "bg-gradient-to-br from-rose-100 via-red-100 to-pink-100 text-rose-700 border-rose-300 shadow-rose-200/50",
+      blue: {
+        gradient: "from-blue-500 via-indigo-600 to-purple-700",
+        ring: "stroke-blue-500",
+        bg: "bg-gradient-to-br from-blue-50 to-indigo-50",
+        iconBg: "bg-gradient-to-br from-blue-500 to-indigo-600",
+      },
+      green: {
+        gradient: "from-emerald-500 via-green-600 to-teal-700",
+        ring: "stroke-emerald-500",
+        bg: "bg-gradient-to-br from-emerald-50 to-green-50",
+        iconBg: "bg-gradient-to-br from-emerald-500 to-green-600",
+      },
+      purple: {
+        gradient: "from-purple-500 via-violet-600 to-indigo-700",
+        ring: "stroke-purple-500",
+        bg: "bg-gradient-to-br from-purple-50 to-violet-50",
+        iconBg: "bg-gradient-to-br from-purple-500 to-violet-600",
+      },
+      orange: {
+        gradient: "from-orange-500 via-amber-600 to-yellow-700",
+        ring: "stroke-orange-500",
+        bg: "bg-gradient-to-br from-orange-50 to-amber-50",
+        iconBg: "bg-gradient-to-br from-orange-500 to-amber-600",
+      },
+      yellow: {
+        gradient: "from-yellow-400 via-amber-500 to-orange-600",
+        ring: "stroke-yellow-500",
+        bg: "bg-gradient-to-br from-yellow-50 to-amber-50",
+        iconBg: "bg-gradient-to-br from-yellow-500 to-amber-600",
+      },
+      red: {
+        gradient: "from-red-500 via-rose-600 to-pink-700",
+        ring: "stroke-red-500",
+        bg: "bg-gradient-to-br from-red-50 to-rose-50",
+        iconBg: "bg-gradient-to-br from-red-500 to-rose-600",
+      },
+      gray: {
+        gradient: "from-slate-300 to-gray-400",
+        ring: "stroke-slate-300",
+        bg: "bg-gradient-to-br from-slate-50 to-gray-50",
+        iconBg: "bg-gradient-to-br from-slate-400 to-gray-500",
+      },
     }),
     [],
   )
 
+  const config = colorConfig[color] || colorConfig.blue
+  const circumference = 2 * Math.PI * 45 // radius = 45
+  const strokeDasharray = circumference
+  const strokeDashoffset = circumference - (progress / 100) * circumference
+
   return (
-    <Card className="border-0 shadow-2xl hover:shadow-3xl transition-all duration-300 bg-white/95 backdrop-blur-xl min-h-[120px] transform hover:-translate-y-1">
-      <CardContent className="p-4 xl:p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-xs xl:text-sm font-black text-slate-600 mb-1 xl:mb-2 uppercase tracking-wide transition-colors duration-300">
-              {title}
-            </p>
-            <p className="text-2xl xl:text-4xl font-black bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent transition-all duration-300">
-              {value}
-            </p>
+    <div className="flex flex-col items-center group">
+      {/* Circular card with progress ring */}
+      <div className="relative">
+        {/* Background circle */}
+        <div className={`w-28 h-28 rounded-full ${config.bg} shadow-lg group-hover:shadow-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden`}>
+          {/* Progress ring */}
+          <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+            {/* Background ring */}
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              className="text-slate-200"
+            />
+            {/* Progress ring */}
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              fill="none"
+              strokeWidth="3"
+              className={config.ring}
+              strokeDasharray={strokeDasharray}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              style={{
+                transition: 'stroke-dashoffset 0.8s ease-in-out',
+              }}
+            />
+          </svg>
+          
+          {/* Icon */}
+          <div className="relative z-10">
+            <Icon className="h-8 w-8 text-slate-700 group-hover:scale-110 transition-transform duration-300" />
           </div>
-          <div
-            className={`p-3 xl:p-4 rounded-2xl shadow-xl border-2 ${colorClasses[color]} flex-shrink-0 transition-all duration-300 hover:scale-110`}
-          >
-            <Icon className="h-5 w-5 xl:h-7 xl:w-7 transition-transform duration-300" />
           </div>
+
+        {/* Value display */}
+        <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2">
+          <div className="bg-white rounded-full shadow-lg px-3 py-1 border border-slate-200">
+            <span className="text-2xl font-black text-slate-800">{value}</span>
         </div>
-      </CardContent>
-    </Card>
+        </div>
+      </div>
+      
+      {/* Title */}
+      <div className="mt-6 text-center">
+        <h3 className="text-sm font-bold text-slate-700">{title}</h3>
+      </div>
+    </div>
   )
 })
 
@@ -641,6 +716,35 @@ export default function EventBookingFull() {
     }
   }, [])
 
+  // Add CSS for optimized smooth animations
+  useLayoutEffect(() => {
+    const style = document.createElement("style")
+    style.innerHTML = `
+      /* Optimized animations for better performance */
+      .will-change-transform {
+        will-change: transform;
+        backface-visibility: hidden;
+        perspective: 1000px;
+        -webkit-transform: translateZ(0);
+      }
+    `
+    style.id = "event-booking-animations-css"
+
+    // Remove existing style if present
+    const existingStyle = document.getElementById("event-booking-animations-css")
+    if (existingStyle) {
+      document.head.removeChild(existingStyle)
+    }
+
+    document.head.appendChild(style)
+    return () => {
+      const styleToRemove = document.getElementById("event-booking-animations-css")
+      if (styleToRemove) {
+        document.head.removeChild(styleToRemove)
+      }
+    }
+  }, [])
+
   return (
     <div
       className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative"
@@ -667,37 +771,13 @@ export default function EventBookingFull() {
         {/* Error Display */}
         {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>}
 
-        {/* Statistics Cards */}
-        <div className="relative">
-          {/* Container for all 4 cards with smooth transitions */}
-          <div className="grid grid-cols-4 gap-4 xl:gap-6">
-            {/* Total Bookings Card - slides out when sidebar opens */}
-            <div
-              className={`transition-all duration-500 ease-in-out ${
-                sidebarCollapsed
-                  ? "opacity-100 scale-100 translate-x-0"
-                  : "opacity-0 scale-95 -translate-x-full pointer-events-none"
-              }`}
-            >
-              <StatCard title="Total Bookings" value={stats.total} icon={Calendar} color="blue" />
-            </div>
-
-            {/* Other 3 cards - slide and center when sidebar opens */}
-            <div
-              className={`col-span-3 grid grid-cols-3 gap-4 xl:gap-6 transition-all duration-500 ease-in-out ${
-                sidebarCollapsed ? "translate-x-0" : "translate-x-[-25%] scale-105"
-              }`}
-            >
-              <div className="transition-all duration-300 ease-in-out hover:scale-105">
-                <StatCard title="Approved" value={stats.approved} icon={Check} color="green" />
-              </div>
-              <div className="transition-all duration-300 ease-in-out hover:scale-105 delay-75">
-                <StatCard title="Pending" value={stats.pending} icon={AlertCircle} color="yellow" />
-              </div>
-              <div className="transition-all duration-300 ease-in-out hover:scale-105 delay-150">
-                <StatCard title="Rejected" value={stats.rejected} icon={XCircle} color="red" />
-              </div>
-            </div>
+        {/* Statistics Cards - Circular progress cards */}
+        <div className="mb-12 flex justify-center">
+          <div className="flex flex-wrap justify-center gap-8 max-w-4xl">
+            <StatCard title="Total Bookings" value={stats.total} icon={Calendar} color="blue" progress={80} />
+            <StatCard title="Approved" value={stats.approved} icon={Check} color="green" progress={90} />
+            <StatCard title="Pending" value={stats.pending} icon={AlertCircle} color="yellow" progress={65} />
+            <StatCard title="Rejected" value={stats.rejected} icon={XCircle} color="red" progress={30} />
           </div>
         </div>
 

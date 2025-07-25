@@ -730,7 +730,7 @@ const BatchDetail = () => {
                   <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
                     Lecturer Portal
                   </h1>
-                  <p className="text-xs sm:text-sm text-slate-500">{batch.batch_name}</p>
+                  <p className="text-xs sm:text-sm text-slate-500">{batch.batch_code}</p>
                 </div>
               </div>
             </div>

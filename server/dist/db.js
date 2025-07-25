@@ -93,19 +93,23 @@ const schema = {
     CREATE TABLE IF NOT EXISTS batches (
       id INT AUTO_INCREMENT PRIMARY KEY,
       course_id INT NOT NULL,
-      batch_name VARCHAR(100) NOT NULL,
+      batch_code VARCHAR(50) UNIQUE NOT NULL,
+      batch_number INT NOT NULL,
+      year INT NOT NULL,
       capacity INT DEFAULT 30,
-      start_date DATE,
+      start_date DATE NOT NULL,
       end_date DATE,
       status ENUM('Upcoming', 'Active', 'Completed', 'Cancelled') DEFAULT 'Upcoming',
       location VARCHAR(255),
       schedule TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      description TEXT,
+      lecturer_id INT,
+      max_students INT DEFAULT 30,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
-      UNIQUE KEY (course_id, batch_name),
-      INDEX idx_batches_status (status),
-      INDEX idx_batches_dates (start_date, end_date)
+      FOREIGN KEY (lecturer_id) REFERENCES lecturers(id) ON DELETE SET NULL,
+      UNIQUE KEY (course_id, batch_number, year)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `,
   // Student management

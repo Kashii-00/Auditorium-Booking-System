@@ -108,8 +108,14 @@ export default function LecturerView() {
   }
 
   // Parse data safely
-  const academic = lecturer.academic_details || {}
-  const bank = lecturer.bank_details || {}
+  const academic = lecturer.academicDetails || {}
+  const bank = lecturer.bankDetails || {}
+  
+  // For Course Information card - show courseIds
+  const courseIds = Array.isArray(lecturer.courses)
+    ? lecturer.courses.map((c) => c.courseId).join(", ")
+    : ""
+  // For display purposes - course names
   const courses = Array.isArray(lecturer.courses)
     ? lecturer.courses.map((c) => c.courseName).join(", ")
     : lecturer.courses || ""
@@ -311,8 +317,8 @@ export default function LecturerView() {
                 <div>
                   <Label className="text-xs text-gray-500 uppercase tracking-wide">Courses</Label>
                   <div className="mt-2">
-                    {courses ? (
-                      <p className="text-gray-900 font-medium">{courses}</p>
+                    {courseIds ? (
+                       <p className="text-gray-900 font-medium">{courseIds}</p>
                     ) : (
                       <p className="text-gray-500 italic">No courses assigned</p>
                     )}
@@ -434,6 +440,61 @@ export default function LecturerView() {
             </CardContent>
           </Card>
         )}
+
+        {/* Courses Section */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-orange-600" />
+              Assigned Courses
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {lecturer.courses && lecturer.courses.length > 0 ? (
+              <div className="space-y-4">
+                {lecturer.courses.map((course, index) => (
+                  <div key={index} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <BookOpen className="h-5 w-5 text-blue-600" />
+                          <div>
+                            <h4 className="font-semibold text-gray-900">{course.courseName}</h4>
+                            <p className="text-sm text-gray-600">Course ID: {course.courseId}</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                          <div>
+                            <Label className="text-xs text-gray-500 uppercase tracking-wide">Stream</Label>
+                            <p className="text-gray-900 font-medium">{course.stream || lecturer.stream || "N/A"}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-gray-500 uppercase tracking-wide">Module</Label>
+                            <p className="text-gray-900 font-medium">{course.module || lecturer.module || "N/A"}</p>
+                          </div>
+                          <div>
+                            <Label className="text-xs text-gray-500 uppercase tracking-wide">Status</Label>
+                            <p className="text-gray-900 font-medium">{course.status || "Active"}</p>
+                          </div>
+                        </div>
+                      </div>
+                      {course.primary_course && (
+                        <Badge className="bg-green-100 text-green-800 border-green-300 ml-4">
+                          Primary Course
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No courses assigned</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Delete Confirmation Modal */}

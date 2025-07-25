@@ -16,6 +16,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa"
+import { Target,UserRoundCog } from "lucide-react"
 import { authRequest } from "../../services/authService"
 import LoadingScreen from "../LoadingScreen/LoadingScreen"
 
@@ -36,6 +37,8 @@ const ROLE_LABELS = {
     icon: FaUser,
   },
 }
+
+
 
 const STATUS_COLORS = {
   ACTIVE: "bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200",
@@ -266,11 +269,17 @@ const UserDetails = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-blue-800 bg-clip-text text-transparent">
-                User Management
-              </h1>
-              <p className="text-slate-600 mt-2">Manage system users, roles, and permissions</p>
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+              <div className="p-3 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 rounded-2xl flex-shrink-0">
+                <UserRoundCog className="h-9 w-9 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-4xl font-black gradient-text whitespace-nowrap">User Management Dashboard</h1>
+                <p className="text-slate-600 font-semibold mt-1 flex items-center gap-1">
+                  <Target className="h-3 w-3 flex-shrink-0" />
+                  Manage system users, roles, and permissions
+                </p>
+              </div>
             </div>
             <Link
               to="/create-user"

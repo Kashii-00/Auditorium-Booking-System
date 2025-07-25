@@ -628,7 +628,7 @@ const StudentBatchDetail = () => {
                   <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
                     Student Portal
                   </h1>
-                  <p className="text-xs sm:text-sm text-slate-500">{batch.batch_name || batch.batchName}</p>
+                  <p className="text-xs sm:text-sm text-slate-500">{batch.batch_code || batch.batchName}</p>
                 </div>
               </div>
               {/* Notifications */}
@@ -674,7 +674,7 @@ const StudentBatchDetail = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
                       <CardTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
-                        {batch.batch_name || batch.batchName}
+                        {batch.batch_code || batch.batchName}
                       </CardTitle>
                       <Badge className={`${getStatusColor(batch.status)} text-xs px-2 py-1 w-fit`}>
                         {batch.status?.charAt(0).toUpperCase() + batch.status?.slice(1)}

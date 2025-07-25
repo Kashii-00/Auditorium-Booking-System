@@ -9,14 +9,10 @@ import {
   Globe,
   Calendar,
   MapPin,
-  Building,
   Ship,
   Phone,
   Waves,
-  UserCheck,
   Upload,
-  ArrowRight,
-  ArrowLeft,
   Save,
   CheckCircle,
   AlertTriangle,
@@ -24,23 +20,35 @@ import {
   X,
   ChevronDown,
   Search,
-  Edit,
-  Trash2,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
   RefreshCw,
   Download,
   Plus,
   Users,
-  GraduationCap,
   FileText,
-  Eye,
   Loader2,
   TrendingUp,
   BookOpen,
-  Target,
   Activity,
+  Check,
+  Eye,
+  Edit,
+  Star,
+  Sparkles,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  ChevronLeft,
+  ChevronRight,
+  UserCheck,
+  Building,
+  Target,
+  GraduationCap,
+  Trash2,
+  Layers,
+  Hash,
+
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -125,50 +133,90 @@ const PERFORMANCE_CSS = `
   }
 `
 
-// Optimized Statistics Card Component
-const StatCard = memo(({ title, value, icon: Icon, color = "blue", trend, className = "" }) => {
-  const colorClasses = useMemo(
-    () => ({
-      blue: "bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700 border-blue-200",
-      green: "bg-gradient-to-br from-emerald-100 to-green-100 text-emerald-700 border-emerald-200",
-      purple: "bg-gradient-to-br from-purple-100 to-violet-100 text-purple-700 border-purple-200",
-      orange: "bg-gradient-to-br from-orange-100 to-amber-100 text-orange-700 border-orange-200",
-      rose: "bg-gradient-to-br from-rose-100 to-pink-100 text-rose-700 border-rose-200",
-    }),
-    [],
-  )
+// Utility function to extract course IDs from enrolled courses
+const extractCourseIds = (enrolledCourses) => {
+  if (!enrolledCourses) return "Not enrolled"
+  
+  // Since the server now returns courseId directly, we just need to handle the string
+  if (typeof enrolledCourses === 'string' && enrolledCourses.trim()) {
+    // Clean up the string and return it
+    return enrolledCourses.trim()
+  }
+  
+  // Handle array case (if needed)
+  if (Array.isArray(enrolledCourses)) {
+    const courseIds = enrolledCourses
+      .map(course => course.courseId || course.course_id || course.id || course)
+      .filter(Boolean)
+      .join(", ")
+    
+    return courseIds || "Not enrolled"
+  }
+  
+  return "Not enrolled"
+}
 
+// Enhanced Course Name Tooltip Component
+const CourseTooltip = memo(({ courseIds, coursesMap }) => {
+  const extractedCourseIds = extractCourseIds(courseIds)
+  
+  if (!extractedCourseIds || extractedCourseIds === "Not enrolled") {
+    return <span className="text-sm font-semibold text-slate-700">Not enrolled</span>
+  }
+
+  const courseIdArray = extractedCourseIds.split(", ").filter(Boolean)
+  
+  // Calculate dynamic width based on longest course name
+  const maxLength = Math.max(
+    ...courseIdArray.map(courseId => {
+      const courseName = coursesMap[courseId] || "Course name not found"
+      return (courseId + ": " + courseName).length
+    })
+  )
+  
+  // Determine tooltip width class based on content length
+  const getTooltipWidthClass = (length) => {
+    if (length <= 30) return "min-w-48 max-w-sm"      // Short names
+    if (length <= 50) return "min-w-64 max-w-md"      // Medium names  
+    if (length <= 80) return "min-w-80 max-w-lg"      // Long names
+    return "min-w-96 max-w-xl"                        // Very long names
+  }
+  
+  const tooltipWidthClass = getTooltipWidthClass(maxLength)
+  
   return (
-    <Card className={`stats-card border shadow-lg bg-white min-h-[140px] ${className}`}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-bold text-slate-600 mb-2 uppercase tracking-wide">{title}</p>
-            <p className="text-3xl font-black gradient-text mb-1">{value}</p>
-            {trend && (
-              <div className="flex items-center gap-1 text-xs">
-                <TrendingUp className="h-3 w-3 text-emerald-600" />
-                <span className="text-emerald-600 font-semibold">{trend}</span>
-              </div>
-            )}
-          </div>
-          <div className={`p-4 rounded-xl border ${colorClasses[color]} flex-shrink-0`}>
-            <Icon className="h-7 w-7" />
+    <div className="group relative">
+      <span className="text-sm font-semibold text-slate-700 max-w-xs truncate cursor-help">
+        {extractedCourseIds}
+      </span>
+      {courseIdArray.length > 0 && (
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50 pointer-events-none">
+          <div className={`bg-slate-800 text-white text-xs rounded-lg py-3 px-4 shadow-xl ${tooltipWidthClass}`}>
+            <div className="space-y-2">
+              {courseIdArray.map((courseId, index) => (
+                <div key={index} className="flex items-start gap-2">
+                  <span className="font-bold text-blue-300 flex-shrink-0">{courseId}:</span>
+                  <span className="break-words leading-relaxed">{coursesMap[courseId] || "Course name not found"}</span>
+                </div>
+              ))}
+            </div>
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   )
 })
 
-StatCard.displayName = "StatCard"
+CourseTooltip.displayName = "CourseTooltip"
 
 // Optimized Student Row Component
-const StudentRow = memo(({ student, onView, onEdit, onDelete, confirmDeleteId, loading }) => {
+const StudentRow = memo(({ student, onView, onEdit, onDelete, onSendPasswordReset, confirmDeleteId, loading, coursesMap }) => {
   const handleView = useCallback(() => onView(student.id), [onView, student.id])
   const handleEdit = useCallback(() => onEdit(student.id), [onEdit, student.id])
   const handleDelete = useCallback(() => onDelete(student.id), [onDelete, student.id])
   const handleCancelDelete = useCallback(() => onDelete(null), [onDelete])
+  const handleSendPasswordReset = useCallback(() => onSendPasswordReset(student), [onSendPasswordReset, student])
 
   return (
     <tr className="table-row border-b border-slate-200">
@@ -206,9 +254,7 @@ const StudentRow = memo(({ student, onView, onEdit, onDelete, confirmDeleteId, l
         <div className="text-sm font-semibold text-slate-700">{student.nationality}</div>
       </td>
       <td className="p-4">
-        <div className="text-sm font-semibold text-slate-700 max-w-xs truncate" title={student.enrolled_courses}>
-          {student.enrolled_courses || "Not enrolled"}
-        </div>
+        <CourseTooltip courseIds={student.enrolled_courses} coursesMap={coursesMap} />
       </td>
       <td className="p-4">
         <Badge
@@ -244,6 +290,15 @@ const StudentRow = memo(({ student, onView, onEdit, onDelete, confirmDeleteId, l
           >
             <Edit className="w-4 h-4" />
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleSendPasswordReset}
+            className="flex items-center gap-1 hover:bg-purple-50 hover:border-purple-300 border transition-colors"
+            title="Send Password Reset Email"
+          >
+            <Mail className="w-4 h-4" />
+          </Button>
           {confirmDeleteId === student.id ? (
             <div className="flex gap-1">
               <Button
@@ -253,7 +308,7 @@ const StudentRow = memo(({ student, onView, onEdit, onDelete, confirmDeleteId, l
                 disabled={loading}
                 className="hover:bg-red-700"
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm"}
+                {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : "Confirm"}
               </Button>
               <Button size="sm" variant="outline" onClick={handleCancelDelete} className="hover:bg-gray-50 border">
                 Cancel
@@ -489,6 +544,8 @@ export default function StudentManagementSystem() {
     }
   }, [])
 
+
+
   // View state - 'dashboard' or 'registration'
   const [currentView, setCurrentView] = useState("dashboard")
 
@@ -516,9 +573,12 @@ export default function StudentManagementSystem() {
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1)
   // Change studentsPerPage from 10 to 2
   const recordsPerPageOptions = [2, 5, 10, 25, 50]
-  const [studentsPerPage, setStudentsPerPage] = useState(2)
+  const [studentsPerPage, setStudentsPerPage] = useState(5)
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
   const [notificationMessage, setNotificationMessage] = useState("")
+
+  // Courses mapping for tooltips
+  const [coursesMap, setCoursesMap] = useState({})
 
   // Refs
   const courseOptionsRef = useRef(null)
@@ -608,6 +668,15 @@ export default function StudentManagementSystem() {
 
       if (coursesData && Array.isArray(coursesData)) {
         setCourses(coursesData)
+        
+        // Build courses mapping for tooltips
+        const mapping = {}
+        coursesData.forEach(course => {
+          if (course.courseId && course.courseName) {
+            mapping[course.courseId] = course.courseName
+          }
+        })
+        setCoursesMap(mapping)
       } else {
         throw new Error("Invalid course data format")
       }
@@ -700,23 +769,14 @@ export default function StudentManagementSystem() {
   const formSections = useMemo(
     () => [
       {
-        title: "Basic Info",
+        title: "Personal Information",
         icon: User,
-        fields: [
-          "full_name",
-          "email",
-          "identification_type",
-          "id_number",
-          "nationality",
-          "date_of_birth",
-          "country",
-          "address",
-        ],
+        fields: ["full_name", "identification_type", "id_number", "nationality", "date_of_birth", "country"],
       },
       {
-        title: "Contact",
+        title: "Contact Information",
         icon: Phone,
-        fields: ["emergency_contact_name", "emergency_contact_number"],
+        fields: ["email", "address", "emergency_contact_name", "emergency_contact_number"],
       },
       {
         title: "Courses",
@@ -726,7 +786,7 @@ export default function StudentManagementSystem() {
       {
         title: "Additional",
         icon: FileText,
-        fields: ["department", "is_swimmer", "is_slpa_employee", "company", "sea_service", "cdc_number"],
+        fields: ["is_swimmer", "is_slpa_employee", "company"],
       },
       {
         title: "Documents",
@@ -737,8 +797,8 @@ export default function StudentManagementSystem() {
     [],
   )
 
-  // Conditional fields when SLPA employee is selected
-  const slpaFields = ["designation", "division", "service_no", "section_unit"]
+  // Conditional fields when SLPA employee is selected - now includes department, sea_service, cdc_number
+  const slpaFields = ["designation", "division", "service_no", "section_unit", "department", "sea_service", "cdc_number"]
 
   // Reset form to default values
   const resetForm = useCallback(() => {
@@ -817,11 +877,38 @@ export default function StudentManagementSystem() {
           nic_document: null,
           passport_document: null,
           photo: null,
-          driving_details: student.driving_details || {
+          driving_details: (() => {
+            // Handle malformed driving_details from database
+            if (student.driving_details) {
+              try {
+                // If it's already an object, use it
+                if (typeof student.driving_details === 'object' && !Array.isArray(student.driving_details)) {
+                  return {
+                    driving_license_no: student.driving_details.driving_license_no || "",
+                    driving_class: student.driving_details.driving_class || "",
+                    issue_date: student.driving_details.issue_date || "",
+                  };
+                }
+                // If it's a string, try to parse it
+                if (typeof student.driving_details === 'string') {
+                  const parsed = JSON.parse(student.driving_details);
+                  return {
+                    driving_license_no: parsed.driving_license_no || "",
+                    driving_class: parsed.driving_class || "",
+                    issue_date: parsed.issue_date || "",
+                  };
+                }
+              } catch (error) {
+                console.warn('Error parsing driving_details:', error);
+              }
+            }
+            // Return default structure
+            return {
             driving_license_no: "",
             driving_class: "",
             issue_date: "",
-          },
+            };
+          })(),
         })
 
         setEditingStudent(studentId)
@@ -883,15 +970,60 @@ export default function StudentManagementSystem() {
     [confirmDeleteId, fetchStudents],
   )
 
+  // Send password reset email handler
+  const handleSendPasswordReset = useCallback(async (student) => {
+    try {
+      setLoading(true)
+      
+      const response = await authRequest("post", "http://localhost:5003/api/student-auth/forgot-password", {
+        email: student.email
+      })
+
+      if (response.success) {
+        setNotificationMessage(`Password reset email sent to ${student.email}`)
+        setShowSuccessNotification(true)
+        
+        setTimeout(() => {
+          setShowSuccessNotification(false)
+        }, 4000)
+      } else {
+        throw new Error(response.message || "Failed to send password reset email")
+      }
+    } catch (error) {
+      console.error("Error sending password reset email:", error)
+      setErrorMessage(`Failed to send password reset email to ${student.email}. Please try again.`)
+      
+      setTimeout(() => {
+        setErrorMessage("")
+      }, 5000)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   // Form validation function
+  // Check if selected courses include Equipment stream courses
+  const hasEquipmentCourses = useMemo(() => {
+    return formData.selected_courses.some(courseId => {
+      const course = courses.find(c => c.id === courseId);
+      return course && course.stream && course.stream.toLowerCase().includes('equipment');
+    });
+  }, [formData.selected_courses, courses]);
+
   const validateForm = useCallback(
     (step) => {
       const newErrors = {}
 
-      const fieldsToValidate = formSections[step].fields
+      const fieldsToValidate = [...formSections[step].fields]
 
+      // Add SLPA fields if employee checkbox is checked
       if (step === 3 && formData.is_slpa_employee) {
         fieldsToValidate.push(...slpaFields)
+      }
+
+      // Add driving details fields if Equipment courses are selected
+      if (step === 3 && hasEquipmentCourses) {
+        fieldsToValidate.push("driving_license_no", "driving_class", "driving_issue_date")
       }
 
       fieldsToValidate.forEach((field) => {
@@ -902,25 +1034,114 @@ export default function StudentManagementSystem() {
           return
         }
 
-        const isFileField = ["nic_document", "passport_document", "photo"].includes(field)
-
-        if (isFileField) {
-          if (!formData[field] && step === 4) {
-            newErrors[field] = "Please upload the required document"
+        // Enhanced validation for specific fields
+        if (field === "email") {
+          if (!formData.email || formData.email.trim() === "") {
+            newErrors.email = "Email is required"
+          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = "Please enter a valid email address"
           }
-        } else if (!formData[field] && fieldsToValidate.includes(field)) {
-          newErrors[field] = `${field.replace("_", " ")} is required`
+          return
+        }
+
+        if (field === "id_number") {
+          if (!formData.id_number || formData.id_number.trim() === "") {
+            newErrors.id_number = `${formData.identification_type} number is required`
+          } else if (formData.identification_type === "NIC") {
+            // NIC validation for Sri Lanka format
+            const nicPattern = /^([0-9]{9}[vVxX]|[0-9]{12})$/
+            if (!nicPattern.test(formData.id_number.trim())) {
+              newErrors.id_number = "Please enter a valid NIC number (9 digits + V/X or 12 digits)"
+            }
+          } else if (formData.identification_type === "Passport") {
+            // Basic passport validation
+            if (formData.id_number.trim().length < 6) {
+              newErrors.id_number = "Passport number must be at least 6 characters"
+            }
+          }
+          return
+        }
+
+        if (field === "date_of_birth") {
+          if (!formData.date_of_birth) {
+            newErrors.date_of_birth = "Date of birth is required"
+          } else {
+            const birthDate = new Date(formData.date_of_birth)
+            const today = new Date()
+            const age = today.getFullYear() - birthDate.getFullYear()
+            if (age < 16 || age > 80) {
+              newErrors.date_of_birth = "Age must be between 16 and 80 years"
+            }
+          }
+          return
+        }
+
+        if (field === "emergency_contact_number") {
+          if (!formData.emergency_contact_number || formData.emergency_contact_number.trim() === "") {
+            newErrors.emergency_contact_number = "Emergency contact number is required"
+          } else if (!/^[0-9+\-\s()]{10,15}$/.test(formData.emergency_contact_number.trim())) {
+            newErrors.emergency_contact_number = "Please enter a valid phone number (10-15 digits)"
+          }
+          return
+        }
+
+        // Driving details validation for Equipment courses
+        if (field === "driving_license_no") {
+          if (!formData.driving_details.driving_license_no || formData.driving_details.driving_license_no.trim() === "") {
+            newErrors.driving_license_no = "Driving license number is required for Equipment courses"
+          }
+          return
+        }
+
+        if (field === "driving_class") {
+          if (!formData.driving_details.driving_class || formData.driving_details.driving_class.trim() === "") {
+            newErrors.driving_class = "Driving license class is required for Equipment courses"
+          }
+          return
+        }
+
+        if (field === "driving_issue_date") {
+          if (!formData.driving_details.issue_date) {
+            newErrors.driving_issue_date = "Driving license issue date is required for Equipment courses"
+          } else {
+            const issueDate = new Date(formData.driving_details.issue_date)
+            const today = new Date()
+            if (issueDate > today) {
+              newErrors.driving_issue_date = "Issue date cannot be in the future"
+            }
+          }
+          return
+        }
+
+        // File fields are now optional - students can upload later
+        const isFileField = ["nic_document", "passport_document", "photo"].includes(field)
+        if (isFileField) {
+          // Skip file validation - make images optional
+          return
+        }
+
+        // General required field validation
+        if (!formData[field] || (typeof formData[field] === "string" && formData[field].trim() === "")) {
+          // Skip certain optional fields
+          const optionalFields = ["company"]
+          
+          // Skip checkbox fields since false is a valid value
+          const checkboxFields = ["is_swimmer", "is_slpa_employee"]
+          
+          // Skip SLPA-specific fields when SLPA employee is not checked
+          const slpaSpecificFields = ["department", "sea_service", "cdc_number"]
+          const shouldSkipSlpaField = slpaSpecificFields.includes(field) && !formData.is_slpa_employee
+          
+          if (!optionalFields.includes(field) && !checkboxFields.includes(field) && !shouldSkipSlpaField) {
+            newErrors[field] = `${field.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())} is required`
+          }
         }
       })
-
-      if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-        newErrors.email = "Please enter a valid email address"
-      }
 
       setErrors(newErrors)
       return Object.keys(newErrors).length === 0
     },
-    [formData, formSections, slpaFields],
+    [formData, formSections, slpaFields, hasEquipmentCourses],
   )
 
   // Handle form input changes
@@ -1116,7 +1337,7 @@ export default function StudentManagementSystem() {
           student.full_name?.toLowerCase().includes(term) ||
           student.email?.toLowerCase().includes(term) ||
           student.id_number?.toLowerCase().includes(term) ||
-          student.enrolled_courses?.toLowerCase().includes(term),
+          extractCourseIds(student.enrolled_courses)?.toLowerCase().includes(term),
       )
     }
 
@@ -1276,7 +1497,7 @@ export default function StudentManagementSystem() {
       student.email,
       `${student.identification_type}: ${student.id_number}`,
       student.nationality,
-      student.enrolled_courses || "",
+      extractCourseIds(student.enrolled_courses) || "",
       student.status || "Active",
       student.registration_date ? new Date(student.registration_date).toLocaleDateString() : "",
     ])
@@ -1812,6 +2033,16 @@ export default function StudentManagementSystem() {
                     </div>
                   )}
                 </div>
+
+                {/* Equipment Course Indicator */}
+                {hasEquipmentCourses && (
+                  <div className="mt-3 p-3 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-lg">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-orange-800">
+                      <Ship className="w-4 h-4" />
+                      Equipment courses selected - Additional driving details will be required in the next step
+                    </div>
+                  </div>
+                )}
               </div>
             )
           }
@@ -1821,8 +2052,11 @@ export default function StudentManagementSystem() {
               <div key={field} className="space-y-2">
                 <Label htmlFor="nic_document" className="flex items-center gap-2 text-sm font-bold text-slate-700">
                   <Upload className="w-4 h-4 text-blue-600" />
-                  NIC Document *
+                  NIC Document - Optional
                 </Label>
+                <div className="text-xs text-slate-500 mb-2">
+                  You can upload this later if needed
+                </div>
                 <Input
                   type="file"
                   id="nic_document"
@@ -1849,8 +2083,11 @@ export default function StudentManagementSystem() {
               <div key={field} className="space-y-2">
                 <Label htmlFor="passport_document" className="flex items-center gap-2 text-sm font-bold text-slate-700">
                   <Upload className="w-4 h-4 text-blue-600" />
-                  Passport Document *
+                  Passport Document - Optional
                 </Label>
+                <div className="text-xs text-slate-500 mb-2">
+                  You can upload this later if needed
+                </div>
                 <Input
                   type="file"
                   id="passport_document"
@@ -1879,8 +2116,11 @@ export default function StudentManagementSystem() {
               <div key={field} className="space-y-2">
                 <Label htmlFor="photo" className="flex items-center gap-2 text-sm font-bold text-slate-700">
                   <Upload className="w-4 h-4 text-blue-600" />
-                  Photo (Passport Size) *
+                  Photo (Passport Size) - Optional
                 </Label>
+                <div className="text-xs text-slate-500 mb-2">
+                  You can upload this later if needed
+                </div>
                 <Input
                   type="file"
                   id="photo"
@@ -1993,6 +2233,137 @@ export default function StudentManagementSystem() {
                 />
                 {errors.section_unit && <div className="text-sm text-red-500 font-semibold">{errors.section_unit}</div>}
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="department" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Building className="w-4 h-4 text-blue-600" />
+                  Department/Rank *
+                </Label>
+                <Input
+                  type="text"
+                  id="department"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleChange}
+                  placeholder="Enter department or rank"
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg",
+                    errors.department ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.department && <div className="text-sm text-red-500 font-semibold">{errors.department}</div>}
+            </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="sea_service" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Ship className="w-4 h-4 text-blue-600" />
+                  Sea Services (Year/Month) *
+                </Label>
+                <Input
+                  type="text"
+                  id="sea_service"
+                  name="sea_service"
+                  value={formData.sea_service}
+                  onChange={handleChange}
+                  placeholder="Example: 2Y/6M"
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg",
+                    errors.sea_service ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.sea_service && <div className="text-sm text-red-500 font-semibold">{errors.sea_service}</div>}
+          </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="cdc_number" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <CreditCard className="w-4 h-4 text-blue-600" />
+                  CDC Number *
+                </Label>
+                <Input
+                  type="text"
+                  id="cdc_number"
+                  name="cdc_number"
+                  value={formData.cdc_number}
+                  onChange={handleChange}
+                  placeholder="Enter CDC number"
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg",
+                    errors.cdc_number ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.cdc_number && <div className="text-sm text-red-500 font-semibold">{errors.cdc_number}</div>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Display Equipment Course Driving Details when Equipment courses are selected */}
+        {currentStep === 3 && hasEquipmentCourses && (
+          <div className="p-6 border-2 rounded-2xl bg-gradient-to-r from-orange-50 via-yellow-50 to-amber-50 border-orange-300 space-y-4 shadow-xl">
+            <h3 className="text-lg font-black text-orange-900 flex items-center gap-2">
+              <Ship className="w-5 h-5" />
+              Equipment Course Requirements - Driving Details
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="driving_license_no" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <CreditCard className="w-4 h-4 text-orange-600" />
+                  Driving License Number *
+                </Label>
+                <Input
+                  type="text"
+                  id="driving_license_no"
+                  name="driving_details.driving_license_no"
+                  value={formData.driving_details.driving_license_no}
+                  onChange={handleChange}
+                  placeholder="Enter driving license number"
+                  className={cn(
+                    "border-2 focus:border-orange-500 focus:ring-orange-500 shadow-lg",
+                    errors.driving_license_no ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.driving_license_no && <div className="text-sm text-red-500 font-semibold">{errors.driving_license_no}</div>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="driving_class" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Building className="w-4 h-4 text-orange-600" />
+                  Driving License Class *
+                </Label>
+                <Input
+                  type="text"
+                  id="driving_class"
+                  name="driving_details.driving_class"
+                  value={formData.driving_details.driving_class}
+                  onChange={handleChange}
+                  placeholder="Enter driving license class (e.g., B, C, D)"
+                  className={cn(
+                    "border-2 focus:border-orange-500 focus:ring-orange-500 shadow-lg",
+                    errors.driving_class ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.driving_class && <div className="text-sm text-red-500 font-semibold">{errors.driving_class}</div>}
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="driving_issue_date" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Calendar className="w-4 h-4 text-orange-600" />
+                  License Issue Date *
+                </Label>
+                <Input
+                  type="date"
+                  id="driving_issue_date"
+                  name="driving_details.issue_date"
+                  value={formData.driving_details.issue_date}
+                  onChange={handleChange}
+                  className={cn(
+                    "border-2 focus:border-orange-500 focus:ring-orange-500 shadow-lg",
+                    errors.driving_issue_date ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.driving_issue_date && <div className="text-sm text-red-500 font-semibold">{errors.driving_issue_date}</div>}
+              </div>
             </div>
           </div>
         )}
@@ -2029,7 +2400,46 @@ export default function StudentManagementSystem() {
                 Export CSV
               </Button>
               <Button
-                onClick={() => setCurrentView("registration")}
+                onClick={() => {
+                  // Reset form state before switching to registration
+                  setFormData({
+                    full_name: "",
+                    email: "",
+                    identification_type: "NIC",
+                    id_number: "",
+                    nationality: "",
+                    date_of_birth: "",
+                    country: "",
+                    cdc_number: "",
+                    address: "",
+                    department: "",
+                    company: "",
+                    sea_service: "",
+                    emergency_contact_name: "",
+                    emergency_contact_number: "",
+                    is_swimmer: false,
+                    is_slpa_employee: false,
+                    designation: "",
+                    division: "",
+                    service_no: "",
+                    section_unit: "",
+                    selected_courses: [],
+                    nic_document: null,
+                    passport_document: null,
+                    photo: null,
+                    driving_details: {
+                      driving_license_no: "",
+                      driving_class: "",
+                      issue_date: "",
+                    },
+                  })
+                  setCurrentStep(0)
+                  setEditingStudent(null)
+                  setErrors({})
+                  setErrorMessage("")
+                  setCurrentView("registration")
+                  navigate("/student-registration", { replace: true })
+                }}
                 className="gap-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white rounded-xl font-bold transition-colors"
               >
                 <Plus className="h-4 w-4" />
@@ -2039,37 +2449,7 @@ export default function StudentManagementSystem() {
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            title="Total Students"
-            value={totalStudents}
-            icon={Users}
-            color="blue"
-            trend="+12% from last month"
-          />
-          <StatCard
-            title="Active Students"
-            value={activeStudents}
-            icon={UserCheck}
-            color="green"
-            trend="+8% enrollment"
-          />
-          <StatCard
-            title="SLPA Employees"
-            value={slpaEmployees}
-            icon={Building}
-            color="purple"
-            trend="+23% from last month"
-          />
-          <StatCard
-            title="Available Courses"
-            value={totalCourses}
-            icon={GraduationCap}
-            color="orange"
-            trend="+3 new courses"
-          />
-        </div>
+
 
         {/* Students Table */}
         <Card className="border-0 shadow-lg bg-white">
@@ -2235,8 +2615,10 @@ export default function StudentManagementSystem() {
                             onView={handleViewStudent}
                             onEdit={handleEditStudent}
                             onDelete={handleDeleteStudent}
+                            onSendPasswordReset={handleSendPasswordReset}
                             confirmDeleteId={confirmDeleteId}
                             loading={loading}
+                            coursesMap={coursesMap}
                           />
                         ))
                       ) : (
@@ -2407,6 +2789,23 @@ export default function StudentManagementSystem() {
                       return <Icon className="h-6 w-6 text-blue-600" />
                     })()}
                     <span>{formSections[currentStep].title}</span>
+                    {/* Conditional section indicators */}
+                    {currentStep === 3 && (
+                      <div className="flex items-center gap-2 text-sm">
+                        {formData.is_slpa_employee && (
+                          <Badge className="bg-purple-100 text-purple-700 border-purple-300">
+                            <Building className="w-3 h-3 mr-1" />
+                            SLPA Employee
+                          </Badge>
+                        )}
+                        {hasEquipmentCourses && (
+                          <Badge className="bg-orange-100 text-orange-700 border-orange-300">
+                            <Ship className="w-3 h-3 mr-1" />
+                            Equipment Course
+                          </Badge>
+                        )}
+                      </div>
+                    )}
                   </h2>
                   {renderFormFields()}
                 </div>
@@ -2496,6 +2895,133 @@ export default function StudentManagementSystem() {
     }
   }, [currentPage])
 
+  // Handle starting new registration - ensures clean state
+  const handleStartNewRegistration = useCallback(() => {
+    // Reset all form state
+    setFormData({
+      full_name: "",
+      email: "",
+      identification_type: "NIC",
+      id_number: "",
+      nationality: "",
+      date_of_birth: "",
+      country: "",
+      cdc_number: "",
+      address: "",
+      department: "",
+      company: "",
+      sea_service: "",
+      emergency_contact_name: "",
+      emergency_contact_number: "",
+      is_swimmer: false,
+      is_slpa_employee: false,
+      designation: "",
+      division: "",
+      service_no: "",
+      section_unit: "",
+      selected_courses: [],
+      nic_document: null,
+      passport_document: null,
+      photo: null,
+      driving_details: {
+        driving_license_no: "",
+        driving_class: "",
+        issue_date: "",
+      },
+    })
+    setCurrentStep(0)
+    setEditingStudent(null)
+    setErrors({})
+    setErrorMessage("")
+    setCurrentView("registration")
+    // Clear URL parameters
+    navigate("/student-registration", { replace: true })
+  }, [navigate])
+
+  // Load student data for editing
+  const loadStudentForEdit = useCallback(async (studentId) => {
+    try {
+      setLoading(true)
+      const student = await authRequest("get", `http://localhost:5003/api/students/${studentId}`)
+
+      if (student) {
+        // Prepare selected courses
+        const selectedCourses = student.courses?.map((course) => course.id) || []
+
+        // Populate form data
+        setFormData({
+          full_name: student.full_name || "",
+          email: student.email || "",
+          selected_courses: selectedCourses,
+          identification_type: student.identification_type || "NIC",
+          id_number: student.id_number || "",
+          nationality: student.nationality || "",
+          date_of_birth: student.date_of_birth ? student.date_of_birth.split("T")[0] : "",
+          country: student.country || "",
+          cdc_number: student.cdc_number || "",
+          address: student.address || "",
+          department: student.department || "",
+          company: student.company || "",
+          sea_service: student.sea_service || "",
+          emergency_contact_name: student.emergency_contact_name || "",
+          emergency_contact_number: student.emergency_contact_number || "",
+          is_swimmer: Boolean(student.is_swimmer),
+          is_slpa_employee: Boolean(student.is_slpa_employee),
+          designation: student.designation || "",
+          division: student.division || "",
+          service_no: student.service_no || "",
+          section_unit: student.section_unit || "",
+          nic_document: null,
+          passport_document: null,
+          photo: null,
+          driving_details: (() => {
+            // Handle malformed driving_details from database
+            if (student.driving_details) {
+              try {
+                // If it's already an object, use it
+                if (typeof student.driving_details === 'object' && !Array.isArray(student.driving_details)) {
+                  return {
+                    driving_license_no: student.driving_details.driving_license_no || "",
+                    driving_class: student.driving_details.driving_class || "",
+                    issue_date: student.driving_details.issue_date || "",
+                  };
+                }
+                // If it's a string, try to parse it
+                if (typeof student.driving_details === 'string') {
+                  const parsed = JSON.parse(student.driving_details);
+                  return {
+                    driving_license_no: parsed.driving_license_no || "",
+                    driving_class: parsed.driving_class || "",
+                    issue_date: parsed.issue_date || "",
+                  };
+                }
+              } catch (error) {
+                console.warn('Error parsing driving_details:', error);
+              }
+            }
+            // Return default structure
+            return {
+            driving_license_no: "",
+            driving_class: "",
+            issue_date: "",
+            };
+          })(),
+        })
+
+        setEditingStudent(studentId)
+        setCurrentStep(0)
+        setCurrentView("registration")
+
+        window.scrollTo({ top: 0, behavior: "smooth" })
+      }
+    } catch (error) {
+      console.error("Error fetching student details:", error)
+      setErrorMessage("Failed to load student details for editing.")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   return (
     <div className="min-h-screen">
       {/* Enhanced Success Notification */}
@@ -2512,3 +3038,4 @@ export default function StudentManagementSystem() {
     </div>
   )
 }
+

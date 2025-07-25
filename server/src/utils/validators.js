@@ -10,9 +10,6 @@ function validateBatch(data) {
     errors.push("Course ID is required")
   }
 
-  if (!data.batch_name) {
-    errors.push("Batch name is required")
-  }
 
   if (!data.start_date) {
     errors.push("Start date is required")

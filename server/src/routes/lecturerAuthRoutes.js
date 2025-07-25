@@ -241,12 +241,14 @@ router.post('/refresh-token', async (req, res) => {
 });
 
 /**
- * Forgot Password - Request Reset
+ * Forgot Password - Request Reset (Enhanced Security)
  * POST /api/lecturer-auth/forgot-password
  */
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
+    const clientIp = req.ip || req.connection.remoteAddress;
+    const userAgent = req.get('User-Agent') || 'Unknown';
     
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
@@ -264,45 +266,154 @@ router.post('/forgot-password', async (req, res) => {
     
     // For security, don't reveal if email exists or not
     if (lecturers.length === 0) {
+      // Log failed attempt
+      await db.queryPromise(
+        'INSERT INTO password_reset_logs (user_type, user_id, email, action, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+        ['lecturer', 0, email, 'failed_attempt', clientIp, userAgent]
+      );
       return res.status(200).json({ success: true, message: 'If your email is registered, you will receive reset instructions' });
     }
     
     const lecturer = lecturers[0];
     
+    // Check for rate limiting - no more than 3 requests per hour
+    const oneHourAgo = new Date(Date.now() - 3600000);
+    if (lecturer.last_reset_request && new Date(lecturer.last_reset_request) > oneHourAgo) {
+      const timeLeft = Math.ceil((60 - (Date.now() - new Date(lecturer.last_reset_request).getTime()) / 60000));
+      
+      // Log rate limit attempt
+      await db.queryPromise(
+        'INSERT INTO password_reset_logs (user_type, user_id, email, action, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+        ['lecturer', lecturer.id, email, 'failed_attempt', clientIp, userAgent]
+      );
+      
+      return res.status(429).json({ 
+        error: `Too many password reset requests. Please try again in ${timeLeft} minutes.`,
+        retryAfter: timeLeft * 60
+      });
+    }
+    
+    // Check if user has recently reset password (within last 24 hours)
+    const twentyFourHoursAgo = new Date(Date.now() - 86400000);
+    if (lecturer.last_password_reset && new Date(lecturer.last_password_reset) > twentyFourHoursAgo) {
+      // Log this attempt
+      await db.queryPromise(
+        'INSERT INTO password_reset_logs (user_type, user_id, email, action, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+        ['lecturer', lecturer.id, email, 'failed_attempt', clientIp, userAgent]
+      );
+      
+      return res.status(400).json({ 
+        error: 'You have recently reset your password. Please wait 24 hours before requesting another reset.',
+        canRetryAt: new Date(new Date(lecturer.last_password_reset).getTime() + 86400000).toISOString()
+      });
+    }
+    
+    // Check if there's already a valid, unused token
+    if (lecturer.reset_token && lecturer.reset_token_expires) {
+      const tokenExpiry = new Date(lecturer.reset_token_expires);
+      if (tokenExpiry > new Date()) {
+        const timeLeft = Math.ceil((tokenExpiry.getTime() - Date.now()) / 60000);
+        
+        // Log duplicate request attempt
+        await db.queryPromise(
+          'INSERT INTO password_reset_logs (user_type, user_id, email, action, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+          ['lecturer', lecturer.id, email, 'failed_attempt', clientIp, userAgent]
+        );
+        
+        return res.status(400).json({ 
+          error: `A password reset email was already sent. Please check your email or wait ${timeLeft} minutes for the link to expire.`,
+          expiresIn: timeLeft * 60
+        });
+      }
+    }
+    
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
     
-    // Save reset token to database
+    // Update tracking fields and save reset token to database
+    const utcExpiryTime = resetTokenExpiry.toISOString().slice(0, 19).replace('T', ' ');
     await db.queryPromise(
-      'UPDATE lecturer_users SET reset_token = ?, reset_token_expires = ? WHERE id = ?',
-      [resetToken, resetTokenExpiry, lecturer.id]
+      `UPDATE lecturer_users 
+       SET reset_token = ?, 
+           reset_token_expires = ?, 
+           last_reset_request = NOW(),
+           reset_request_count = reset_request_count + 1 
+       WHERE id = ?`,
+      [resetToken, utcExpiryTime, lecturer.id]
+    );
+    
+    // Log the password reset request
+    await db.queryPromise(
+      'INSERT INTO password_reset_logs (user_type, user_id, email, action, ip_address, user_agent, token_used) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      ['lecturer', lecturer.id, email, 'request', clientIp, userAgent, resetToken]
     );
     
     // Send password reset email
-    const resetUrl = `http://localhost:5003/lecturer-reset-password?token=${resetToken}`;
+    const resetUrl = `http://localhost:3000/lecturer-reset-password?token=${resetToken}`;
     
-    await sendEmail({
-      to: email,
-      subject: 'Password Reset - Maritime Training Center',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-          <h2 style="color: #3b82f6;">Password Reset Request</h2>
-          <p>Dear ${lecturer.full_name},</p>
-          <p>We received a request to reset your password. Click the button below to create a new password:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Your Password</a>
+    try {
+      await sendEmail({
+        to: email,
+        subject: '🔐 Password Reset Request - MPMA Lecturer Portal',
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px;">
+            <div style="background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #2563eb; font-size: 28px; margin: 0; font-weight: 800;">🔐 Password Reset</h1>
+                <p style="color: #64748b; font-size: 16px; margin: 10px 0;">MPMA Lecturer Portal</p>
+              </div>
+              
+              <div style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0); border-radius: 15px; padding: 25px; margin: 25px 0;">
+                <h2 style="color: #1e293b; font-size: 20px; margin: 0 0 15px 0;">Hello ${lecturer.full_name},</h2>
+                <p style="color: #475569; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+                  We received a request to reset your password for your MPMA Lecturer Portal account.
+                </p>
+                <p style="color: #dc2626; font-size: 14px; font-weight: 600; margin: 0;">
+                  ⚠️ This link will expire in 1 hour for security reasons.
+                </p>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; text-decoration: none; padding: 15px 30px; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transition: all 0.3s ease;">
+                  🔑 Reset My Password
+                </a>
+              </div>
+              
+              <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; border-radius: 8px; margin: 25px 0;">
+                <p style="color: #b91c1c; font-size: 14px; margin: 0; font-weight: 600;">
+                  🚨 Security Notice: If you didn't request this password reset, please ignore this email. Your account remains secure.
+                </p>
+              </div>
+              
+              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                <p style="color: #64748b; font-size: 12px; margin: 0;">
+                  © 2025 MPMA Lecturer Portal. This is an automated message.
+                </p>
+              </div>
+            </div>
           </div>
-          <p>This link will expire in 1 hour for security reasons.</p>
-          <p>If you didn't request this password reset, please ignore this email or contact our support team if you have concerns.</p>
-          <p>Thank you,<br>Maritime Training Center Team</p>
-        </div>
-      `
-    });
+        `
+      });
+      
+      logger.info(`Password reset email sent successfully to lecturer: ${email}`);
+      
+    } catch (emailError) {
+      logger.error('Failed to send password reset email:', emailError);
+      
+      // Clear the reset token if email failed
+      await db.queryPromise(
+        'UPDATE lecturer_users SET reset_token = NULL, reset_token_expires = NULL WHERE id = ?',
+        [lecturer.id]
+      );
+      
+      return res.status(500).json({ error: 'Failed to send password reset email. Please try again later.' });
+    }
     
     res.status(200).json({ 
       success: true, 
-      message: 'If your email is registered, you will receive reset instructions' 
+      message: 'Password reset instructions have been sent to your email',
+      expiresIn: 3600 // 1 hour in seconds
     });
     
   } catch (error) {
@@ -312,12 +423,14 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 /**
- * Reset Password with Token
+ * Reset Password with Token (Enhanced Security)
  * POST /api/lecturer-auth/reset-password
  */
 router.post('/reset-password', async (req, res) => {
   try {
     const { token, newPassword } = req.body;
+    const clientIp = req.ip || req.connection.remoteAddress;
+    const userAgent = req.get('User-Agent') || 'Unknown';
     
     if (!token || !newPassword) {
       return res.status(400).json({ error: 'Token and new password are required' });
@@ -331,13 +444,19 @@ router.post('/reset-password', async (req, res) => {
     const query = `
       SELECT * FROM lecturer_users 
       WHERE reset_token = ? 
-      AND reset_token_expires > NOW() 
+      AND reset_token_expires > UTC_TIMESTAMP() 
       AND status = 'ACTIVE'
     `;
     
     const lecturers = await db.queryPromise(query, [token]);
     
     if (lecturers.length === 0) {
+      // Log failed attempt
+      await db.queryPromise(
+        'INSERT INTO password_reset_logs (user_type, user_id, email, action, ip_address, user_agent, token_used) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        ['lecturer', 0, 'unknown', 'failed_attempt', clientIp, userAgent, token]
+      );
+      
       return res.status(400).json({ error: 'Invalid or expired reset token' });
     }
     
@@ -346,19 +465,33 @@ router.post('/reset-password', async (req, res) => {
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     
-    // Update password and clear reset token
+    // Update password, clear reset token, and track the reset
     await db.queryPromise(
       `UPDATE lecturer_users 
        SET password = ?, 
            is_temp_password = FALSE, 
            reset_token = NULL, 
            reset_token_expires = NULL, 
+           last_password_reset = NOW(),
+           password_reset_count = password_reset_count + 1,
            updated_at = NOW() 
        WHERE id = ?`,
       [hashedPassword, lecturer.id]
     );
     
-    res.json({ success: true, message: 'Password has been reset successfully' });
+    // Log successful password reset
+    await db.queryPromise(
+      'INSERT INTO password_reset_logs (user_type, user_id, email, action, ip_address, user_agent, token_used) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      ['lecturer', lecturer.id, lecturer.email, 'reset', clientIp, userAgent, token]
+    );
+    
+    logger.info(`Password reset successfully completed for lecturer: ${lecturer.email}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'Password has been reset successfully. You can now log in with your new password.',
+      redirectTo: '/lecturer-login'
+    });
     
   } catch (error) {
     logger.error('Reset password error:', error);
@@ -434,7 +567,7 @@ router.get('/profile', lecturerAuthMiddleware, async (req, res) => {
     
     // Get batches the lecturer is assigned to
     const batchesQuery = `
-      SELECT b.id, b.batch_name, b.capacity, c.courseName,
+      SELECT b.id, b.capacity, c.courseName,
              b.start_date, b.end_date, b.status, b.location,
              lb.module, lb.hours_assigned, lb.payment_rate,
              (SELECT COUNT(*) FROM student_batches WHERE batch_id = b.id) as enrolled_students
@@ -495,7 +628,7 @@ router.get('/profile', lecturerAuthMiddleware, async (req, res) => {
       })),
       batches: batches.map(batch => ({
         id: batch.id,
-        batch_name: batch.batch_name,
+
         courseName: batch.courseName,
         start_date: batch.start_date,
         end_date: batch.end_date,
@@ -527,7 +660,7 @@ router.get('/students', lecturerAuthMiddleware, async (req, res) => {
     
     let query = `
       SELECT DISTINCT s.id, s.full_name, s.email, s.emergency_contact_number as phone, s.id_number,
-             sb.batch_id, b.batch_name, c.courseName,
+             sb.batch_id,c.courseName,
              sb.attendance_percentage, sb.status as enrollment_status
       FROM students s
       JOIN student_batches sb ON s.id = sb.student_id

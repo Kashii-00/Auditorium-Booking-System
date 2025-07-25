@@ -91,7 +91,7 @@ const BatchDetailsPopup = ({ batchId, onClose }) => {
     <div className="batch-details-popup">
       <div className="details-popup-content">
         <div className="details-popup-header">
-          <h3>{batch.batch_name}</h3>
+          <h3>{batch.batch_code}</h3>
           <button className="close-button" onClick={onClose}>
             <FaTimes />
           </button>

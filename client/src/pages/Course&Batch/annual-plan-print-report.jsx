@@ -476,12 +476,7 @@ const AnnualPlanPrintReport = () => {
                                       <span>{lecturer.department}</span>
                                     </div>
                                   )}
-                                  {lecturer.specialization && (
-                                    <div className="flex items-center gap-1">
-                                      <BookOpen className="h-3 w-3" />
-                                      <span>{lecturer.specialization}</span>
-                                    </div>
-                                  )}
+                                  
                                   {lecturer.email && (
                                     <div className="flex items-center gap-1">
                                       <Mail className="h-3 w-3" />

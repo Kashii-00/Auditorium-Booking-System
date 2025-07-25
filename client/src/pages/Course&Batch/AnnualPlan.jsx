@@ -182,7 +182,7 @@ const TimelineBatch = memo(({ batch, style, onClick, index }) => {
     >
       <div className="p-4 h-full flex flex-col justify-between text-white">
         <div>
-          <h4 className="font-bold text-sm truncate mb-1">{batch.batch_name}</h4>
+          <h4 className="font-bold text-sm truncate mb-1">{batch.batch_code}</h4>
           <p className="text-xs opacity-90 font-medium">
             {formatDate(batch.start_date)} - {formatDate(batch.end_date)}
           </p>
@@ -226,7 +226,7 @@ const BatchCard = memo(({ batch, onClick, formatDate, getDurationInWeeks }) => {
       <CardContent className="pt-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-3">
-            <h3 className="font-black text-xl gradient-text">{batch.batch_name}</h3>
+            <h3 className="font-black text-xl gradient-text">{batch.batch_code}</h3>
             <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
               <div className="flex items-center gap-2 bg-blue-50 rounded-full px-3 py-1">
                 <Calendar className="h-4 w-4 text-blue-600" />
@@ -499,7 +499,7 @@ const AnnualPlan = () => {
     const headers = ["Batch", "Start Date", "End Date", "Duration", "Status", "Students", "Lecturers"]
 
     const data = batches.map((batch) => [
-      batch.batch_name,
+      batch.batch_code,
       formatDate(batch.start_date),
       formatDate(batch.end_date),
       `${getDurationInWeeks(batch.start_date, batch.end_date)} weeks`,

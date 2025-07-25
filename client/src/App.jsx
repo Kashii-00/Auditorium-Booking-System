@@ -37,6 +37,7 @@ import CancelRequestForm from "./pages/Classroom_Booking/CancelRequestForm"
 // Import the new student portal components
 import StudentChangePassword from "./pages/StudentPortal/StudentChangePassword"
 import StudentForgotPassword from "./pages/StudentPortal/StudentForgotPassword"
+import StudentResetPassword from "./pages/StudentPortal/StudentResetPassword"
 import StudentDashboard from "./pages/StudentPortal/StudentDashboard"
 import StudentProfile from "./pages/StudentPortal/StudentProfile"
 import StudentPreferences from "./pages/StudentPortal/StudentPreferences"
@@ -47,6 +48,7 @@ import LecturerChangePassword from "./pages/LecturerPortal/LecturerChangePasswor
 import LecturerDashboard from "./pages/LecturerPortal/LecturerDashboard"
 import BatchDetail from "./pages/LecturerPortal/BatchDetail"
 import LecturerForgotPassword from "./pages/LecturerPortal/LecturerForgotPassword"
+import LecturerResetPassword from "./pages/LecturerPortal/LecturerResetPassword"
 import LecturerProfile from "./pages/LecturerPortal/LecturerProfile"
 
 //Import the new Finance Function components 
@@ -206,7 +208,7 @@ function App() {
     if (userRoles.includes("busbookings_access")) return "/busbookings"
     if (userRoles.includes("calendar_access")) return "/calendar"
     if (userRoles.includes("bookings_access")) return "/bookings"
-    if (userRoles.includes("course_registration_access")) return "/courseregistration"
+    if (userRoles.includes("course_registration_access")) return "/course-registration"
     if (userRoles.includes("student_registration_access")) return "/student-registration"
     if (userRoles.includes("lecturer_management_access")) return "/lecturer-registration"
     if (userRoles.includes("finance_manager")) return "/coursecost"
@@ -298,6 +300,11 @@ function App() {
 
           <Route
             path="/courseregistration"
+            element={<ProtectedRouteWithErrorBoundary element={C_Registration} canAccess={canAccessCRegistration} />}
+          />
+
+          <Route
+            path="/course-registration"
             element={<ProtectedRouteWithErrorBoundary element={C_Registration} canAccess={canAccessCRegistration} />}
           />
 
@@ -530,6 +537,7 @@ function App() {
           <Route path="/student-dashboard" element={<StudentDashboard />} />
           <Route path="/student-change-password" element={<StudentChangePassword />} />
           <Route path="/student-forgot-password" element={<StudentForgotPassword />} />
+          <Route path="/student-reset-password" element={<StudentResetPassword />} />
           <Route path="/student-profile" element={<StudentProfile />} />
           <Route path="/student-preferences" element={<StudentPreferences />} />
           <Route path="/student-batch-detail/:batchId" element={<StudentBatchDetail />} />
@@ -540,6 +548,7 @@ function App() {
         <Route path="/lecturer/batch/:batchId" element={<BatchDetail />} />
         <Route path="/lecturer-change-password" element={<LecturerChangePassword />} />
         <Route path="/lecturer-forgot-password" element={<LecturerForgotPassword />} />
+        <Route path="/lecturer-reset-password" element={<LecturerResetPassword />} />
         <Route path="/lecturer-profile" element={<LecturerProfile />} />
 
           <Route path="*" element={<AccessDenied />} />

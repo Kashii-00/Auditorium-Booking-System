@@ -683,7 +683,7 @@ router.get('/announcements/all', studentAuthMiddleware, async (req, res) => {
     
     // Get announcements from all batches the student is enrolled in with read status
     const announcementsQuery = `
-      SELECT a.*, b.batch_name,b.batch_code, c.courseName, l.full_name as lecturer_name,
+      SELECT a.*,b.batch_code, c.courseName, l.full_name as lecturer_name,
              CASE WHEN sar.id IS NOT NULL THEN 1 ELSE 0 END as is_read,
              sar.read_at,
              CASE 

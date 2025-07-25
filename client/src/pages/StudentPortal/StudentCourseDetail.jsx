@@ -215,7 +215,7 @@ const StudentCourseDetail = () => {
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-slate-800">{course.courseName}</h1>
-                <p className="text-slate-600">{course.courseId} • Batch: {course.batch_name}</p>
+                <p className="text-slate-600">{course.courseId} • Batch: {course.batch_code}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -397,7 +397,7 @@ const StudentCourseDetail = () => {
                                             Not graded ({assignment.points} points)
                                           </Badge>
                                         ) : (
-                                          <Badge variant="outline">{assignment.points} points</Badge>
+                                        <Badge variant="outline">{assignment.points} points</Badge>
                                         )}
                                         {assignment.submission_status === 'submitted' && (
                                           <Badge variant="success" className="bg-green-100 text-green-800">
@@ -739,8 +739,8 @@ const StudentCourseDetail = () => {
                       {selectedAssignment.submission_file_name && (
                         <div className="mt-3 flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-blue-600" />
-                            <span className="text-sm text-blue-600">{selectedAssignment.submission_file_name}</span>
+                          <FileText className="w-4 h-4 text-blue-600" />
+                          <span className="text-sm text-blue-600">{selectedAssignment.submission_file_name}</span>
                           </div>
                           {selectedAssignment.submission_id && (
                             <Button

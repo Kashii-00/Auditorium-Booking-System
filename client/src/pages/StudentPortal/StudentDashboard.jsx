@@ -273,9 +273,9 @@ const BatchCard = memo(({ batch, index, shouldAnimate, onClick, variant = "full"
 
   const statusBadge = getStatusBadge()
 
-      return (
-      <CardComponent
-        {...cardVariants}
+  return (
+    <CardComponent
+      {...cardVariants}
         className="w-full max-w-none bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
         onClick={() => onClick && onClick(batch)}
       >
@@ -285,13 +285,13 @@ const BatchCard = memo(({ batch, index, shouldAnimate, onClick, variant = "full"
           <h3 className={`${variant === "simple" ? "text-base sm:text-lg" : "text-lg sm:text-xl"} font-bold text-gray-900 group-hover:text-blue-600 transition-colors`}>
             {batch.batchName}
           </h3>
-          <Badge 
+        <Badge
             variant="outline" 
             className={`px-2 py-0.5 text-xs font-medium ${statusBadge.className} flex-shrink-0`}
-          >
+        >
             {statusBadge.text}
-          </Badge>
-        </div>
+        </Badge>
+      </div>
         <p className={`text-gray-600 ${variant === "simple" ? "text-xs sm:text-sm mb-3" : "text-sm sm:text-base mb-4 sm:mb-5"}`}>{batch.courseName}</p>
 
         {/* Show simplified version for dashboard, full version for batch page */}
@@ -303,7 +303,7 @@ const BatchCard = memo(({ batch, index, shouldAnimate, onClick, variant = "full"
               <p className="text-xs text-gray-600">
                 {formatDate(batch.startDate)} - {formatDate(batch.endDate)}
               </p>
-            </div>
+          </div>
 
             {/* Course Progress Section - only show for non-completed batches */}
             {!isCompleted && (
@@ -322,8 +322,8 @@ const BatchCard = memo(({ batch, index, shouldAnimate, onClick, variant = "full"
                     ></div>
                   </div>
                 </div>
-              </div>
-            )}
+        </div>
+      )}
           </div>
         ) : (
           /* Full version with all cards */
@@ -1094,8 +1094,8 @@ const StudentDashboard = () => {
                               ))}
                   </div>
                           ) : (
-                                                      <div className="text-center py-8 sm:py-12">
-                            <Calendar className="w-12 h-12 sm:w-16 sm:h-16 text-slate-300 mx-auto mb-4" />
+                            <div className="text-center py-8 sm:py-12">
+                              <Calendar className="w-12 h-12 sm:w-16 sm:h-16 text-slate-300 mx-auto mb-4" />
                             <p className="text-slate-500 text-base sm:text-lg">
                               {batchFilter === "all" 
                                 ? "No batches assigned" 
@@ -1379,85 +1379,85 @@ const StudentDashboard = () => {
                             <AnimatePresence>
                               {batchFilter === "all" && (
                                 <>
-                                  {/* Upcoming Batches */}
-                                  {student.batches.filter((batch) => batch.category === "upcoming").length > 0 && (
-                                    <motion.div
-                                      initial={{ opacity: 0, y: 20 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      exit={{ opacity: 0, y: -20 }}
-                                    >
-                          <h3 className="font-bold text-lg text-blue-700 mb-4 flex items-center">
-                                        <Clock className="w-5 h-5 mr-2" />
-                            Upcoming Batches
-                          </h3>
+                              {/* Upcoming Batches */}
+                              {student.batches.filter((batch) => batch.category === "upcoming").length > 0 && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -20 }}
+                                >
+                      <h3 className="font-bold text-lg text-blue-700 mb-4 flex items-center">
+                                    <Clock className="w-5 h-5 mr-2" />
+                        Upcoming Batches
+                      </h3>
                                             <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
-                                {student.batches
-                                          .filter((batch) => batch.category === "upcoming")
-                                          .map((batch, index) => (
+                        {student.batches
+                                      .filter((batch) => batch.category === "upcoming")
+                                      .map((batch, index) => (
                                             <BatchCard 
-                                              key={batch.id}
+                                          key={batch.id}
                                               batch={batch} 
                                               index={index}
                                               shouldAnimate={shouldAnimate}
                                               onClick={() => handleBatchClick(batch)}
                                             />
-                              ))}
-                            </div>
-                                    </motion.div>
-                                  )}
+                          ))}
+                      </div>
+                                </motion.div>
+                              )}
 
-                                  {/* Active Batches */}
-                                  {student.batches.filter((batch) => batch.category === "active").length > 0 && (
-                                    <motion.div
-                                      initial={{ opacity: 0, y: 20 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      exit={{ opacity: 0, y: -20 }}
-                                    >
-                          <h3 className="font-bold text-lg text-green-700 mb-4 flex items-center">
-                                        <Users className="w-5 h-5 mr-2" />
-                            Current Active Batches
-                          </h3>
+                              {/* Active Batches */}
+                              {student.batches.filter((batch) => batch.category === "active").length > 0 && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -20 }}
+                                >
+                      <h3 className="font-bold text-lg text-green-700 mb-4 flex items-center">
+                                    <Users className="w-5 h-5 mr-2" />
+                        Current Active Batches
+                      </h3>
                                             <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
-                                {student.batches
-                                          .filter((batch) => batch.category === "active")
-                                          .map((batch, index) => (
+                        {student.batches
+                                      .filter((batch) => batch.category === "active")
+                                      .map((batch, index) => (
                                             <BatchCard 
-                                              key={batch.id}
+                                          key={batch.id}
                                               batch={batch} 
                                               index={index}
                                               shouldAnimate={shouldAnimate}
                                               onClick={() => handleBatchClick(batch)}
                                             />
-                              ))}
-                            </div>
-                                    </motion.div>
-                                  )}
+                          ))}
+                      </div>
+                                </motion.div>
+                              )}
 
-                                  {/* Completed Batches */}
-                                  {student.batches.filter((batch) => batch.category === "completed").length > 0 && (
-                                    <motion.div
-                                      initial={{ opacity: 0, y: 20 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      exit={{ opacity: 0, y: -20 }}
-                                    >
-                                      <h3 className="font-bold text-lg text-slate-700 mb-4 flex items-center">
-                                        <Award className="w-5 h-5 mr-2" />
-                                        Completed Batches
-                          </h3>
+                              {/* Completed Batches */}
+                              {student.batches.filter((batch) => batch.category === "completed").length > 0 && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -20 }}
+                                >
+                                  <h3 className="font-bold text-lg text-slate-700 mb-4 flex items-center">
+                                    <Award className="w-5 h-5 mr-2" />
+                                    Completed Batches
+                      </h3>
                                             <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8">
-                                {student.batches
-                                          .filter((batch) => batch.category === "completed")
-                                          .map((batch, index) => (
+                        {student.batches
+                                      .filter((batch) => batch.category === "completed")
+                                      .map((batch, index) => (
                                             <BatchCard 
-                                              key={batch.id}
+                                          key={batch.id}
                                               batch={batch} 
                                               index={index}
                                               shouldAnimate={shouldAnimate}
                                               onClick={() => handleBatchClick(batch)}
                                             />
                               ))}
-                            </div>
-                                    </motion.div>
+                              </div>
+                                        </motion.div>
                       )}
                                 </>
                               )}
@@ -1478,10 +1478,10 @@ const StudentDashboard = () => {
                                         shouldAnimate={shouldAnimate}
                                         onClick={() => handleBatchClick(batch)}
                                       />
-                                    ))}
-                                  </div>
+                          ))}
+                      </div>
                                 </motion.div>
-                              )}
+                  )}
                             </AnimatePresence>
                 </div>
               ) : (

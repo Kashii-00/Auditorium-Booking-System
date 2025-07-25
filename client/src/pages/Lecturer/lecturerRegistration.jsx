@@ -1,1494 +1,2245 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback, memo, useLayoutEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Separator } from "@/components/ui/separator"
-import { Progress } from "@/components/ui/progress"
+import { useState, useEffect, useRef, useCallback, useMemo, memo, useLayoutEffect } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Plus,
+  User,
+  Mail,
+  CreditCard,
+  Globe,
+  Calendar,
+  MapPin,
+  Ship,
+  Phone,
+  Waves,
+  Upload,
+  Save,
+  CheckCircle,
+  AlertTriangle,
+  RotateCcw,
+  X,
+  ChevronDown,
   Search,
+  RefreshCw,
   Download,
+  Plus,
+  Users,
+  FileText,
+  Loader2,
+  TrendingUp,
+  BookOpen,
+  Activity,
+  Check,
   Eye,
   Edit,
-  Trash2,
-  Users,
-  Upload,
-  Loader2,
-  Save,
-  User,
-  CreditCard,
-  FileText,
-  AlertCircle,
-  CheckCircle,
+  Star,
+  Sparkles,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   ChevronLeft,
   ChevronRight,
-  Award,
-  Settings,
-  Sparkles,
-  Star,
   UserCheck,
+  Building,
+  Target,
   GraduationCap,
+  Trash2,
+  Layers,
+  Hash,
+  Award,
 } from "lucide-react"
-import { authRequest } from "../../services/authService"
-import { useNavigate } from "react-router-dom"
-import LoadingScreen from "../LoadingScreen/LoadingScreen"
-import LecturerView from "./LecturerView"
 
-// Performance CSS with hardware acceleration
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead,TableRow } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { cn } from "@/lib/utils"
+import { authRequest } from "../../services/authService"
+
+// Performance optimized CSS
 const PERFORMANCE_CSS = `
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
+  .hardware-accelerated {
+    transform: translate3d(0, 0, 0);
+    will-change: auto;
   }
-  
+
+  .card-transition {
+    transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+  }
+
   .lecturer-card {
-    will-change: transform, opacity;
-    transform: translateZ(0);
+    transition: transform 150ms ease-out, box-shadow 150ms ease-out;
   }
-  
+
   .lecturer-card:hover {
-    transform: translateY(-4px) translateZ(0);
+    transform: translateY(-1px);
   }
-  
-  .fade-in-stagger > * {
-    animation: fadeInUp 0.6s ease-out forwards;
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  
-  .fade-in-stagger > *:nth-child(1) { animation-delay: 0.1s; }
-  .fade-in-stagger > *:nth-child(2) { animation-delay: 0.2s; }
-  .fade-in-stagger > *:nth-child(3) { animation-delay: 0.3s; }
-  .fade-in-stagger > *:nth-child(4) { animation-delay: 0.4s; }
-  
-  @keyframes fadeInUp {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
+
   .gradient-text {
-    background: linear-gradient(135deg, #1e40af, #3b82f6, #6366f1);
+    background: linear-gradient(135deg, #1e293b, #3b82f6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  
-  .glass-effect {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .form-step {
+    transition: all 200ms ease-out;
+  }
+
+  .table-row {
+    transition: background-color 150ms ease-out;
+  }
+
+  .table-row:hover {
+    background: rgba(59, 130, 246, 0.03);
+  }
+
+  /* Optimize scrolling */
+  * {
+    scroll-behavior: smooth;
+  }
+
+  /* Reduce paint complexity */
+  .backdrop-blur-xl {
+    backdrop-filter: blur(8px);
+  }
+
+  .shadow-2xl {
+    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -6px rgba(0, 0, 0, 0.1);
   }
 `
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024
+// Utility function to extract course IDs from enrolled courses
+const extractCourseIds = (enrolledCourses) => {
+  if (!enrolledCourses) return "Not assigned"
+  
+  // Since the server returns courseId directly, we just need to handle the string
+  if (typeof enrolledCourses === 'string' && enrolledCourses.trim()) {
+    // Clean up the string and return it
+    return enrolledCourses.trim()
+  }
+  
+  // Handle array case (if needed)
+  if (Array.isArray(enrolledCourses)) {
+    const courseIds = enrolledCourses
+      .map(course => course.courseId || course.course_id || course.id || course)
+      .filter(Boolean)
+      .join(", ")
+    
+    return courseIds || "Not assigned"
+  }
+  
+  return "Not assigned"
+}
 
-const steps = [
-  { id: 0, title: "Personal Details", icon: User, description: "Basic information" },
-  { id: 1, title: "Bank Details", icon: CreditCard, description: "Payment information" },
-  { id: 2, title: "Academic Details", icon: Award, description: "Education & experience" },
-  { id: 3, title: "Course & Documents", icon: FileText, description: "Course assignment & files" },
-]
-
-// Enhanced Stat Card Component
-const StatCard = memo(({ title, value, subtext, icon: Icon, color = "blue", progress = 0 }) => {
-  const colorClasses = {
-    blue: "bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 text-blue-700 border-blue-300 shadow-blue-200/50",
-    green:
-      "bg-gradient-to-br from-emerald-100 via-green-100 to-teal-100 text-emerald-700 border-emerald-300 shadow-emerald-200/50",
-    yellow:
-      "bg-gradient-to-br from-amber-100 via-yellow-100 to-orange-100 text-amber-700 border-amber-300 shadow-amber-200/50",
-    purple:
-      "bg-gradient-to-br from-purple-100 via-violet-100 to-indigo-100 text-purple-700 border-purple-300 shadow-purple-200/50",
+// Enhanced Course Name Tooltip Component
+const CourseTooltip = memo(({ courseIds, coursesMap }) => {
+  const extractedCourseIds = extractCourseIds(courseIds)
+  
+  if (!extractedCourseIds || extractedCourseIds === "Not assigned") {
+    return <span className="text-sm font-semibold text-slate-700">Not assigned</span>
   }
 
-  return (
-    <Card className="border-0 shadow-2xl hover:shadow-3xl transition-all duration-300 bg-white/95 backdrop-blur-xl transform hover:-translate-y-1 lecturer-card">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-black text-slate-600 mb-2 uppercase tracking-wide">{title}</p>
-            <p className="text-3xl font-black bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
-              {value}
-            </p>
-            <p className="text-xs text-slate-500 mt-1">{subtext}</p>
-          </div>
-          <div
-            className={`p-4 rounded-2xl shadow-xl border-2 ${colorClasses[color]} flex-shrink-0 transition-all duration-300 hover:scale-110`}
-          >
-            <Icon className="h-7 w-7 transition-transform duration-300" />
-          </div>
-        </div>
-        <div className="mt-4">
-          <Progress value={progress} className="h-2 bg-slate-200 transition-all duration-500" />
-        </div>
-      </CardContent>
-    </Card>
+  const courseIdArray = extractedCourseIds.split(", ").filter(Boolean)
+  
+  // Calculate dynamic width based on longest course name
+  const maxLength = Math.max(
+    ...courseIdArray.map(courseId => {
+      const courseName = coursesMap[courseId] || "Course name not found"
+      return (courseId + ": " + courseName).length
+    })
   )
-})
-
-StatCard.displayName = "StatCard"
-
-// Enhanced File Upload Component
-const FileUpload = memo(({ name, label, required = false, form, errors, handleChange }) => (
-  <div className="space-y-3">
-    <Label htmlFor={name} className="text-sm font-black text-slate-700">
-      {label} {required && <span className="text-red-500">*</span>}
-    </Label>
-    <div className="border-2 border-dashed border-blue-200 rounded-2xl p-6 text-center hover:border-blue-400 transition-all duration-300 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 backdrop-blur-sm">
-      <div className="flex flex-col items-center space-y-3">
-        <div className="p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl">
-          <Upload className="h-8 w-8 text-white" />
-        </div>
-        <div>
-          <Label
-            htmlFor={name}
-            className="cursor-pointer text-sm font-semibold text-slate-700 hover:text-blue-700 transition-colors"
-          >
-            Click to upload or drag and drop
-          </Label>
-          <p className="text-xs text-slate-500 mt-1 font-medium">PDF, JPG, PNG up to 10MB</p>
-          <Input id={name} name={name} type="file" className="hidden" onChange={handleChange} />
-        </div>
-      </div>
-      {form[name] && (
-        <div className="mt-4 p-3 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 shadow-lg">
-          <div className="flex items-center justify-center gap-2">
-            <CheckCircle className="h-5 w-5 text-emerald-600" />
-            <p className="text-sm font-semibold text-emerald-700">File selected: {form[name]?.name}</p>
+  
+  // Determine tooltip width class based on content length
+  const getTooltipWidthClass = (length) => {
+    if (length <= 30) return "min-w-48 max-w-sm"      // Short names
+    if (length <= 50) return "min-w-64 max-w-md"      // Medium names  
+    if (length <= 80) return "min-w-80 max-w-lg"      // Long names
+    return "min-w-96 max-w-xl"                        // Very long names
+  }
+  
+  const tooltipWidthClass = getTooltipWidthClass(maxLength)
+  
+  return (
+    <div className="group relative">
+      <span className="text-sm font-semibold text-slate-700 max-w-xs truncate cursor-help">
+        {extractedCourseIds}
+      </span>
+      {courseIdArray.length > 0 && (
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50 pointer-events-none">
+          <div className={`bg-slate-800 text-white text-xs rounded-lg py-3 px-4 shadow-xl ${tooltipWidthClass}`}>
+            <div className="space-y-2">
+              {courseIdArray.map((courseId, index) => (
+                <div key={index} className="flex items-start gap-2">
+                  <span className="font-bold text-blue-300 flex-shrink-0">{courseId}:</span>
+                  <span className="break-words leading-relaxed">{coursesMap[courseId] || "Course name not found"}</span>
+                </div>
+              ))}
+            </div>
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
           </div>
         </div>
       )}
     </div>
-    {errors[name] && (
-      <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-red-50 to-rose-50 rounded-xl border-2 border-red-200 shadow-lg">
-        <AlertCircle className="h-5 w-5 text-red-600" />
-        <p className="text-sm font-semibold text-red-700">{errors[name]}</p>
-      </div>
-    )}
-  </div>
-))
+  )
+})
 
-FileUpload.displayName = "FileUpload"
+CourseTooltip.displayName = "CourseTooltip"
 
-// Enhanced Focus-preserving input component
-const FocusInput = ({ name, value, onChange, error, icon: Icon, ...props }) => {
-  const inputRef = useRef(null)
-
-  useEffect(() => {
-    if (document.activeElement === inputRef.current) {
-      inputRef.current.focus()
-      if (inputRef.current.selectionStart) {
-        const cursorPosition = inputRef.current.selectionStart
-        inputRef.current.setSelectionRange(cursorPosition, cursorPosition)
-      }
-    }
-  }, [value])
+// Optimized Lecturer Row Component
+const LecturerRow = memo(({ lecturer, onView, onEdit, onDelete, onSendPasswordReset, confirmDeleteId, loading, coursesMap }) => {
+  const handleView = useCallback(() => onView(lecturer.id), [onView, lecturer.id])
+  const handleEdit = useCallback(() => onEdit(lecturer.id), [onEdit, lecturer.id])
+  const handleDelete = useCallback(() => onDelete(lecturer.id), [onDelete, lecturer.id])
+  const handleCancelDelete = useCallback(() => onDelete(null), [onDelete])
+  const handleSendPasswordReset = useCallback(() => onSendPasswordReset(lecturer), [onSendPasswordReset, lecturer])
 
   return (
-    <div className="relative">
-      {Icon && <Icon className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />}
-      <Input
-        ref={inputRef}
-        name={name}
-        value={value}
-        onChange={onChange}
-        className={`${Icon ? "pl-12" : ""} h-12 border-2 ${
-          error
-            ? "border-red-300 focus:border-red-500 bg-red-50/50"
-            : "border-slate-200 focus:border-blue-500 bg-white/90"
-        } rounded-xl shadow-lg backdrop-blur-sm transition-all duration-300 font-medium`}
-        {...props}
-      />
+    <tr className="table-row border-b border-slate-200">
+      <td className="p-4">
+        <div className="flex items-center gap-3">
+          <Avatar className="w-12 h-12 border-2 border-blue-200">
+            <AvatarImage src={`/placeholder.svg?height=48&width=48&query=lecturer`} />
+            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white font-bold">
+              {lecturer.full_name
+                ?.split(" ")
+                .map((n) => n[0])
+                .join("") || "L"}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-bold text-slate-900">{lecturer.full_name}</div>
+            <div className="text-sm text-slate-500 font-semibold">
+              <span className="text-slate-400">
+                ID: {lecturer.id}
+              </span>
+            </div>
+          </div>
+        </div>
+      </td>
+      <td className="p-4">
+        <div className="text-sm font-semibold text-slate-700">{lecturer.email}</div>
+      </td>
+      <td className="p-4">
+        <div className="text-sm">
+          <div className="font-bold text-slate-900">NIC</div>
+          <div className="text-slate-600 font-medium">{lecturer.id_number || "N/A"}</div>
+        </div>
+      </td>
+      <td className="p-4">
+        <CourseTooltip courseIds={lecturer.assigned_courses} coursesMap={coursesMap} />
+      </td>
+      <td className="p-4">
+        <Badge
+          variant="outline"
+          className={cn(
+            "font-bold px-3 py-1",
+            lecturer.status === "Active" || !lecturer.status
+              ? "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border-emerald-300"
+              : "bg-gradient-to-r from-slate-100 to-gray-100 text-slate-800 border-slate-300",
+          )}
+        >
+          <Activity className="h-3 w-3 mr-1" />
+          {lecturer.status || "Active"}
+        </Badge>
+      </td>
+      <td className="p-4">
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleView}
+            className="flex items-center gap-1 hover:bg-blue-50 hover:border-blue-300 border transition-colors"
+            title="View Lecturer"
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleEdit}
+            className="flex items-center gap-1 hover:bg-emerald-50 hover:border-emerald-300 border transition-colors"
+            title="Edit Lecturer"
+          >
+            <Edit className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleSendPasswordReset}
+            className="flex items-center gap-1 hover:bg-purple-50 hover:border-purple-300 border transition-colors"
+            title="Send Password Reset Email"
+          >
+            <Mail className="w-4 h-4" />
+          </Button>
+          {confirmDeleteId === lecturer.id ? (
+            <div className="flex gap-1">
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={loading}
+                className="hover:bg-red-700"
+              >
+                {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : "Confirm"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelDelete} className="hover:bg-gray-50 border">
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleDelete}
+              className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-300 border transition-colors"
+              title="Delete Lecturer"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      </td>
+    </tr>
+  )
+})
+
+LecturerRow.displayName = "LecturerRow"
+
+// Add table header component to improve code organization
+const TableHeader = memo(({ onSort, sortField, sortDirection }) => {
+  const getSortIcon = useCallback(
+    (field) => {
+      if (sortField !== field) return <ArrowUpDown className="w-4 h-4 text-gray-400" />
+      return sortDirection === "asc" ? (
+        <ArrowUp className="w-4 h-4 text-blue-600" />
+      ) : (
+        <ArrowDown className="w-4 h-4 text-blue-600" />
+      )
+    },
+    [sortField, sortDirection],
+  )
+
+  return (
+    <thead>
+      <tr className="border-b-2 border-slate-200 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">
+        <th
+          className="text-left p-4 cursor-pointer hover:bg-blue-100 transition-colors rounded-tl-xl"
+          onClick={() => onSort("full_name")}
+        >
+          <div className="flex items-center gap-2 font-black text-slate-700">
+            Name
+            {getSortIcon("full_name")}
+          </div>
+        </th>
+        <th
+          className="text-left p-4 cursor-pointer hover:bg-blue-100 transition-colors"
+          onClick={() => onSort("email")}
+        >
+          <div className="flex items-center gap-2 font-black text-slate-700">
+            Email
+            {getSortIcon("email")}
+          </div>
+        </th>
+        <th className="text-left p-4 font-black text-slate-700">Identification</th>
+        <th className="text-left p-4 font-black text-slate-700">Courses</th>
+        <th
+          className="text-left p-4 cursor-pointer hover:bg-blue-100 transition-colors"
+          onClick={() => onSort("status")}
+        >
+          <div className="flex items-center gap-2 font-black text-slate-700">
+            Status
+            {getSortIcon("status")}
+          </div>
+        </th>
+        <th className="text-left p-4 font-black text-slate-700 rounded-tr-xl">Actions</th>
+      </tr>
+    </thead>
+  )
+})
+
+TableHeader.displayName = "TableHeader"
+
+// Enhanced Success Notification Component
+const SuccessNotification = memo(({ isVisible, message, onClose }) => {
+  useEffect(() => {
+    if (isVisible) {
+      const timer = setTimeout(() => {
+        onClose()
+      }, 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [isVisible, onClose])
+
+  if (!isVisible) return null
+
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right duration-300">
+      <Card className="border-0 shadow-2xl bg-gradient-to-r from-emerald-50 to-green-50 border-l-4 border-emerald-500">
+        <CardContent className="p-4 flex items-center gap-3">
+          <div className="flex-shrink-0">
+            <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-emerald-800">{message}</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="flex-shrink-0 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-100"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   )
-}
+})
 
-// Enhanced Registration Form Component
-const RegistrationForm = memo(
-  ({
-    step,
-    setStep,
-    form,
-    errors,
-    isEditMode,
-    isLoading,
-    isSubmitting,
-    id,
-    handleChange,
-    handleSelectChange,
-    handleExperienceChange,
-    addExperienceRow,
-    removeExperienceRow,
-    courses,
-    back,
-    next,
-    handleSubmit,
-  }) => {
-    const progressPercentage = ((step + 1) / steps.length) * 100
+SuccessNotification.displayName = "SuccessNotification"
 
-    const renderStep = () => {
-      switch (step) {
-        case 0:
-          return (
-            <div className="space-y-6 animate-in fade-in-50 duration-300">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="fullName" className="text-sm font-black text-slate-700 mb-2 block">
-                    Full Name *
-                  </Label>
-                  <FocusInput
-                    id="fullName"
-                    name="fullName"
-                    placeholder="Enter full name"
-                    value={form.fullName}
-                    onChange={handleChange}
-                    error={errors.fullName}
-                    icon={User}
-                  />
-                  {errors.fullName && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.fullName}</p>}
-                </div>
+// Records Per Page Selector Component
+const RecordsPerPageSelector = memo(({ value, onChange, options }) => {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-slate-600 font-semibold">Show</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="border-2 border-slate-200 rounded-lg p-1 text-sm font-semibold bg-white"
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+      <span className="text-sm text-slate-600 font-semibold">records per page</span>
+    </div>
+  )
+})
 
-                <div>
-                  <Label htmlFor="email" className="text-sm font-black text-slate-700 mb-2 block">
-                    Email *
-                  </Label>
-                  <FocusInput
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="Enter email address"
-                    value={form.email}
-                    onChange={handleChange}
-                    error={errors.email}
-                  />
-                  {errors.email && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.email}</p>}
-                </div>
+RecordsPerPageSelector.displayName = "RecordsPerPageSelector"
 
-                <div>
-                  <Label htmlFor="nicNumber" className="text-sm font-black text-slate-700 mb-2 block">
-                    NIC Number *
-                  </Label>
-                  <FocusInput
-                    id="nicNumber"
-                    name="nicNumber"
-                    placeholder="Enter NIC number"
-                    value={form.nicNumber}
-                    onChange={handleChange}
-                    error={errors.nicNumber}
-                  />
-                  {errors.nicNumber && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.nicNumber}</p>}
-                </div>
-
-                <div>
-                  <Label htmlFor="dob" className="text-sm font-black text-slate-700 mb-2 block">
-                    Date of Birth *
-                  </Label>
-                  <FocusInput
-                    id="dob"
-                    name="dob"
-                    type="date"
-                    value={form.dob}
-                    onChange={handleChange}
-                    error={errors.dob}
-                  />
-                  {errors.dob && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.dob}</p>}
-                </div>
-
-                <div className="md:col-span-2">
-                  <Label htmlFor="address" className="text-sm font-black text-slate-700 mb-2 block">
-                    Address *
-                  </Label>
-                  <Textarea
-                    id="address"
-                    name="address"
-                    placeholder="Enter complete address"
-                    value={form.address}
-                    onChange={handleChange}
-                    className={`h-24 border-2 ${
-                      errors.address
-                        ? "border-red-300 focus:border-red-500 bg-red-50/50"
-                        : "border-slate-200 focus:border-blue-500 bg-white/90"
-                    } rounded-xl shadow-lg backdrop-blur-sm transition-all duration-300 font-medium`}
-                    rows={3}
-                  />
-                  {errors.address && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.address}</p>}
-                </div>
-
-                <div>
-                  <Label htmlFor="phone" className="text-sm font-black text-slate-700 mb-2 block">
-                    Phone Number *
-                  </Label>
-                  <FocusInput
-                    id="phone"
-                    name="phone"
-                    placeholder="Enter phone number"
-                    value={form.phone}
-                    onChange={handleChange}
-                    error={errors.phone}
-                  />
-                  {errors.phone && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.phone}</p>}
-                </div>
-
-                <div>
-                  <Label htmlFor="cdcNumber" className="text-sm font-black text-slate-700 mb-2 block">
-                    CDC Number
-                  </Label>
-                  <FocusInput
-                    id="cdcNumber"
-                    name="cdcNumber"
-                    placeholder="Enter CDC number"
-                    value={form.cdcNumber}
-                    onChange={handleChange}
-                    error={errors.cdcNumber}
-                  />
-                  {errors.cdcNumber && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.cdcNumber}</p>}
-                </div>
-
-                <div>
-                  <Label htmlFor="category" className="text-sm font-black text-slate-700 mb-2 block">
-                    Lecturer Category *
-                  </Label>
-                  <Select
-                    value={form.category || undefined}
-                    onValueChange={(value) => handleSelectChange("category", value)}
-                  >
-                    <SelectTrigger
-                      className={`h-12 border-2 ${
-                        errors.category
-                          ? "border-red-300 focus:border-red-500 bg-red-50/50"
-                          : "border-slate-200 focus:border-blue-500 bg-white/90"
-                      } rounded-xl shadow-lg backdrop-blur-sm transition-all duration-300 font-medium`}
-                    >
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="A">Category A</SelectItem>
-                      <SelectItem value="B">Category B</SelectItem>
-                      <SelectItem value="C">Category C</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.category && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.category}</p>}
-                </div>
-
-                <div>
-                  <Label htmlFor="status" className="text-sm font-black text-slate-700 mb-2 block">
-                    Lecturer Status *
-                  </Label>
-                  <Select
-                    value={form.status || "Active"}
-                    onValueChange={(value) => handleSelectChange("status", value)}
-                  >
-                    <SelectTrigger
-                      className={`h-12 border-2 ${
-                        errors.status
-                          ? "border-red-300 focus:border-red-500 bg-red-50/50"
-                          : "border-slate-200 focus:border-blue-500 bg-white/90"
-                      } rounded-xl shadow-lg backdrop-blur-sm transition-all duration-300 font-medium`}
-                    >
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.status && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.status}</p>}
-                </div>
-
-                <div>
-                  <Label htmlFor="vehicleNumber" className="text-sm font-black text-slate-700 mb-2 block">
-                    Vehicle License Number
-                  </Label>
-                  <FocusInput
-                    id="vehicleNumber"
-                    name="vehicleNumber"
-                    placeholder="Enter vehicle number"
-                    value={form.vehicleNumber}
-                    onChange={handleChange}
-                    error={errors.vehicleNumber}
-                  />
-                  {errors.vehicleNumber && (
-                    <p className="text-red-500 text-sm mt-2 font-semibold">{errors.vehicleNumber}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )
-
-        case 1:
-          return (
-            <div className="space-y-6 animate-in fade-in-50 duration-300">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="bankName" className="text-sm font-black text-slate-700 mb-2 block">
-                    Bank Name *
-                  </Label>
-                  <Select
-                    value={form.bankName || undefined}
-                    onValueChange={(value) => handleSelectChange("bankName", value)}
-                  >
-                    <SelectTrigger
-                      className={`h-12 border-2 ${
-                        errors.bankName
-                          ? "border-red-300 focus:border-red-500 bg-red-50/50"
-                          : "border-slate-200 focus:border-blue-500 bg-white/90"
-                      } rounded-xl shadow-lg backdrop-blur-sm transition-all duration-300 font-medium`}
-                    >
-                      <SelectValue placeholder="Select your bank" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Commercial Bank">Commercial Bank</SelectItem>
-                      <SelectItem value="People's Bank">People's Bank</SelectItem>
-                      <SelectItem value="Bank of Ceylon">Bank of Ceylon</SelectItem>
-                      <SelectItem value="Sampath Bank">Sampath Bank</SelectItem>
-                      <SelectItem value="Hatton National Bank">Hatton National Bank</SelectItem>
-                      <SelectItem value="Nations Trust Bank">Nations Trust Bank</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.bankName && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.bankName}</p>}
-                </div>
-
-                <div>
-                  <Label htmlFor="branchName" className="text-sm font-black text-slate-700 mb-2 block">
-                    Branch Name *
-                  </Label>
-                  <FocusInput
-                    id="branchName"
-                    name="branchName"
-                    placeholder="Enter branch name"
-                    value={form.branchName}
-                    onChange={handleChange}
-                    error={errors.branchName}
-                    icon={CreditCard}
-                  />
-                  {errors.branchName && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.branchName}</p>}
-                </div>
-
-                <div className="md:col-span-2">
-                  <Label htmlFor="accountNumber" className="text-sm font-black text-slate-700 mb-2 block">
-                    Account Number *
-                  </Label>
-                  <FocusInput
-                    id="accountNumber"
-                    name="accountNumber"
-                    placeholder="Enter account number"
-                    value={form.accountNumber}
-                    onChange={handleChange}
-                    error={errors.accountNumber}
-                  />
-                  {errors.accountNumber && (
-                    <p className="text-red-500 text-sm mt-2 font-semibold">{errors.accountNumber}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )
-
-        case 2:
-          return (
-            <div className="space-y-8 animate-in fade-in-50 duration-300">
-              <div>
-                <div className="flex justify-between items-center mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-lg">
-                      <Award className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <Label className="text-xl font-black text-slate-800">Working Experience</Label>
-                  </div>
-                  <Button
-                    type="button"
-                    onClick={addExperienceRow}
-                    variant="outline"
-                    className="h-10 px-4 rounded-xl font-bold border-2 border-blue-200 text-blue-700 hover:bg-blue-50 shadow-lg"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Experience
-                  </Button>
-                </div>
-
-                {form.experience.map((exp, idx) => (
-                  <Card key={idx} className="p-6 mb-6 border-0 shadow-xl bg-white/95 backdrop-blur-xl">
-                    <div className="flex justify-between items-center mb-6">
-                      <h4 className="text-lg font-black text-slate-800">Experience {idx + 1}</h4>
-                      {form.experience.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeExperienceRow(idx)}
-                          className="h-8 px-3 rounded-xl font-bold border-2 border-red-200 text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <Label className="text-sm font-black text-slate-700 mb-2 block">Institution *</Label>
-                        <FocusInput
-                          placeholder="Institution name"
-                          value={exp.institution}
-                          onChange={(e) => handleExperienceChange(idx, "institution", e.target.value)}
-                          error={errors[`exp_institution_${idx}`]}
-                        />
-                        {errors[`exp_institution_${idx}`] && (
-                          <p className="text-red-500 text-sm mt-2 font-semibold">{errors[`exp_institution_${idx}`]}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <Label className="text-sm font-black text-slate-700 mb-2 block">Years of Experience *</Label>
-                        <FocusInput
-                          placeholder="Years"
-                          value={exp.years}
-                          onChange={(e) => handleExperienceChange(idx, "years", e.target.value)}
-                          error={errors[`exp_years_${idx}`]}
-                        />
-                        {errors[`exp_years_${idx}`] && (
-                          <p className="text-red-500 text-sm mt-2 font-semibold">{errors[`exp_years_${idx}`]}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <Label className="text-sm font-black text-slate-700 mb-2 block">Start Date *</Label>
-                        <FocusInput
-                          placeholder="Start date"
-                          value={exp.start}
-                          onChange={(e) => handleExperienceChange(idx, "start", e.target.value)}
-                          error={errors[`exp_start_${idx}`]}
-                        />
-                        {errors[`exp_start_${idx}`] && (
-                          <p className="text-red-500 text-sm mt-2 font-semibold">{errors[`exp_start_${idx}`]}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <Label className="text-sm font-black text-slate-700 mb-2 block">End Date *</Label>
-                        <FocusInput
-                          placeholder="End date"
-                          value={exp.end}
-                          onChange={(e) => handleExperienceChange(idx, "end", e.target.value)}
-                          error={errors[`exp_end_${idx}`]}
-                        />
-                        {errors[`exp_end_${idx}`] && (
-                          <p className="text-red-500 text-sm mt-2 font-semibold">{errors[`exp_end_${idx}`]}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <Label className="text-sm font-black text-slate-700 mb-2 block">Designation *</Label>
-                        <FocusInput
-                          placeholder="Job title"
-                          value={exp.designation}
-                          onChange={(e) => handleExperienceChange(idx, "designation", e.target.value)}
-                          error={errors[`exp_designation_${idx}`]}
-                        />
-                        {errors[`exp_designation_${idx}`] && (
-                          <p className="text-red-500 text-sm mt-2 font-semibold">{errors[`exp_designation_${idx}`]}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <Label className="text-sm font-black text-slate-700 mb-2 block">Nature of Work *</Label>
-                        <FocusInput
-                          placeholder="Work description"
-                          value={exp.nature}
-                          onChange={(e) => handleExperienceChange(idx, "nature", e.target.value)}
-                          error={errors[`exp_nature_${idx}`]}
-                        />
-                        {errors[`exp_nature_${idx}`] && (
-                          <p className="text-red-500 text-sm mt-2 font-semibold">{errors[`exp_nature_${idx}`]}</p>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-
-              <Separator className="border-slate-200" />
-
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-gradient-to-br from-emerald-100 to-green-100 rounded-xl shadow-lg">
-                    <GraduationCap className="h-6 w-6 text-emerald-600" />
-                  </div>
-                  <h4 className="text-xl font-black text-slate-800">Educational Qualifications</h4>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="highestQualification" className="text-sm font-black text-slate-700 mb-2 block">
-                      Highest Qualification *
-                    </Label>
-                    <FocusInput
-                      id="highestQualification"
-                      name="highestQualification"
-                      placeholder="Enter your highest qualification"
-                      value={form.highestQualification}
-                      onChange={handleChange}
-                      error={errors.highestQualification}
-                    />
-                    {errors.highestQualification && (
-                      <p className="text-red-500 text-sm mt-2 font-semibold">{errors.highestQualification}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="otherQualifications" className="text-sm font-black text-slate-700 mb-2 block">
-                      Other Qualifications *
-                    </Label>
-                    <Textarea
-                      id="otherQualifications"
-                      name="otherQualifications"
-                      placeholder="Enter other qualifications"
-                      value={form.otherQualifications}
-                      onChange={handleChange}
-                      className={`h-24 border-2 ${
-                        errors.otherQualifications
-                          ? "border-red-300 focus:border-red-500 bg-red-50/50"
-                          : "border-slate-200 focus:border-blue-500 bg-white/90"
-                      } rounded-xl shadow-lg backdrop-blur-sm transition-all duration-300 font-medium`}
-                      rows={3}
-                    />
-                    {errors.otherQualifications && (
-                      <p className="text-red-500 text-sm mt-2 font-semibold">{errors.otherQualifications}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )
-
-        case 3:
-          return (
-            <div className="space-y-8 animate-in fade-in-50 duration-300">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="course_ids" className="text-sm font-black text-slate-700 mb-2 block">
-                    Courses *
-                  </Label>
-                  <select
-                    id="course_ids"
-                    name="course_ids"
-                    multiple
-                    value={form.course_ids}
-                    onChange={(e) => {
-                      const selectedOptions = Array.from(e.target.selectedOptions, (option) =>
-                        Number.parseInt(option.value),
-                      )
-                      handleSelectChange("course_ids", selectedOptions)
-                    }}
-                    className="w-full p-4 border-2 border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 min-h-[120px] bg-white/90 backdrop-blur-sm shadow-lg font-medium"
-                  >
-                    {courses.map((course) => (
-                      <option key={course.id} value={course.id} className="p-2">
-                        {course.courseName}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-slate-500 mt-2 font-medium">Hold Ctrl/Cmd to select multiple courses</p>
-                  {errors.course_ids && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.course_ids}</p>}
-                </div>
-
-                <div>
-                  <Label htmlFor="stream" className="text-sm font-black text-slate-700 mb-2 block">
-                    Stream *
-                  </Label>
-                  <FocusInput
-                    id="stream"
-                    name="stream"
-                    placeholder="Enter stream"
-                    value={form.stream}
-                    onChange={handleChange}
-                    error={errors.stream}
-                  />
-                  {errors.stream && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.stream}</p>}
-                </div>
-
-                <div className="md:col-span-2">
-                  <Label htmlFor="module" className="text-sm font-black text-slate-700 mb-2 block">
-                    Module *
-                  </Label>
-                  <FocusInput
-                    id="module"
-                    name="module"
-                    placeholder="Enter module"
-                    value={form.module}
-                    onChange={handleChange}
-                    error={errors.module}
-                  />
-                  {errors.module && <p className="text-red-500 text-sm mt-2 font-semibold">{errors.module}</p>}
-                </div>
-              </div>
-
-              <Separator className="border-slate-200" />
-
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-gradient-to-br from-purple-100 to-violet-100 rounded-xl shadow-lg">
-                    <FileText className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <h4 className="text-xl font-black text-slate-800">Document Upload (Optional)</h4>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FileUpload
-                    name="nic_file"
-                    label="NIC Copy"
-                    form={form}
-                    errors={errors}
-                    handleChange={handleChange}
-                  />
-                  <FileUpload
-                    name="photo_file"
-                    label="Passport Photo"
-                    form={form}
-                    errors={errors}
-                    handleChange={handleChange}
-                  />
-                  <FileUpload
-                    name="passbook_file"
-                    label="Bank Passbook"
-                    form={form}
-                    errors={errors}
-                    handleChange={handleChange}
-                  />
-                  <FileUpload
-                    name="education_certificate_file"
-                    label="Education Certificate"
-                    form={form}
-                    errors={errors}
-                    handleChange={handleChange}
-                  />
-                  <FileUpload
-                    name="cdc_book_file"
-                    label="CDC Book"
-                    form={form}
-                    errors={errors}
-                    handleChange={handleChange}
-                  />
-                  <FileUpload
-                    name="driving_trainer_license_file"
-                    label="Driving Trainer License"
-                    form={form}
-                    errors={errors}
-                    handleChange={handleChange}
-                  />
-                </div>
-              </div>
-            </div>
-          )
-
-        default:
-          return null
-      }
-    }
-
+// Pagination Controls Component
+const PaginationControls = memo(
+  ({ currentPage, totalPages, indexOfFirstLecturer, indexOfLastLecturer, totalItems, onPageChange }) => {
     return (
-      <div className="space-y-8">
-        {/* Enhanced Progress */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-lg font-black text-slate-700">
-              Step {step + 1} of {steps.length}: {steps[step].title}
-            </span>
-            <span className="text-sm font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
-              {Math.round(progressPercentage)}% Complete
-            </span>
-          </div>
-          <Progress value={progressPercentage} className="h-3 bg-slate-200 rounded-full" />
-          <p className="text-sm text-slate-600 mt-2 font-medium">{steps[step].description}</p>
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-6 py-4 bg-gradient-to-r from-slate-50 to-blue-50 border-t border-slate-200">
+        <div className="text-sm text-slate-600 font-semibold">
+          Showing {indexOfFirstLecturer + 1} to {Math.min(indexOfLastLecturer, totalItems)} of {totalItems} lecturers
         </div>
-
-        <form onSubmit={handleSubmit}>
-          {isLoading && step === 0 && id && <LoadingScreen message="Loading lecturer data..." />}
-
-          {renderStep()}
-
-          <div className="flex justify-between mt-8 pt-6 border-t-2 border-slate-200">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={back}
-              disabled={step === 0 || isSubmitting}
-              className="h-12 px-6 rounded-xl font-bold border-2 hover:bg-slate-50 shadow-lg"
-            >
-              <ChevronLeft className="h-5 w-5 mr-2" />
-              Back
-            </Button>
-
-            {step < steps.length - 1 ? (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="border-slate-200"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          
+          {/* Page numbers */}
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum
+            if (totalPages <= 5) {
+              pageNum = i + 1
+            } else if (currentPage <= 3) {
+              pageNum = i + 1
+            } else if (currentPage >= totalPages - 2) {
+              pageNum = totalPages - 4 + i
+            } else {
+              pageNum = currentPage - 2 + i
+            }
+            
+            return (
               <Button
-                type="button"
-                onClick={next}
-                disabled={isSubmitting}
-                className="h-12 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl shadow-xl font-bold transform hover:scale-105 transition-all duration-300"
+                key={pageNum}
+                variant={currentPage === pageNum ? "default" : "outline"}
+                size="sm"
+                onClick={() => onPageChange(pageNum)}
+                className={
+                  currentPage === pageNum
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "border-slate-200"
+                }
               >
-                Next Step
-                <ChevronRight className="h-5 w-5 ml-2" />
+                {pageNum}
               </Button>
-            ) : (
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="h-12 px-6 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 rounded-xl shadow-xl font-bold transform hover:scale-105 transition-all duration-300"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                    {isEditMode ? "Updating..." : "Submitting..."}
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-5 w-5 mr-2" />
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    {isEditMode ? "Update Registration" : "Submit Registration"}
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        </form>
+            )
+          })}
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="border-slate-200"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     )
-  },
+  }
 )
 
-RegistrationForm.displayName = "RegistrationForm"
+PaginationControls.displayName = "PaginationControls"
 
-// Main component with enhanced design
-export default function LecturerManagementFull() {
-  const [lecturers, setLecturers] = useState([])
-  const [courses, setCourses] = useState([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("All")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditMode, setIsEditMode] = useState(isAddDialogOpen)
-  const [step, setStep] = useState(0)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [loadingLecturers, setLoadingLecturers] = useState(true)
-  const [editingLecturer, setEditingLecturer] = useState(null)
-  const [selectedLecturer, setSelectedLecturer] = useState(null)
-  const [viewMode, setViewMode] = useState("list")
-
+export default function LecturerManagementSystem() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
-  const [form, setForm] = useState({
-    fullName: "",
+  // Add performance CSS to document head - Optimized
+  useLayoutEffect(() => {
+    const style = document.createElement("style")
+    style.innerHTML = PERFORMANCE_CSS
+    style.id = "lecturer-management-performance-css"
+
+    // Remove existing style if present
+    const existingStyle = document.getElementById("lecturer-management-performance-css")
+    if (existingStyle) {
+      document.head.removeChild(existingStyle)
+    }
+
+    document.head.appendChild(style)
+    return () => {
+      const styleToRemove = document.getElementById("lecturer-management-performance-css")
+      if (styleToRemove) {
+        document.head.removeChild(styleToRemove)
+      }
+    }
+  }, [])
+
+  // View state - 'dashboard' or 'registration'
+  const [currentView, setCurrentView] = useState("dashboard")
+
+  // Form state
+  const [currentStep, setCurrentStep] = useState(0)
+  const [courses, setCourses] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [coursesLoading, setCoursesLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState("")
+  const [showCourseOptions, setShowCourseOptions] = useState(false)
+  const [courseFilter, setCourseFilter] = useState("")
+
+  // Lecturer list state
+  const [lecturers, setLecturers] = useState([])
+  const [lecturersLoading, setLecturersLoading] = useState(false)
+  const [lecturersError, setLecturersError] = useState("")
+  const [editingLecturer, setEditingLecturer] = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [sortField, setSortField] = useState("full_name")
+  const [sortDirection, setSortDirection] = useState("asc")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false)
+  const [searchSuggestions, setSearchSuggestions] = useState([])
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1)
+  const recordsPerPageOptions = [5, 10, 25, 50]
+  const [lecturersPerPage, setLecturersPerPage] = useState(5)
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false)
+  const [notificationMessage, setNotificationMessage] = useState("")
+
+  // Courses mapping for tooltips
+  const [coursesMap, setCoursesMap] = useState({})
+
+  // Refs
+  const courseOptionsRef = useRef(null)
+  const courseInputRef = useRef(null)
+  const tableRef = useRef(null)
+  const searchInputRef = useRef(null)
+  const searchSuggestionsRef = useRef(null)
+
+  const [formData, setFormData] = useState({
+    full_name: "",
     email: "",
-    nicNumber: "",
-    dob: "",
+    selected_courses: [],
+    id_number: "",
+    date_of_birth: "",
     address: "",
     phone: "",
-    cdcNumber: "",
+    cdc_number: "",
     category: "",
-    vehicleNumber: "",
+    vehicle_number: "",
     status: "Active",
-    bankName: "",
-    branchName: "",
-    accountNumber: "",
-    experience: [{ institution: "", years: "", start: "", end: "", designation: "", nature: "" }],
-    highestQualification: "",
-    otherQualifications: "",
-    course_ids: [],
-    stream: "",
-    module: "",
+    bank_name: "",
+    branch_name: "",
+    account_number: "",
+    highest_qualification: "",
+    other_qualifications: "",
+
+    work_experiences: [
+      {
+        institution: "",
+        position: "",
+        start_year: "",
+        end_year: "",
+        department: "",
+        is_current: false
+      }
+    ],
     nic_file: null,
     photo_file: null,
-    passbook_file: null,
     education_certificate_file: null,
     cdc_book_file: null,
     driving_trainer_license_file: null,
-    other_documents_file: null,
   })
 
   const [errors, setErrors] = useState({})
 
-  // Add performance CSS to document head
-  useLayoutEffect(() => {
-    const style = document.createElement("style")
-    style.innerHTML = PERFORMANCE_CSS
-    document.head.appendChild(style)
-    return () => {
-      if (document.head.contains(style)) {
-        document.head.removeChild(style)
-      }
+  // Form sections matching student structure but adapted for lecturers
+  const formSections = useMemo(
+    () => [
+      {
+        title: "Personal Information",
+        icon: User,
+        fields: ["full_name", "email", "id_number", "date_of_birth", "address", "phone", "cdc_number", "vehicle_number"],
+      },
+      {
+        title: "Academic & Experience",
+        icon: Award,
+        fields: ["highest_qualification", "other_qualifications"],
+      },
+      {
+        title: "Professional Experience",
+        icon: Building,
+        fields: ["work_experiences"],
+      },
+      {
+        title: "Courses & Teaching",
+        icon: GraduationCap,
+        fields: ["selected_courses", "category", "status"],
+      },
+      {
+        title: "Banking & Documents",
+        icon: FileText,
+        fields: ["bank_name", "branch_name", "account_number", "nic_file", "photo_file", "education_certificate_file"],
+      },
+    ],
+    [],
+  )
+
+  // Reset form to default values
+  const resetForm = useCallback(() => {
+    setFormData({
+      full_name: "",
+      email: "",
+      selected_courses: [],
+      id_number: "",
+      date_of_birth: "",
+      address: "",
+      phone: "",
+      cdc_number: "",
+      category: "",
+      vehicle_number: "",
+      status: "Active",
+      bank_name: "",
+      branch_name: "",
+      account_number: "",
+      highest_qualification: "",
+      other_qualifications: "",
+ 
+      work_experiences: [
+        {
+          institution: "",
+          position: "",
+          start_year: "",
+          end_year: "",
+          department: "",
+          is_current: false
+        }
+      ],
+      nic_file: null,
+      photo_file: null,
+      education_certificate_file: null,
+      cdc_book_file: null,
+      driving_trainer_license_file: null,
+    })
+    setCurrentStep(0)
+    setEditingLecturer(null)
+    setErrors({})
+    setCurrentView("dashboard")
+    // Clear URL parameters
+    navigate("/lecturer-registration", { replace: true })
+  }, [navigate])
+
+  // Form validation matching student validation but adapted for lecturers
+  const validateForm = useCallback(
+    (step) => {
+      const newErrors = {}
+      const fieldsToValidate = formSections[step].fields
+
+      fieldsToValidate.forEach((field) => {
+        if (field === "selected_courses") {
+          if (formData.selected_courses.length === 0) {
+            newErrors.selected_courses = "Please select at least one course"
+          }
+          return
+        }
+
+        if (field === "work_experiences") {
+          if (!formData.work_experiences || formData.work_experiences.length === 0) {
+            newErrors.work_experiences = "Please add at least one work experience"
+          } else {
+            // Validate each work experience
+            const hasInvalidExperience = formData.work_experiences.some((exp, index) => {
+              if (!exp.institution || !exp.institution.trim()) {
+                newErrors[`work_experience_${index}_institution`] = "Institution is required"
+                return true
+              }
+              if (!exp.position || !exp.position.trim()) {
+                newErrors[`work_experience_${index}_position`] = "Position is required"
+                return true
+              }
+              if (!exp.start_year) {
+                newErrors[`work_experience_${index}_start_year`] = "Start year is required"
+                return true
+              }
+              if (!exp.is_current && (!exp.end_year || exp.end_year <= exp.start_year)) {
+                newErrors[`work_experience_${index}_end_year`] = "End year must be after start year"
+                return true
+              }
+              return false
+            })
+            
+            if (hasInvalidExperience) {
+              newErrors.work_experiences = "Please complete all work experience fields"
+            }
+          }
+          return
+        }
+
+        // Enhanced validation for specific fields
+        if (field === "email") {
+          if (!formData.email || formData.email.trim() === "") {
+            newErrors.email = "Email is required"
+          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = "Please enter a valid email address"
+          }
+          return
+        }
+
+        if (field === "id_number") {
+          if (!formData.id_number || formData.id_number.trim() === "") {
+            newErrors.id_number = "NIC number is required"
+          } else {
+            // NIC validation for Sri Lanka format
+            const nicPattern = /^([0-9]{9}[vVxX]|[0-9]{12})$/
+            if (!nicPattern.test(formData.id_number.trim())) {
+              newErrors.id_number = "Please enter a valid NIC number (9 digits + V/X or 12 digits)"
+            }
+          }
+          return
+        }
+
+        if (field === "phone") {
+          if (!formData.phone || formData.phone.trim() === "") {
+            newErrors.phone = "Phone number is required"
+          } else if (!/^[0-9+\-\s()]{10,15}$/.test(formData.phone.trim())) {
+            newErrors.phone = "Please enter a valid phone number (10-15 digits)"
+          }
+          return
+        }
+
+        if (field === "date_of_birth") {
+          if (!formData.date_of_birth) {
+            newErrors.date_of_birth = "Date of birth is required"
+          } else {
+            const birthDate = new Date(formData.date_of_birth)
+            const today = new Date()
+            const age = today.getFullYear() - birthDate.getFullYear()
+            if (age < 21 || age > 70) {
+              newErrors.date_of_birth = "Age must be between 21 and 70 years for lecturers"
+            }
+          }
+          return
+        }
+
+        // File fields are optional
+        const isFileField = ["nic_file", "photo_file", "education_certificate_file", "cdc_book_file", "driving_trainer_license_file"].includes(field)
+        if (isFileField) {
+          return
+        }
+
+        // General required field validation
+        if (!formData[field] || (typeof formData[field] === "string" && formData[field].trim() === "")) {
+          // Skip certain optional fields
+          const optionalFields = ["cdc_number", "vehicle_number"]
+          
+          if (!optionalFields.includes(field)) {
+            newErrors[field] = `${field.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())} is required`
+          }
+        }
+      })
+
+      setErrors(newErrors)
+      return Object.keys(newErrors).length === 0
+    },
+    [formData, formSections],
+  )
+
+  // Handle form input changes
+  const handleChange = useCallback((e) => {
+    const { name, value, type, checked, files } = e.target
+
+    if (type === "file" && files[0]) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: files[0],
+      }))
+    } else if (type === "checkbox") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: checked,
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }))
     }
   }, [])
 
-  // Extract lecturer ID from URL or query params
-  const getIdFromUrl = () => {
-    if (typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search)
-      return urlParams.get("id")
-    }
-    return null
-  }
-  const id = getIdFromUrl()
+  // Handle course selection
+  const handleCourseSelect = useCallback((courseId) => {
+    setFormData((prev) => ({
+      ...prev,
+      selected_courses: prev.selected_courses.includes(courseId)
+        ? prev.selected_courses.filter((id) => id !== courseId)
+        : [...prev.selected_courses, courseId],
+    }))
+  }, [])
 
-  // Fetch lecturers data
-  const fetchLecturers = async () => {
+  // Remove a selected course
+  const removeCourse = useCallback((courseId) => {
+    setFormData((prev) => ({
+      ...prev,
+      selected_courses: prev.selected_courses.filter((id) => id !== courseId),
+    }))
+  }, [])
+
+  // Filter courses based on search input
+  const filteredCourses = useMemo(
+    () => courses.filter((course) => course.courseName.toLowerCase().includes(courseFilter.toLowerCase())),
+    [courses, courseFilter],
+  )
+
+  // Fetch lecturers function - moved here to fix initialization order
+  const fetchLecturers = useCallback(async () => {
     try {
-      setLoadingLecturers(true)
+      setLecturersLoading(true)
+      setLecturersError("")
+
       const response = await authRequest("get", "http://localhost:5003/api/lecturer-registration")
-      if (Array.isArray(response)) {
+
+      if (response && Array.isArray(response)) {
         setLecturers(response)
+      } else {
+        throw new Error("Invalid lecturers data format")
       }
     } catch (error) {
       console.error("Error fetching lecturers:", error)
+      setLecturersError("Failed to load lecturers. Please try again.")
     } finally {
-      setLoadingLecturers(false)
+      setLecturersLoading(false)
     }
-  }
-
-  // Fetch courses
-  const fetchCourses = async () => {
-    try {
-      const response = await authRequest("get", "http://localhost:5003/api/lecturer-registration/courses")
-      if (Array.isArray(response)) {
-        setCourses(response)
-      }
-    } catch (error) {
-      console.error("Error fetching courses:", error)
-    }
-  }
-
-  // Initial data fetching
-  useEffect(() => {
-    fetchLecturers()
-    fetchCourses()
   }, [])
 
-  // Fetch lecturer data if in edit mode
-  useEffect(() => {
-    if (id) {
-      const fetchLecturerData = async () => {
-        try {
-          setIsLoading(true)
-          const lecturerData = await authRequest("get", `http://localhost:5003/api/lecturer-registration/${id}`)
+  // Handle form submission for create/update
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault()
 
-          if (lecturerData) {
-            // Parse experience from academic_details if present
-            let experience = []
-            let academicDetails = {}
-            if (lecturerData.academic_details) {
-              if (typeof lecturerData.academic_details === "object" && lecturerData.academic_details !== null) {
-                academicDetails = lecturerData.academic_details
-              } else if (typeof lecturerData.academic_details === "string") {
-                try {
-                  academicDetails = JSON.parse(lecturerData.academic_details)
-                } catch (e) {
-                  academicDetails = {}
-                }
-              }
-              if (academicDetails.experience) {
-                if (typeof academicDetails.experience === "string") {
-                  try {
-                    experience = JSON.parse(academicDetails.experience)
-                  } catch {
-                    experience = []
-                  }
-                } else if (Array.isArray(academicDetails.experience)) {
-                  experience = academicDetails.experience
-                }
-              }
-            }
-            // Fallback: try lecturerData.experience
-            if ((!experience || experience.length === 0) && lecturerData.experience) {
-              if (typeof lecturerData.experience === "string") {
-                try {
-                  experience = JSON.parse(lecturerData.experience)
-                } catch {
-                  experience = []
-                }
-              } else if (Array.isArray(lecturerData.experience)) {
-                experience = lecturerData.experience
-              }
-            }
-            if (!Array.isArray(experience) || experience.length === 0) {
-              experience = [{ institution: "", years: "", start: "", end: "", designation: "", nature: "" }]
-            }
-            let bankDetails = {}
-            if (lecturerData.bank_details) {
-              if (typeof lecturerData.bank_details === "object" && lecturerData.bank_details !== null) {
-                bankDetails = lecturerData.bank_details
-              } else if (typeof lecturerData.bank_details === "string") {
-                try {
-                  bankDetails = JSON.parse(lecturerData.bank_details)
-                } catch (e) {
-                  bankDetails = {}
-                }
-              }
-            }
-            setForm({
-              fullName: lecturerData.full_name || "",
-              email: lecturerData.email || "",
-              nicNumber: lecturerData.id_number || "",
-              dob: lecturerData.date_of_birth ? lecturerData.date_of_birth.split("T")[0] : "",
-              address: lecturerData.address || "",
-              phone: lecturerData.phone || "",
-              cdcNumber: lecturerData.cdc_number || "",
-              category: lecturerData.category || "",
-              vehicleNumber: lecturerData.vehicle_number || "",
-              status: lecturerData.status || "Active",
-              bankName: bankDetails.bank_name || lecturerData.bank_name || "",
-              branchName: bankDetails.branch_name || lecturerData.branch_name || "",
-              accountNumber: bankDetails.account_number || lecturerData.account_number || "",
-              experience: experience,
-              highestQualification: academicDetails.highest_qualification || lecturerData.highest_qualification || "",
-              otherQualifications: academicDetails.other_qualifications || lecturerData.other_qualifications || "",
-              course_ids: lecturerData.course_ids || [],
-              stream: lecturerData.stream || "",
-              module: lecturerData.module || "",
-              nic_file: null,
-              photo_file: null,
-              passbook_file: null,
-              education_certificate_file: null,
-              cdc_book_file: null,
-              driving_trainer_license_file: null,
-              other_documents_file: null,
-            })
-            if (courses.length === 0) {
-              fetchCourses()
-            }
-            setIsEditMode(true)
-            setEditingLecturer(id)
-            setIsAddDialogOpen(true)
+      if (!validateForm(currentStep)) {
+        return
+      }
+
+      setLoading(true)
+      setErrorMessage("")
+
+      try {
+        const formDataObj = new FormData()
+
+        Object.entries(formData).forEach(([key, value]) => {
+          if (key === "selected_courses") {
+            formDataObj.append("course_ids", JSON.stringify(value))
+          } else if (key === "work_experiences") {
+            formDataObj.append("work_experiences", JSON.stringify(value))
+          } else if (value instanceof File) {
+            formDataObj.append(key, value)
+          } else if (typeof value !== "undefined" && value !== null) {
+            formDataObj.append(key, value)
           }
-        } catch (error) {
-          console.error("Error fetching lecturer data:", error)
-          alert("Failed to load lecturer data for editing")
-        } finally {
-          setIsLoading(false)
-        }
-      }
-      fetchLecturerData()
-    }
-  }, [id, courses.length])
-
-  // Automatically open dialog when in edit mode
-  useEffect(() => {
-    if (id) {
-      setIsAddDialogOpen(true)
-      setIsEditMode(true)
-      setEditingLecturer(id)
-    }
-  }, [id])
-
-  // Filter lecturers based on search and status
-  const filteredLecturers = lecturers.filter((lecturer) => {
-    const matchesSearch =
-      lecturer.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lecturer.email?.toLowerCase().includes(searchTerm.toLowerCase())
-
-    if (statusFilter === "All") return matchesSearch
-
-    const hasStatusMatch = lecturer.status === statusFilter
-    return matchesSearch && hasStatusMatch
-  })
-
-  // Optimize handleChange to reduce re-renders
-  const handleChange = useCallback(
-    (e) => {
-      const { name, value, files } = e.target
-
-      if (files && files.length > 0) {
-        const file = files[0]
-        if (file.size > MAX_FILE_SIZE) {
-          setErrors((prev) => ({ ...prev, [name]: "File is too large. Max allowed is 10MB." }))
-          return
-        }
-        setForm((prev) => ({ ...prev, [name]: file }))
-      } else {
-        setForm((prev) => ({ ...prev, [name]: value }))
-      }
-      if (errors[name]) {
-        setErrors((prev) => {
-          const newErrors = { ...prev }
-          delete newErrors[name]
-          return newErrors
         })
+
+        let response
+
+        if (editingLecturer) {
+          response = await authRequest("put", `http://localhost:5003/api/lecturer-registration/${editingLecturer}`, formDataObj, {
+            headers: { "Content-Type": "multipart/form-data" },
+          })
+
+          if (response.success) {
+            setNotificationMessage("Lecturer updated successfully!")
+            setShowSuccessNotification(true)
+          }
+        } else {
+          response = await authRequest("post", "http://localhost:5003/api/lecturer-registration", formDataObj, {
+            headers: { "Content-Type": "multipart/form-data" },
+          })
+
+          if (response.success) {
+            setNotificationMessage("Lecturer registered successfully!")
+            setShowSuccessNotification(true)
+          }
+        }
+
+        resetForm()
+        fetchLecturers()
+        setCurrentView("dashboard")
+
+        setTimeout(() => {
+          setShowSuccessNotification(false)
+        }, 3000)
+      } catch (error) {
+        console.error("Error processing lecturer:", error)
+        setErrorMessage(error.response?.data?.error || "Failed to process lecturer data. Please try again.")
+      } finally {
+        setLoading(false)
       }
     },
-    [errors],
+    [currentStep, validateForm, formData, editingLecturer, resetForm, fetchLecturers],
   )
 
-  const handleSelectChange = useCallback((name, value) => {
-    setForm((prev) => ({ ...prev, [name]: value }))
-    setErrors((prev) => {
-      if (prev[name]) {
-        const newErrors = { ...prev }
-        delete newErrors[name]
-        return newErrors
+  // Navigate to previous form step
+  const prevStep = useCallback(() => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1)
+    }
+  }, [currentStep])
+
+  // Navigate to next form step
+  const nextStep = useCallback(() => {
+    if (validateForm(currentStep)) {
+      if (currentStep < formSections.length - 1) {
+        setCurrentStep(currentStep + 1)
       }
-      return prev
-    })
-  }, [])
-
-  const handleExperienceChange = useCallback((idx, field, value) => {
-    setForm((prev) => {
-      const exp = [...prev.experience]
-      exp[idx][field] = value
-      return { ...prev, experience: exp }
-    })
-    const errorKey = `exp_${field}_${idx}`
-    setErrors((prev) => {
-      if (prev[errorKey]) {
-        const newErrors = { ...prev }
-        delete newErrors[errorKey]
-        return newErrors
-      }
-      return prev
-    })
-  }, [])
-
-  const addExperienceRow = useCallback(() => {
-    setForm((prev) => ({
-      ...prev,
-      experience: [...prev.experience, { institution: "", years: "", start: "", end: "", designation: "", nature: "" }],
-    }))
-  }, [])
-
-  const removeExperienceRow = useCallback((idx) => {
-    setForm((prev) => ({
-      ...prev,
-      experience: prev.experience.filter((_, i) => i !== idx),
-    }))
-  }, [])
-
-  // Validation logic
-  const validateStep = () => {
-    const newErrors = {}
-
-    if (step === 0) {
-      if (!form.fullName.trim()) newErrors.fullName = "Full name is required"
-      if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) newErrors.email = "Valid email is required"
-      if (!form.nicNumber.trim()) newErrors.nicNumber = "NIC number is required"
-      if (!form.dob) newErrors.dob = "Date of birth is required"
-      if (!form.address.trim()) newErrors.address = "Address is required"
-      if (!form.phone.trim() || !/^\d{10,}$/.test(form.phone)) newErrors.phone = "Valid phone number is required"
-      if (!form.cdcNumber.trim()) newErrors.cdcNumber = "CDC number is required"
-      if (!form.category.trim()) newErrors.category = "Category is required"
-      if (!form.status) newErrors.status = "Status is required"
-      if (!form.vehicleNumber.trim()) newErrors.vehicleNumber = "Vehicle license number is required"
     }
+  }, [currentStep, validateForm, formSections.length])
 
-    if (step === 1) {
-      if (!form.bankName.trim()) newErrors.bankName = "Bank name is required"
-      if (!form.branchName.trim()) newErrors.branchName = "Branch name is required"
-      if (!form.accountNumber.trim()) newErrors.accountNumber = "Account number is required"
-    }
+  // Render form fields based on current step
+  const renderFormFields = () => {
+    const currentFields = formSections[currentStep].fields
 
-    if (step === 2) {
-      form.experience.forEach((exp, idx) => {
-        if (!exp.institution.trim()) newErrors[`exp_institution_${idx}`] = "Institution is required"
-        if (!exp.years.trim()) newErrors[`exp_years_${idx}`] = "Years is required"
-        if (!exp.start.trim()) newErrors[`exp_start_${idx}`] = "Start date is required"
-        if (!exp.end.trim()) newErrors[`exp_end_${idx}`] = "End date is required"
-        if (!exp.designation.trim()) newErrors[`exp_designation_${idx}`] = "Designation is required"
-        if (!exp.nature.trim()) newErrors[`exp_nature_${idx}`] = "Nature of work is required"
-      })
-      if (!form.highestQualification.trim()) newErrors.highestQualification = "Highest qualification is required"
-      if (!form.otherQualifications.trim()) newErrors.otherQualifications = "Other qualifications are required"
-    }
+    return (
+      <div className="space-y-6">
+        {currentFields.map((field) => {
+          if (field === "full_name") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="full_name" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <User className="w-4 h-4 text-blue-600" />
+                  Full Name *
+                </Label>
+                <Input
+                  type="text"
+                  id="full_name"
+                  name="full_name"
+                  value={formData.full_name}
+                  onChange={handleChange}
+                  placeholder="Enter full name"
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12",
+                    errors.full_name ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.full_name && <div className="text-sm text-red-500 font-semibold">{errors.full_name}</div>}
+              </div>
+            )
+          }
 
-    if (step === 3) {
-      if (!form.course_ids || form.course_ids.length === 0) newErrors.course_ids = "At least one course is required"
-      if (!form.stream.trim()) newErrors.stream = "Stream is required"
-      if (!form.module.trim()) newErrors.module = "Module is required"
-    }
+          if (field === "email") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="email" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Mail className="w-4 h-4 text-blue-600" />
+                  Email Address *
+                </Label>
+                <Input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Enter email address"
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12",
+                    errors.email ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.email && <div className="text-sm text-red-500 font-semibold">{errors.email}</div>}
+              </div>
+            )
+          }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+          if (field === "id_number") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="id_number" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <CreditCard className="w-4 h-4 text-blue-600" />
+                  NIC Number *
+                </Label>
+                <Input
+                  type="text"
+                  id="id_number"
+                  name="id_number"
+                  value={formData.id_number}
+                  onChange={handleChange}
+                  placeholder="Enter NIC number"
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12",
+                    errors.id_number ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.id_number && <div className="text-sm text-red-500 font-semibold">{errors.id_number}</div>}
+              </div>
+            )
+          }
+
+          if (field === "date_of_birth") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="date_of_birth" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Calendar className="w-4 h-4 text-blue-600" />
+                  Date of Birth *
+                </Label>
+                <Input
+                  type="date"
+                  id="date_of_birth"
+                  name="date_of_birth"
+                  value={formData.date_of_birth}
+                  onChange={handleChange}
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12",
+                    errors.date_of_birth ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.date_of_birth && <div className="text-sm text-red-500 font-semibold">{errors.date_of_birth}</div>}
+              </div>
+            )
+          }
+
+          if (field === "address") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="address" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <MapPin className="w-4 h-4 text-blue-600" />
+                  Address *
+                </Label>
+                <Textarea
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Enter complete address"
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg",
+                    errors.address ? "border-red-500" : "border-slate-200",
+                  )}
+                  rows={3}
+                />
+                {errors.address && <div className="text-sm text-red-500 font-semibold">{errors.address}</div>}
+              </div>
+            )
+          }
+
+          if (field === "phone") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="phone" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Phone className="w-4 h-4 text-blue-600" />
+                  Phone Number *
+                </Label>
+                <Input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="Enter phone number"
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12",
+                    errors.phone ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.phone && <div className="text-sm text-red-500 font-semibold">{errors.phone}</div>}
+              </div>
+            )
+          }
+
+          if (field === "cdc_number") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="cdc_number" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Ship className="w-4 h-4 text-blue-600" />
+                  CDC Number
+                </Label>
+                <Input
+                  type="text"
+                  id="cdc_number"
+                  name="cdc_number"
+                  value={formData.cdc_number}
+                  onChange={handleChange}
+                  placeholder="Enter CDC number"
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12",
+                    errors.cdc_number ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.cdc_number && <div className="text-sm text-red-500 font-semibold">{errors.cdc_number}</div>}
+              </div>
+            )
+          }
+
+          if (field === "vehicle_number") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="vehicle_number" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Waves className="w-4 h-4 text-blue-600" />
+                  Vehicle Number
+                </Label>
+                <Input
+                  type="text"
+                  id="vehicle_number"
+                  name="vehicle_number"
+                  value={formData.vehicle_number}
+                  onChange={handleChange}
+                  placeholder="Enter vehicle number"
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12",
+                    errors.vehicle_number ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.vehicle_number && <div className="text-sm text-red-500 font-semibold">{errors.vehicle_number}</div>}
+              </div>
+            )
+          }
+
+          if (field === "highest_qualification") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="highest_qualification" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Award className="w-4 h-4 text-blue-600" />
+                  Highest Qualification *
+                </Label>
+                <Input
+                  type="text"
+                  id="highest_qualification"
+                  name="highest_qualification"
+                  value={formData.highest_qualification}
+                  onChange={handleChange}
+                  placeholder="e.g., Masters in Maritime Engineering"
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12",
+                    errors.highest_qualification ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.highest_qualification && <div className="text-sm text-red-500 font-semibold">{errors.highest_qualification}</div>}
+              </div>
+            )
+          }
+
+          if (field === "other_qualifications") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="other_qualifications" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <GraduationCap className="w-4 h-4 text-blue-600" />
+                  Other Qualifications *
+                </Label>
+                <Textarea
+                  id="other_qualifications"
+                  name="other_qualifications"
+                  value={formData.other_qualifications}
+                  onChange={handleChange}
+                  placeholder="List other relevant qualifications and certifications"
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg",
+                    errors.other_qualifications ? "border-red-500" : "border-slate-200",
+                  )}
+                  rows={3}
+                />
+                {errors.other_qualifications && <div className="text-sm text-red-500 font-semibold">{errors.other_qualifications}</div>}
+              </div>
+            )
+          }
+
+
+
+          if (field === "work_experiences") {
+            return (
+              <div key={field} className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                    <Building className="w-4 h-4 text-blue-600" />
+                    Professional Experience *
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        work_experiences: [
+                          ...prev.work_experiences,
+                          {
+                            institution: "",
+                            position: "",
+                            start_year: "",
+                            end_year: "",
+                            department: "",
+                            is_current: false
+                          }
+                        ]
+                      }))
+                    }}
+                    className="border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Experience
+                  </Button>
+                </div>
+                
+                <div className="space-y-6">
+                  {formData.work_experiences.map((experience, index) => (
+                    <div key={index} className="p-6 border-2 border-slate-200 rounded-xl bg-gradient-to-br from-slate-50 to-blue-50/30 shadow-lg">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-lg font-bold text-slate-700 flex items-center gap-2">
+                          <Building className="w-5 h-5 text-blue-600" />
+                          Work Experience {index + 1}
+                        </h4>
+                        {formData.work_experiences.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setFormData(prev => ({
+                                ...prev,
+                                work_experiences: prev.work_experiences.filter((_, i) => i !== index)
+                              }))
+                            }}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-bold text-slate-700">
+                            Institution/Company *
+                          </Label>
+                          <Input
+                            type="text"
+                            value={experience.institution}
+                            onChange={(e) => {
+                              const newExperiences = [...formData.work_experiences]
+                              newExperiences[index].institution = e.target.value
+                              setFormData(prev => ({ ...prev, work_experiences: newExperiences }))
+                            }}
+                            placeholder="e.g., NIBM, SLIIT"
+                            className="border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-sm font-bold text-slate-700">
+                            Position/Title *
+                          </Label>
+                          <Input
+                            type="text"
+                            value={experience.position}
+                            onChange={(e) => {
+                              const newExperiences = [...formData.work_experiences]
+                              newExperiences[index].position = e.target.value
+                              setFormData(prev => ({ ...prev, work_experiences: newExperiences }))
+                            }}
+                            placeholder="e.g., Senior Lecturer, Junior Lecturer"
+                            className="border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-sm font-bold text-slate-700">
+                            Start Year *
+                          </Label>
+                          <Input
+                            type="number"
+                            value={experience.start_year}
+                            onChange={(e) => {
+                              const newExperiences = [...formData.work_experiences]
+                              newExperiences[index].start_year = e.target.value
+                              setFormData(prev => ({ ...prev, work_experiences: newExperiences }))
+                            }}
+                            placeholder="e.g., 2015"
+                            min="1980"
+                            max={new Date().getFullYear()}
+                            className="border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-sm font-bold text-slate-700">
+                            End Year
+                          </Label>
+                          <div className="flex items-center gap-3">
+                            <Input
+                              type="number"
+                              value={experience.end_year}
+                              onChange={(e) => {
+                                const newExperiences = [...formData.work_experiences]
+                                newExperiences[index].end_year = e.target.value
+                                setFormData(prev => ({ ...prev, work_experiences: newExperiences }))
+                              }}
+                              placeholder="e.g., 2020"
+                              min="1980"
+                              max={new Date().getFullYear() + 10}
+                              disabled={experience.is_current}
+                              className="border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12 flex-1"
+                            />
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`current_${index}`}
+                                checked={experience.is_current}
+                                onChange={(e) => {
+                                  const newExperiences = [...formData.work_experiences]
+                                  newExperiences[index].is_current = e.target.checked
+                                  if (e.target.checked) {
+                                    newExperiences[index].end_year = ""
+                                  }
+                                  setFormData(prev => ({ ...prev, work_experiences: newExperiences }))
+                                }}
+                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                              />
+                              <Label htmlFor={`current_${index}`} className="text-sm font-semibold text-slate-700">
+                                Current
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="md:col-span-2 space-y-2">
+                          <Label className="text-sm font-bold text-slate-700">
+                            Department/Faculty
+                          </Label>
+                          <Input
+                            type="text"
+                            value={experience.department}
+                            onChange={(e) => {
+                              const newExperiences = [...formData.work_experiences]
+                              newExperiences[index].department = e.target.value
+                              setFormData(prev => ({ ...prev, work_experiences: newExperiences }))
+                            }}
+                            placeholder="e.g., Computer Science, Maritime Studies"
+                            className="border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {errors.work_experiences && <div className="text-sm text-red-500 font-semibold">{errors.work_experiences}</div>}
+              </div>
+            )
+          }
+
+          if (field === "selected_courses") {
+            return (
+              <div key={field} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                    <GraduationCap className="w-4 h-4 text-blue-600" />
+                    Assign Courses *
+                  </Label>
+                  {errorMessage && (
+                    <div className="flex items-center gap-2 text-sm text-red-600">
+                      <AlertTriangle className="w-4 h-4" />
+                      {errorMessage}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={fetchCourses}
+                        disabled={coursesLoading}
+                        className="border-2 shadow-lg"
+                      >
+                        <RotateCcw className="w-4 h-4" /> Retry
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <div className="relative">
+                  <div
+                    className={cn(
+                      "min-h-[50px] border-2 rounded-xl p-3 cursor-pointer flex flex-wrap gap-2 items-center shadow-lg backdrop-blur-sm",
+                      errors.selected_courses ? "border-red-500" : "border-slate-200",
+                      coursesLoading ? "opacity-50" : "hover:border-blue-400",
+                    )}
+                    onClick={() => !coursesLoading && setShowCourseOptions(true)}
+                    ref={courseInputRef}
+                  >
+                    {formData.selected_courses.length > 0 ? (
+                      formData.selected_courses.map((courseId) => {
+                        const course = courses.find((c) => c.id === courseId)
+                        return course ? (
+                          <Badge
+                            key={courseId}
+                            variant="secondary"
+                            className="flex items-center gap-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-blue-300 font-semibold px-3 py-1 shadow-lg"
+                          >
+                            {course.courseName}
+                            <X
+                              className="w-3 h-3 cursor-pointer hover:text-red-500 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                removeCourse(courseId)
+                              }}
+                            />
+                          </Badge>
+                        ) : null
+                      })
+                    ) : coursesLoading ? (
+                      <span className="text-slate-500 font-semibold">Loading courses...</span>
+                    ) : (
+                      <span className="text-slate-500 font-semibold">Click to assign courses</span>
+                    )}
+                    <ChevronDown className="w-4 h-4 ml-auto text-slate-400" />
+                  </div>
+                  {errors.selected_courses && (
+                    <div className="text-sm text-red-500 font-semibold">{errors.selected_courses}</div>
+                  )}
+
+                  {showCourseOptions && !coursesLoading && (
+                    <div
+                      className="absolute z-10 w-full mt-1 bg-white/95 backdrop-blur-xl border-2 border-slate-200 rounded-xl shadow-2xl max-h-60 overflow-auto"
+                      ref={courseOptionsRef}
+                    >
+                      <div className="p-3 border-b border-slate-200">
+                        <div className="flex items-center gap-2">
+                          <Search className="w-4 h-4 text-slate-400" />
+                          <Input
+                            placeholder="Search courses..."
+                            value={courseFilter}
+                            onChange={(e) => setCourseFilter(e.target.value)}
+                            className="border-0 p-0 focus:ring-0 text-sm font-semibold"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      </div>
+                      {filteredCourses.length > 0 ? (
+                        filteredCourses.map((course) => (
+                          <div
+                            key={course.id}
+                            className={cn(
+                              "p-3 cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 text-sm font-semibold transition-all duration-200",
+                              formData.selected_courses.includes(course.id)
+                                ? "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700"
+                                : "text-slate-700",
+                            )}
+                            onClick={() => handleCourseSelect(course.id)}
+                          >
+                            {course.courseName}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-3 text-slate-500 text-sm font-semibold">No courses found</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          }
+
+          if (field === "category") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="category" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Award className="w-4 h-4 text-blue-600" />
+                  Lecturer Category *
+                </Label>
+                <Select
+                  value={formData.category || ""}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                >
+                  <SelectTrigger className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12",
+                    errors.category ? "border-red-500" : "border-slate-200",
+                  )}>
+                    <SelectValue placeholder="Select lecturer category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Senior">A</SelectItem>
+                    <SelectItem value="Associate">B</SelectItem>
+                    <SelectItem value="Assistant">C</SelectItem>
+
+                  </SelectContent>
+                </Select>
+                {errors.category && <div className="text-sm text-red-500 font-semibold">{errors.category}</div>}
+              </div>
+            )
+          }
+
+          if (field === "status") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="status" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Activity className="w-4 h-4 text-blue-600" />
+                  Status *
+                </Label>
+                <Select
+                  value={formData.status || "Active"}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12",
+                    errors.status ? "border-red-500" : "border-slate-200",
+                  )}>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                    <SelectItem value="On Leave">On Leave</SelectItem>
+                    <SelectItem value="Suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.status && <div className="text-sm text-red-500 font-semibold">{errors.status}</div>}
+              </div>
+            )
+          }
+
+          if (field === "bank_name") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="bank_name" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Building className="w-4 h-4 text-blue-600" />
+                  Bank Name *
+                </Label>
+                <Select
+                  value={formData.bank_name || ""}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, bank_name: value }))}
+                >
+                  <SelectTrigger className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12",
+                    errors.bank_name ? "border-red-500" : "border-slate-200",
+                  )}>
+                    <SelectValue placeholder="Select your bank" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Commercial Bank">Commercial Bank</SelectItem>
+                    <SelectItem value="People's Bank">People's Bank</SelectItem>
+                    <SelectItem value="Bank of Ceylon">Bank of Ceylon</SelectItem>
+                    <SelectItem value="Sampath Bank">Sampath Bank</SelectItem>
+                    <SelectItem value="Hatton National Bank">Hatton National Bank</SelectItem>
+                    <SelectItem value="Nations Trust Bank">Nations Trust Bank</SelectItem>
+                    <SelectItem value="DFCC Bank">DFCC Bank</SelectItem>
+                    <SelectItem value="National Development Bank">National Development Bank</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.bank_name && <div className="text-sm text-red-500 font-semibold">{errors.bank_name}</div>}
+              </div>
+            )
+          }
+
+          if (field === "branch_name") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="branch_name" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <MapPin className="w-4 h-4 text-blue-600" />
+                  Branch Name *
+                </Label>
+                <Input
+                  type="text"
+                  id="branch_name"
+                  name="branch_name"
+                  value={formData.branch_name}
+                  onChange={handleChange}
+                  placeholder="Enter branch name"
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12",
+                    errors.branch_name ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.branch_name && <div className="text-sm text-red-500 font-semibold">{errors.branch_name}</div>}
+              </div>
+            )
+          }
+
+          if (field === "account_number") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="account_number" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <CreditCard className="w-4 h-4 text-blue-600" />
+                  Account Number *
+                </Label>
+                <Input
+                  type="text"
+                  id="account_number"
+                  name="account_number"
+                  value={formData.account_number}
+                  onChange={handleChange}
+                  placeholder="Enter bank account number"
+                  className={cn(
+                    "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg h-12",
+                    errors.account_number ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.account_number && <div className="text-sm text-red-500 font-semibold">{errors.account_number}</div>}
+              </div>
+            )
+          }
+
+          // File upload fields
+          if (field === "nic_file") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="nic_file" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Upload className="w-4 h-4 text-blue-600" />
+                  NIC Copy
+                </Label>
+                <div className="border-2 border-dashed border-blue-200 rounded-xl p-6 text-center hover:border-blue-400 transition-all duration-300 bg-gradient-to-br from-blue-50/50 to-indigo-50/50">
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                      <Upload className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <Label htmlFor="nic_file" className="cursor-pointer text-sm font-semibold text-slate-700 hover:text-blue-700">
+                        Click to upload NIC copy
+                      </Label>
+                      <p className="text-xs text-slate-500 mt-1">PDF, JPG, PNG up to 10MB</p>
+                      <Input
+                        id="nic_file"
+                        name="nic_file"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={handleChange}
+                        className="hidden"
+                      />
+                    </div>
+                  </div>
+                  {formData.nic_file && (
+                    <div className="mt-4 p-3 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
+                      <div className="flex items-center justify-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-emerald-600" />
+                        <p className="text-sm font-semibold text-emerald-700">File selected: {formData.nic_file.name}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          }
+
+          if (field === "photo_file") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="photo_file" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Upload className="w-4 h-4 text-blue-600" />
+                  Passport Photo
+                </Label>
+                <div className="border-2 border-dashed border-blue-200 rounded-xl p-6 text-center hover:border-blue-400 transition-all duration-300 bg-gradient-to-br from-blue-50/50 to-indigo-50/50">
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                      <Upload className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <Label htmlFor="photo_file" className="cursor-pointer text-sm font-semibold text-slate-700 hover:text-blue-700">
+                        Click to upload passport photo
+                      </Label>
+                      <p className="text-xs text-slate-500 mt-1">JPG, PNG up to 5MB</p>
+                      <Input
+                        id="photo_file"
+                        name="photo_file"
+                        type="file"
+                        accept=".jpg,.jpeg,.png"
+                        onChange={handleChange}
+                        className="hidden"
+                      />
+                    </div>
+                  </div>
+                  {formData.photo_file && (
+                    <div className="mt-4 p-3 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
+                      <div className="flex items-center justify-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-emerald-600" />
+                        <p className="text-sm font-semibold text-emerald-700">File selected: {formData.photo_file.name}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          }
+
+          if (field === "education_certificate_file") {
+            return (
+              <div key={field} className="space-y-2">
+                <Label htmlFor="education_certificate_file" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Upload className="w-4 h-4 text-blue-600" />
+                  Education Certificates
+                </Label>
+                <div className="border-2 border-dashed border-blue-200 rounded-xl p-6 text-center hover:border-blue-400 transition-all duration-300 bg-gradient-to-br from-blue-50/50 to-indigo-50/50">
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                      <Upload className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <Label htmlFor="education_certificate_file" className="cursor-pointer text-sm font-semibold text-slate-700 hover:text-blue-700">
+                        Click to upload education certificates
+                      </Label>
+                      <p className="text-xs text-slate-500 mt-1">PDF, JPG, PNG up to 10MB</p>
+                      <Input
+                        id="education_certificate_file"
+                        name="education_certificate_file"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={handleChange}
+                        className="hidden"
+                      />
+                    </div>
+                  </div>
+                  {formData.education_certificate_file && (
+                    <div className="mt-4 p-3 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
+                      <div className="flex items-center justify-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-emerald-600" />
+                        <p className="text-sm font-semibold text-emerald-700">File selected: {formData.education_certificate_file.name}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          }
+
+          return null
+        })}
+      </div>
+    )
   }
 
-  const next = () => {
-    if (validateStep()) {
-      setStep((prev) => Math.min(prev + 1, steps.length - 1))
-    }
-  }
+  // Fetch lecturer data for editing - moved here to fix initialization order
+  const fetchLecturerForEdit = useCallback(async (lecturerId) => {
+    try {
+      setLoading(true)
+      setErrorMessage("")
 
-  const back = () => {
-    setStep((prev) => Math.max(prev - 1, 0))
-  }
+      const lecturerData = await authRequest("get", `http://localhost:5003/api/lecturer-registration/${lecturerId}`)
+      
+      if (lecturerData) {
+        // Format date for input field
+        const formattedDateOfBirth = lecturerData.date_of_birth 
+          ? new Date(lecturerData.date_of_birth).toISOString().split('T')[0]
+          : ""
 
-  // Handle view lecturer details
-  const handleViewLecturer = (lecturerId) => {
-    navigate(`/lecturer/${lecturerId}`)
-  }
+        // Parse courses from string to array
+        const selectedCourses = lecturerData.courses && Array.isArray(lecturerData.courses)
+          ? lecturerData.courses.map(course => course.id)
+          : []
 
-  // Handle edit lecturer
-  const handleEditLecturer = useCallback(
-    (lecturerId) => {
-      // Update URL to include the ID
-      if (typeof window !== "undefined") {
-        const url = new URL(window.location)
-        url.searchParams.set("id", lecturerId)
-        window.history.pushState({}, "", url)
-      }
+        // Parse work experiences from academic details experience JSON
+        let workExperiences = [{
+          institution: "",
+          position: "",
+          start_year: "",
+          end_year: "",
+          department: "",
+          is_current: false
+        }];
+        
+        if (lecturerData.academicDetails?.experience) {
+          try {
+            let experienceData = lecturerData.academicDetails.experience;
+            // Handle double-encoded JSON
+            if (typeof experienceData === 'string') {
+              experienceData = JSON.parse(experienceData);
+            }
+            if (typeof experienceData === 'string') {
+              experienceData = JSON.parse(experienceData);
+            }
+            
+            if (Array.isArray(experienceData) && experienceData.length > 0) {
+              workExperiences = experienceData.map(exp => ({
+                institution: exp.institution || "",
+                position: exp.designation || "",
+                start_year: exp.start || "",
+                end_year: exp.end === "Present" ? "" : (exp.end || ""),
+                department: exp.nature || "",
+                is_current: exp.end === "Present"
+              }));
+            }
+          } catch (e) {
+            console.error("Error parsing experience data:", e);
+          }
+        }
 
-      const lecturer = lecturers.find((l) => l.id === lecturerId)
-      if (lecturer) {
-        // Populate form with lecturer data
-        setForm({
-          fullName: lecturer.full_name || "",
-          email: lecturer.email || "",
-          nicNumber: lecturer.id_number || "",
-          dob: lecturer.date_of_birth ? lecturer.date_of_birth.split("T")[0] : "",
-          address: lecturer.address || "",
-          phone: lecturer.phone || "",
-          cdcNumber: lecturer.cdc_number || "",
-          category: lecturer.category || "",
-          vehicleNumber: lecturer.vehicle_number || "",
-          status: lecturer.status || "Active",
-          bankName: lecturer.bank_details?.bank_name || "",
-          branchName: lecturer.bank_details?.branch_name || "",
-          accountNumber: lecturer.bank_details?.account_number || "",
-          experience: lecturer.experience || [
-            { institution: "", years: "", start: "", end: "", designation: "", nature: "" },
-          ],
-          highestQualification: lecturer.academic_details?.highest_qualification || "",
-          otherQualifications: lecturer.academic_details?.other_qualifications || "",
-          course_ids: lecturer.course_ids || [],
-          stream: lecturer.stream || "",
-          module: lecturer.module || "",
+        setFormData({
+          full_name: lecturerData.full_name || "",
+          email: lecturerData.email || "",
+          selected_courses: selectedCourses,
+          id_number: lecturerData.id_number || "",
+          date_of_birth: formattedDateOfBirth,
+          address: lecturerData.address || "",
+          phone: lecturerData.phone || "",
+          cdc_number: lecturerData.cdc_number || "",
+          category: lecturerData.category || "",
+          vehicle_number: lecturerData.vehicle_number || "",
+          status: lecturerData.status || "Active",
+          bank_name: lecturerData.bankDetails?.bank_name || "",
+          branch_name: lecturerData.bankDetails?.branch_name || "",
+          account_number: lecturerData.bankDetails?.account_number || "",
+          highest_qualification: lecturerData.academicDetails?.highest_qualification || "",
+          other_qualifications: lecturerData.academicDetails?.other_qualifications || "",
+
+          work_experiences: workExperiences,
           nic_file: null,
-          photo_file: null,
-          passbook_file: null,
           education_certificate_file: null,
           cdc_book_file: null,
           driving_trainer_license_file: null,
-          other_documents_file: null,
+          bank_document_file: null,
+          photo: null,
+          police_report_file: null,
         })
-        setIsEditMode(true)
-        setEditingLecturer(lecturerId)
-        setIsAddDialogOpen(true)
-        setViewMode("list")
-        setSelectedLecturer(null)
+      }
+    } catch (error) {
+      console.error("Error fetching lecturer for edit:", error)
+      setErrorMessage("Failed to load lecturer data for editing. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // Handle URL parameters for editing
+  useEffect(() => {
+    const editId = searchParams.get("edit")
+    if (editId && editId !== editingLecturer) {
+      setEditingLecturer(editId)
+      fetchLecturerForEdit(editId)
+    }
+  }, [searchParams, editingLecturer, fetchLecturerForEdit])
+
+  // Load lecturer data when editing starts
+  useEffect(() => {
+    if (editingLecturer && currentView === "registration") {
+      fetchLecturerForEdit(editingLecturer)
+    }
+  }, [editingLecturer, currentView, fetchLecturerForEdit])
+
+  // Fetch courses function with retry capability
+  const fetchCourses = useCallback(async () => {
+    try {
+      setCoursesLoading(true)
+      setErrorMessage("")
+
+      const coursesData = await authRequest("get", "http://localhost:5003/api/lecturer-registration/courses")
+
+      if (coursesData && Array.isArray(coursesData)) {
+        setCourses(coursesData)
+        
+        // Build courses mapping for tooltips
+        const mapping = {}
+        coursesData.forEach(course => {
+          if (course.courseId && course.courseName) {
+            mapping[course.courseId] = course.courseName
+          }
+        })
+        setCoursesMap(mapping)
+      } else {
+        throw new Error("Invalid course data format")
+      }
+    } catch (error) {
+      console.error("Error fetching courses:", error)
+      setErrorMessage("Failed to load courses. Please try again.")
+    } finally {
+      setCoursesLoading(false)
+    }
+  }, [])
+
+  // Handle starting new registration - ensures clean state
+  const handleStartNewRegistration = useCallback(() => {
+    // Reset all form state
+    setFormData({
+      full_name: "",
+      email: "",
+      selected_courses: [],
+      id_number: "",
+      date_of_birth: "",
+      address: "",
+      phone: "",
+      cdc_number: "",
+      category: "",
+      vehicle_number: "",
+      status: "Active",
+      bank_name: "",
+      branch_name: "",
+      account_number: "",
+      highest_qualification: "",
+      other_qualifications: "",
+
+      work_experiences: [
+        {
+          institution: "",
+          position: "",
+          start_year: "",
+          end_year: "",
+          department: "",
+          is_current: false
+        }
+      ],
+      nic_file: null,
+      photo_file: null,
+      education_certificate_file: null,
+      cdc_book_file: null,
+      driving_trainer_license_file: null,
+    })
+    setCurrentStep(0)
+    setEditingLecturer(null)
+    setErrors({})
+    setErrorMessage("")
+    setCurrentView("registration")
+    // Clear URL parameters
+    navigate("/lecturer-registration", { replace: true })
+  }, [navigate])
+
+  // Initial data fetching
+  useEffect(() => {
+    fetchCourses()
+    fetchLecturers()
+  }, [fetchCourses, fetchLecturers])
+
+  // Click outside to close course dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        courseOptionsRef.current &&
+        !courseOptionsRef.current.contains(event.target) &&
+        courseInputRef.current &&
+        !courseInputRef.current.contains(event.target)
+      ) {
+        setShowCourseOptions(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
+
+  // Handle password reset email
+  const handleSendPasswordReset = useCallback(
+    async (lecturer) => {
+      try {
+        setLoading(true)
+        await authRequest("post", "http://localhost:5003/api/lecturer-auth/forgot-password", { email: lecturer.email })
+        setNotificationMessage(`Password reset email sent successfully to ${lecturer.full_name} (${lecturer.email})!`)
+        setShowSuccessNotification(true)
+      } catch (error) {
+        console.error("Error sending password reset email:", error)
+        alert(`Failed to send password reset email: ${error.response?.data?.error || error.message}`)
+      } finally {
+        setLoading(false)
       }
     },
-    [lecturers],
+    [],
   )
+
+  // Handle sorting
+  const handleSort = useCallback((field) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortDirection("asc")
+    }
+  }, [sortField])
+
+  // Filter and sort lecturers
+  const getFilteredAndSortedLecturers = useMemo(() => {
+    let filtered = lecturers
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = lecturers.filter(
+        (lecturer) =>
+          lecturer.full_name?.toLowerCase().includes(term) ||
+          lecturer.email?.toLowerCase().includes(term) ||
+          lecturer.id_number?.toLowerCase().includes(term) ||
+          extractCourseIds(lecturer.assigned_courses)?.toLowerCase().includes(term),
+      )
+    }
+
+    return filtered.sort((a, b) => {
+      if (!a[sortField]) return sortDirection === "asc" ? 1 : -1
+      if (!b[sortField]) return sortDirection === "asc" ? -1 : 1
+
+      if (typeof a[sortField] === "string") {
+        return sortDirection === "asc"
+          ? a[sortField].localeCompare(b[sortField])
+          : b[sortField].localeCompare(a[sortField])
+      }
+
+      return sortDirection === "asc" ? a[sortField] - b[sortField] : b[sortField] - a[sortField]
+    })
+  }, [lecturers, searchTerm, sortField, sortDirection])
+
+  // Pagination logic
+  const totalPages = Math.ceil(getFilteredAndSortedLecturers.length / lecturersPerPage)
+  const indexOfLastLecturer = currentPage * lecturersPerPage
+  const indexOfFirstLecturer = indexOfLastLecturer - lecturersPerPage
+  const currentLecturers = getFilteredAndSortedLecturers.slice(indexOfFirstLecturer, indexOfLastLecturer)
+
+  // Handle view lecturer
+  const handleViewLecturer = useCallback((lecturerId) => {
+    navigate(`/lecturer/${lecturerId}`)
+  }, [navigate])
+
+  // Handle edit lecturer
+  const handleEditLecturer = useCallback((lecturerId) => {
+    // Set URL parameter for editing
+    navigate(`?edit=${lecturerId}`, { replace: true })
+    setEditingLecturer(lecturerId)
+    setCurrentView("registration")
+  }, [navigate])
 
   // Handle delete lecturer
   const handleDeleteLecturer = useCallback(
     async (lecturerId) => {
-      if (window.confirm("Are you sure you want to delete this lecturer?")) {
+      if (lecturerId === null) {
+        setConfirmDeleteId(null)
+        return
+      }
+      
+      if (confirmDeleteId === lecturerId) {
+        // Perform actual delete
         try {
+          setLoading(true)
           await authRequest("delete", `http://localhost:5003/api/lecturer-registration/${lecturerId}`)
           setLecturers((prev) => prev.filter((l) => l.id !== lecturerId))
-          setViewMode("list")
-          setSelectedLecturer(null)
-          alert("Lecturer deleted successfully!")
+          setConfirmDeleteId(null)
+          setNotificationMessage("Lecturer deleted successfully!")
+          setShowSuccessNotification(true)
         } catch (error) {
           console.error("Error deleting lecturer:", error)
           alert("Failed to delete lecturer")
+        } finally {
+          setLoading(false)
         }
+      } else {
+        setConfirmDeleteId(lecturerId)
       }
     },
-    [authRequest],
+    [confirmDeleteId],
   )
 
-  // Submit logic with FormData
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!validateStep()) return
+  // Memoized calculations
+  const totalLecturers = useMemo(() => lecturers.length, [lecturers])
+  const activeLecturers = useMemo(() => lecturers.filter((l) => l.status === "Active" || !l.status).length, [lecturers])
+  const totalCourses = useMemo(() => courses.length, [courses])
 
-    setIsSubmitting(true)
-    const data = new FormData()
+  if (currentView === "registration") {
+    return (
+      <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-x-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-30 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/50 to-purple-50/50"></div>
+        </div>
 
-    // Prepare academic details as a structured object
-    const academicDetails = {
-      highest_qualification: form.highestQualification,
-      other_qualifications: form.otherQualifications,
-    }
+        <div className="relative z-10 w-full h-full p-4 lg:p-6">
+          {/* Registration Form Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700 rounded-xl shadow-xl">
+                <Users className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-black gradient-text">
+                  {editingLecturer ? "Edit Lecturer" : "Add New Lecturer"}
+                </h1>
+                <p className="text-slate-600 font-semibold">
+                  {editingLecturer ? "Update lecturer information" : "Register a new lecturer in the system"}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCurrentView("dashboard")
+                setEditingLecturer(null)
+                navigate("/lecturer-registration", { replace: true })
+              }}
+              className="h-12 px-6 rounded-xl font-bold border-2 hover:bg-slate-50 shadow-lg"
+            >
+              <ChevronLeft className="h-5 w-5 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
 
-    // Append form fields to FormData
-    Object.entries(form).forEach(([k, v]) => {
-      if (k === "experience") {
-        data.append(k, JSON.stringify(v))
-      } else if (k === "dob") {
-        data.append("date_of_birth", v)
-      } else if (k === "course_ids" && v && v.length > 0) {
-        data.append("course_ids", JSON.stringify(v))
-      } else if (k === "highestQualification") {
-        data.append("highestQualification", v)
-      } else if (k === "otherQualifications") {
-        data.append("otherQualifications", v)
-      } else if (v instanceof File) {
-        data.append(k, v)
-      } else if (v !== null && v !== undefined) {
-        data.append(k, v)
-      }
-    })
+          {/* Registration Form */}
+          <Card className="animate-fade-in stagger-1 border-0 shadow-2xl bg-white/95 backdrop-blur-xl">
+            <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">
+              <CardTitle className="flex items-center justify-between">
+                <span className="text-2xl font-black gradient-text">Lecturer Registration Form</span>
+                {editingLecturer && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-blue-300 font-bold px-4 py-2 text-sm"
+                  >
+                    Editing Lecturer ID: {editingLecturer}
+                  </Badge>
+                )}
+              </CardTitle>
 
-    // Append academic details as a JSON string
-    data.append("academic_details", JSON.stringify(academicDetails))
+              {/* Enhanced Progress Steps */}
+              <div className="flex items-center justify-between mt-6 overflow-x-auto">
+                {formSections.map((section, index) => {
+                  const SectionIcon = section.icon
+                  return (
+                    <div key={index} className="flex items-center min-w-0">
+                      <div
+                        className={cn(
+                          "form-step w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 cursor-pointer shadow-xl border-2",
+                          index <= currentStep
+                            ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-blue-600"
+                            : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50 hover:border-slate-400",
+                        )}
+                        onClick={() => {
+                          // Allow jumping to any step if current step is valid or if going to a previous step
+                          if (index <= currentStep || validateForm(currentStep)) {
+                            setCurrentStep(index)
+                          }
+                        }}
+                        title={`Go to ${section.title}`}
+                      >
+                        <SectionIcon className="w-6 h-6" />
+                      </div>
+                      <span
+                        className={cn(
+                          "ml-3 text-sm whitespace-nowrap transition-all duration-300 cursor-pointer font-bold",
+                          index <= currentStep ? "text-blue-600" : "text-slate-500 hover:text-slate-700",
+                        )}
+                        onClick={() => {
+                          // Allow jumping to any step if current step is valid or if going to a previous step
+                          if (index <= currentStep || validateForm(currentStep)) {
+                            setCurrentStep(index)
+                          }
+                        }}
+                        title={`Go to ${section.title}`}
+                      >
+                        {section.title}
+                      </span>
+                      {index < formSections.length - 1 && (
+                        <div
+                          className={cn(
+                            "w-12 h-1 mx-4 transition-all duration-300 rounded-full",
+                            index < currentStep
+                              ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600"
+                              : "bg-slate-200",
+                          )}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </CardHeader>
 
-    // Map form field names to API field names
-    data.append("full_name", form.fullName)
-    data.append("id_number", form.nicNumber)
+            <CardContent className="p-8">
+              {errorMessage && (
+                <Alert className="mb-6 border-2 border-red-200 bg-gradient-to-r from-red-50 to-rose-50 shadow-xl">
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                  <AlertDescription className="text-red-800 font-semibold text-base">{errorMessage}</AlertDescription>
+                </Alert>
+              )}
 
-    if (!data.has("date_of_birth") && form.dob) {
-      data.append("date_of_birth", form.dob)
-    }
+              <form onSubmit={handleSubmit}>
+                <div className="mb-8">
+                  <h2 className="text-2xl font-black mb-6 gradient-text flex items-center gap-3">
+                    {(() => {
+                      const Icon = formSections[currentStep].icon
+                      return <Icon className="h-6 w-6 text-blue-600" />
+                    })()}
+                    <span>{formSections[currentStep].title}</span>
+                  </h2>
+                  {renderFormFields()}
+                </div>
 
-    // Prepare bank details as a structured object
-    const bankDetails = {
-      bank_name: form.bankName,
-      branch_name: form.branchName,
-      account_number: form.accountNumber,
-    }
+                {/* Enhanced Navigation Buttons */}
+                <div className="flex justify-between pt-6 border-t-2 border-slate-200">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={prevStep}
+                    disabled={currentStep === 0}
+                    className="flex items-center gap-2 border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl font-bold shadow-lg transition-all duration-300"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Previous
+                  </Button>
 
-    data.append("bank_details", JSON.stringify(bankDetails))
-
-    if (!data.has("address")) {
-      data.append("address", form.address || "")
-    }
-
-    // Get user_id from localStorage
-    const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null
-    let user_id = null
-    if (userStr) {
-      try {
-        const userObj = JSON.parse(userStr)
-        user_id = userObj.id
-      } catch {}
-    }
-    if (user_id) {
-      data.append("user_id", user_id)
-    }
-
-    // Course validation
-    if (!form.course_ids || form.course_ids.length === 0) {
-      alert("Please select at least one course.")
-      setIsSubmitting(false)
-      return
-    }
-
-    try {
-      const url = isEditMode
-        ? `http://localhost:5003/api/lecturer-registration/${editingLecturer}`
-        : "http://localhost:5003/api/lecturer-registration/"
-
-      const method = isEditMode ? "put" : "post"
-
-      const response = await authRequest(method, url, data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-
-      alert(isEditMode ? "Lecturer updated successfully!" : "Lecturer registered successfully!")
-
-      if (isEditMode) {
-        // Clear URL params
-        if (typeof window !== "undefined") {
-          const url = new URL(window.location)
-          url.searchParams.delete("id")
-          window.history.pushState({}, "", url)
-        }
-      }
-
-      resetForm()
-      setIsAddDialogOpen(false)
-      fetchLecturers()
-    } catch (err) {
-      const msg = err?.response?.data?.error || err.message || "Unknown error"
-      setErrors((prev) => ({ ...prev, global: msg }))
-      alert(msg)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Active":
-      case true:
-        return "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border-2 border-emerald-300"
-      case "Pending":
-        return "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border-2 border-amber-300"
-      case "Completed":
-        return "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-2 border-blue-300"
-      case "Inactive":
-      case false:
-        return "bg-gradient-to-r from-slate-100 to-gray-100 text-slate-800 border-2 border-slate-300"
-      default:
-        return "bg-gradient-to-r from-slate-100 to-gray-100 text-slate-800 border-2 border-slate-300"
-    }
-  }
-
-  // Handle dialog close to reset form and redirect if needed
-  const handleDialogOpenChange = (open) => {
-    setIsAddDialogOpen(open)
-
-    if (!open && isEditMode) {
-      // Clear URL params
-      if (typeof window !== "undefined") {
-        const url = new URL(window.location)
-        url.searchParams.delete("id")
-        window.history.pushState({}, "", url)
-      }
-      setIsEditMode(false)
-      setEditingLecturer(null)
-      resetForm()
-    }
-  }
-
-  const resetForm = () => {
-    setForm({
-      fullName: "",
-      email: "",
-      nicNumber: "",
-      dob: "",
-      address: "",
-      phone: "",
-      cdcNumber: "",
-      category: "",
-      vehicleNumber: "",
-      status: "Active",
-      bankName: "",
-      branchName: "",
-      accountNumber: "",
-      experience: [{ institution: "", years: "", start: "", end: "", designation: "", nature: "" }],
-      highestQualification: "",
-      otherQualifications: "",
-      course_ids: [],
-      stream: "",
-      module: "",
-      nic_file: null,
-      photo_file: null,
-      passbook_file: null,
-      education_certificate_file: null,
-      cdc_book_file: null,
-      driving_trainer_license_file: null,
-      other_documents_file: null,
-    })
-    setStep(0)
-    setErrors({})
-  }
-
-  // Show detail view if a lecturer is selected
-  if (viewMode === "detail" && selectedLecturer) {
-    return <LecturerView />
+                  <div className="flex gap-3">
+                    {currentStep < formSections.length - 1 ? (
+                      <Button
+                        type="button"
+                        onClick={nextStep}
+                        className="flex items-center gap-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white shadow-xl hover:shadow-2xl rounded-xl font-bold transition-all duration-300"
+                      >
+                        Next
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        type="submit"
+                        disabled={loading}
+                        className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 text-white shadow-xl hover:shadow-2xl rounded-xl font-bold transition-all duration-300"
+                      >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        {editingLecturer ? "Update Lecturer" : "Register Lecturer"}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -1498,9 +2249,16 @@ export default function LecturerManagementFull() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/50 to-purple-50/50"></div>
       </div>
 
+      {/* Success Notification */}
+      <SuccessNotification
+        isVisible={showSuccessNotification}
+        message={notificationMessage}
+        onClose={() => setShowSuccessNotification(false)}
+      />
+
       <div className="relative z-10 w-full h-full p-4 lg:p-6">
         {/* Enhanced Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-6 w-full">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-8 gap-6">
           <div className="flex items-center gap-6">
             <div className="relative">
               <div className="p-4 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700 rounded-2xl shadow-2xl">
@@ -1509,269 +2267,188 @@ export default function LecturerManagementFull() {
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
             </div>
             <div>
-              <h1 className="text-4xl font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
-                Lecturer Management
+              <h1 className="text-4xl font-black gradient-text whitespace-nowrap">
+                Lecturer Management Dashboard
               </h1>
-              <p className="text-slate-600 font-semibold text-lg mt-2">Manage lecturer registrations and information</p>
+              <p className="text-slate-600 font-semibold mt-1 flex items-center gap-1">
+                <Target className="h-3 w-3 flex-shrink-0" />
+                Comprehensive maritime training lecturer management system
+              </p>
             </div>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={handleDialogOpenChange}>
-            <DialogTrigger asChild>
-              <button className="h-14 px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-800 rounded-2xl shadow-xl font-bold transition-all duration-300 transform hover:scale-105 text-white flex items-center gap-2">
-                <Plus className="h-5 w-5" />
-                <Sparkles className="h-4 w-4" />
-                Add Lecturer
-              </button>
-            </DialogTrigger>
-            <DialogContent className="w-full max-w-5xl max-h-[70vh] overflow-y-auto border-0 shadow-2xl bg-white/95 backdrop-blur-xl mt-10">
-              <DialogHeader className="border-b border-slate-200 pb-4">
-                <DialogTitle className="text-2xl font-black bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
-                  {isEditMode ? "Edit Lecturer Registration" : "Add New Lecturer"}
-                </DialogTitle>
-                <DialogDescription className="text-slate-600 font-semibold">
-                  {isEditMode
-                    ? "Update the lecturer details below."
-                    : "Fill in the lecturer details to add them to the system."}
-                </DialogDescription>
-              </DialogHeader>
-              <RegistrationForm
-                step={step}
-                setStep={setStep}
-                form={form}
-                errors={errors}
-                isEditMode={isEditMode}
-                isLoading={isLoading}
-                isSubmitting={isSubmitting}
-                id={editingLecturer}
-                handleChange={handleChange}
-                handleSelectChange={handleSelectChange}
-                handleExperienceChange={handleExperienceChange}
-                addExperienceRow={addExperienceRow}
-                removeExperienceRow={removeExperienceRow}
-                courses={courses}
-                back={back}
-                next={next}
-                handleSubmit={handleSubmit}
-              />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-4 w-full lg:w-auto">
+            <Button
+              onClick={() => console.log("Export CSV")}
+              variant="outline"
+              className="gap-2 border-2 border-slate-300 hover:border-slate-400 text-slate-700 rounded-xl font-bold transition-colors"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+            <Button
+              onClick={handleStartNewRegistration}
+              className="gap-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white rounded-xl font-bold transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Add Lecturer
+            </Button>
+          </div>
         </div>
 
-        {/* Enhanced Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 fade-in-stagger w-full">
-          <StatCard
-            title="Total Lecturers"
-            value={lecturers.length}
-            subtext="All registered lecturers"
-            icon={Users}
-            color="blue"
-            progress={lecturers.length > 0 ? 85 : 0}
-          />
-          <StatCard
-            title="Active Lecturers"
-            value={lecturers.filter((l) => l.status === "Active").length}
-            subtext="Currently teaching"
-            icon={UserCheck}
-            color="green"
-            progress={
-              lecturers.length > 0
-                ? (lecturers.filter((l) => l.status === "Active").length / lecturers.length) * 100
-                : 0
-            }
-          />
-          <StatCard
-            title="Pending Approval"
-            value={lecturers.filter((l) => l.status === "Pending").length}
-            subtext="Awaiting verification"
-            icon={Star}
-            color="yellow"
-            progress={
-              lecturers.length > 0
-                ? (lecturers.filter((l) => l.status === "Pending").length / lecturers.length) * 100
-                : 0
-            }
-          />
-          <StatCard
-            title="Total Courses"
-            value={courses.length}
-            subtext="Available courses"
-            icon={GraduationCap}
-            color="purple"
-            progress={courses.length > 0 ? 70 : 0}
-          />
-        </div>
-
-        {/* Enhanced Lecturers Table */}
-        <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-xl w-full">
-          <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50 rounded-t-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-lg">
-                  <Users className="h-6 w-6 text-blue-600" />
+        {/* Lecturers Table */}
+        <Card className="border-0 shadow-lg bg-white">
+          <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <CardTitle className="text-2xl font-black gradient-text flex items-center gap-3">
+                <BookOpen className="h-6 w-6" />
+                Registered Lecturers
+              </CardTitle>
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1 lg:w-80">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 z-10" />
+                  <Input
+                    ref={searchInputRef}
+                    placeholder="Search by name, email, ID number, or courses..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-10 border-2 border-slate-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl font-semibold"
+                    autoComplete="off"
+                  />
+                  {searchTerm && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSearchTerm("")
+                        setCurrentPage(1)
+                      }}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-slate-100 rounded-full"
+                    >
+                      <X className="w-4 h-4 text-slate-400" />
+                    </Button>
+                  )}
                 </div>
-                <div>
-                  <CardTitle className="text-2xl font-black bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
-                    All Lecturers
-                  </CardTitle>
-                  <p className="text-slate-600 font-semibold">Manage and view all lecturer information</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  className="h-10 px-4 rounded-xl font-bold border-2 border-blue-200 text-blue-700 hover:bg-blue-50 shadow-lg"
+                  onClick={fetchLecturers}
+                  disabled={lecturersLoading}
+                  className="border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl transition-colors"
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-10 px-4 rounded-xl font-bold border-2 border-slate-200 text-slate-700 hover:bg-slate-50 shadow-lg"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
+                  <RefreshCw className={`w-4 h-4 ${lecturersLoading ? "animate-spin" : ""}`} />
                 </Button>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-6">
-            {/* Enhanced Search and Filter */}
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
-                <Input
-                  placeholder="Search lecturers by name or email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 h-12 border-2 border-slate-200 focus:border-blue-500 rounded-xl bg-white/90 backdrop-blur-sm shadow-lg font-medium"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full md:w-[180px] h-12 border-2 border-slate-200 focus:border-blue-500 rounded-xl bg-white/90 backdrop-blur-sm shadow-lg font-medium">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Status</SelectItem>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
+          <CardContent className="p-0">
+            {/* Records per page selector */}
+            <div className="flex justify-between items-center p-6 pb-4">
+              <RecordsPerPageSelector
+                value={lecturersPerPage}
+                onChange={(value) => {
+                  setLecturersPerPage(value)
+                  setCurrentPage(1)
+                }}
+                options={recordsPerPageOptions}
+              />
+
+              {lecturers.length > 0 && (
+                <Badge
+                  variant="outline"
+                  className="bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border-blue-200 px-3 py-1 font-semibold"
+                >
+                  <BookOpen className="w-3 h-3 mr-1" />
+                  {getFilteredAndSortedLecturers.length} lecturers found
+                </Badge>
+              )}
             </div>
 
-            {/* Enhanced Table */}
-            {loadingLecturers ? (
-              <LoadingScreen message="Loading lecturers..." />
+            {/* Lecturer Table */}
+            {lecturersLoading ? (
+              <div className="text-center py-16">
+                <div className="p-6 bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 rounded-3xl inline-block mb-6">
+                  <Loader2 className="mx-auto h-16 w-16 animate-spin text-blue-600" />
+                </div>
+                <h3 className="text-2xl font-black gradient-text mb-3">Loading lecturers...</h3>
+                <p className="text-slate-600 font-semibold text-lg">Please wait while we fetch the lecturer data</p>
+              </div>
+            ) : lecturersError ? (
+              <div className="text-center py-16">
+                <div className="p-6 bg-gradient-to-br from-red-100 via-rose-100 to-pink-100 rounded-3xl inline-block mb-6">
+                  <AlertTriangle className="mx-auto h-16 w-16 text-red-600" />
+                </div>
+                <h3 className="text-2xl font-black text-red-700 mb-3">Error Loading Lecturers</h3>
+                <p className="text-slate-600 font-semibold text-lg mb-4">{lecturersError}</p>
+                <Button
+                  onClick={fetchLecturers}
+                  className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Try Again
+                </Button>
+              </div>
             ) : (
-              <div className="rounded-2xl border-2 border-slate-200 overflow-hidden shadow-xl bg-white/50 backdrop-blur-sm">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-800">
-                      <tr>
-                        <th className="text-white font-bold py-4 px-6 text-left">Lecturer</th>
-                        <th className="text-white font-bold py-4 px-6 text-left">Contact</th>
-                        <th className="text-white font-bold py-4 px-6 text-left">Course</th>
-                        <th className="text-white font-bold py-4 px-6 text-left">Status</th>
-                        <th className="text-white font-bold py-4 px-6 text-center">Actions</th>
-                      </tr>
-                    </thead>
+              <>
+                <div className="overflow-x-auto" ref={tableRef}>
+                  <table className="w-full border-collapse">
+                    <TableHeader onSort={handleSort} sortField={sortField} sortDirection={sortDirection} />
                     <tbody>
-                      {filteredLecturers.length > 0 ? (
-                        filteredLecturers.map((lecturer, index) => (
-                          <tr
+                      {currentLecturers.length > 0 ? (
+                        currentLecturers.map((lecturer) => (
+                          <LecturerRow
                             key={lecturer.id}
-                            className={`${
-                              index % 2 === 0 ? "bg-white/80" : "bg-slate-50/80"
-                            } hover:bg-blue-50/80 transition-all duration-200 backdrop-blur-sm lecturer-card`}
-                          >
-                            <td className="py-4 px-6">
-                              <div className="flex items-center">
-                                <Avatar className="h-12 w-12 mr-4 shadow-lg border-2 border-white">
-                                  <AvatarImage src="/placeholder.svg?height=48&width=48" />
-                                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold">
-                                    {lecturer.full_name
-                                      ?.split(" ")
-                                      .map((n) => n[0])
-                                      .join("")
-                                      .toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <p className="font-bold text-slate-900 text-lg">{lecturer.full_name}</p>
-                                  <p className="text-sm text-slate-600 font-medium">ID: #{lecturer.id}</p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="py-4 px-6">
-                              <div className="text-sm">
-                                <p className="font-semibold text-slate-900">{lecturer.email}</p>
-                                <p className="text-slate-600 font-medium">{lecturer.phone || "N/A"}</p>
-                              </div>
-                            </td>
-                            <td className="py-4 px-6">
-                              <div className="text-sm">
-                                <p className="font-semibold text-slate-900">{lecturer.courses}</p>
-                                <p className="text-slate-600 font-medium">{lecturer.module}</p>
-                              </div>
-                            </td>
-                            <td className="py-4 px-6">
-                              <Badge className={`${getStatusColor(lecturer.status)} px-3 py-1 rounded-full font-bold`}>
-                                {lecturer.status}
-                              </Badge>
-                            </td>
-                            <td className="py-4 px-6 text-center">
-                              <div className="flex gap-2 justify-center">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    console.log("View button clicked for lecturer:", lecturer.id)
-                                    navigate(`/lecturer/${lecturer.id}`)
-                                  }}
-                                  className="h-8 w-8 p-0 rounded-xl hover:bg-blue-100 text-blue-600 transition-all duration-200"
-                                  title="View Details"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEditLecturer(lecturer.id)}
-                                  className="h-8 w-8 p-0 rounded-xl hover:bg-emerald-100 text-emerald-600 transition-all duration-200"
-                                  title="Edit Lecturer"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeleteLecturer(lecturer.id)}
-                                  className="h-8 w-8 p-0 rounded-xl hover:bg-red-100 text-red-600 transition-all duration-200"
-                                  title="Delete Lecturer"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
+                            lecturer={lecturer}
+                            onView={handleViewLecturer}
+                            onEdit={handleEditLecturer}
+                            onDelete={handleDeleteLecturer}
+                            onSendPasswordReset={handleSendPasswordReset}
+                            confirmDeleteId={confirmDeleteId}
+                            loading={loading}
+                            coursesMap={coursesMap}
+                          />
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={5} className="text-center py-16">
-                            <div className="flex flex-col items-center">
-                              <div className="p-6 bg-gradient-to-br from-slate-100 to-blue-100 rounded-2xl shadow-xl mb-6">
-                                <Users className="h-16 w-16 text-slate-400" />
-                              </div>
-                              <p className="text-slate-500 text-xl font-bold mb-2">No lecturers found</p>
-                              <p className="text-slate-400 font-medium">Try adjusting your search criteria</p>
+                          <td colSpan={6} className="p-16 text-center">
+                            <div className="p-6 bg-gradient-to-br from-slate-100 via-gray-100 to-zinc-100 rounded-3xl inline-block mb-6">
+                              <Users className="mx-auto h-16 w-16 text-slate-400" />
                             </div>
+                            <h3 className="text-2xl font-black gradient-text mb-3">
+                              {searchTerm ? "No lecturers found" : "No lecturers registered"}
+                            </h3>
+                            <p className="text-slate-600 font-semibold text-lg mb-6">
+                              {searchTerm
+                                ? "No lecturers match your search criteria."
+                                : "Start by adding your first lecturer to the system."}
+                            </p>
+                            {!searchTerm && (
+                              <Button
+                                onClick={handleStartNewRegistration}
+                                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                              >
+                                <Plus className="w-4 h-4 mr-2" />
+                                Add New Lecturer
+                              </Button>
+                            )}
                           </td>
                         </tr>
                       )}
                     </tbody>
                   </table>
                 </div>
-              </div>
+
+                {/* Pagination Controls */}
+                {!lecturersLoading && getFilteredAndSortedLecturers.length > 0 && (
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    indexOfFirstLecturer={indexOfFirstLecturer}
+                    indexOfLastLecturer={indexOfLastLecturer}
+                    totalItems={getFilteredAndSortedLecturers.length}
+                    onPageChange={setCurrentPage}
+                  />
+                )}
+              </>
             )}
           </CardContent>
         </Card>

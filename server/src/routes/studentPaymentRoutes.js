@@ -13,7 +13,7 @@ router.get('/', studentAuthMiddleware, async (req, res) => {
     const studentId = req.student.studentId;
     
     const query = `
-      SELECT p.*, c.courseName, b.batch_name 
+      SELECT p.*, c.courseName,
       FROM student_payments p
       JOIN courses c ON p.course_id = c.id
       LEFT JOIN batches b ON p.batch_id = b.id
@@ -40,7 +40,7 @@ router.get('/pending', studentAuthMiddleware, async (req, res) => {
     const query = `
       SELECT c.id AS course_id, c.courseName, c.fee AS total_fee, 
              sc.amount_paid, (c.fee - sc.amount_paid) AS remaining_amount,
-             sc.payment_status, b.id AS batch_id, b.batch_name
+             sc.payment_status, b.id AS batch_id,
       FROM student_courses sc
       JOIN courses c ON sc.course_id = c.id
       LEFT JOIN student_batches sb ON sc.student_id = sb.student_id AND sc.course_id = (

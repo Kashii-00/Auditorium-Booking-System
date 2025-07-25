@@ -94,7 +94,7 @@ router.get("/:id", auth.authMiddleware, async (req, res) => {
 router.post("/", auth.authMiddleware, async (req, res) => {
   const { 
     course_id, 
-    batch_name, 
+
     start_date, 
     end_date = null, 
     capacity = 30, 
@@ -105,14 +105,13 @@ router.post("/", auth.authMiddleware, async (req, res) => {
     year = null
   } = req.body
 
-  if (!course_id || !batch_name || !start_date) {
-    return res.status(400).json({ error: "course_id, batch_name, and start_date are required" })
+  if (!course_id || !start_date) {
+    return res.status(400).json({ error: "course_id, and start_date are required" })
   }
 
   try {
     // Use batch manager to create batch with automatic batch number and code generation
     const batchData = {
-      batch_name,
       start_date,
       end_date,
       capacity,
@@ -120,12 +119,13 @@ router.post("/", auth.authMiddleware, async (req, res) => {
       description,
       lecturer_id,
       max_students: capacity,
-      year: year || new Date(start_date).getFullYear()
+      year: year || new Date(start_date).getFullYear(),
+      schedule
     };
 
     const result = await batchManager.createBatch(course_id, batchData);
     
-    logger.info(`Batch "${batch_name}" (${result.batch_code}) created by ${req.user.name} at ${moment().format()}`);
+    logger.info(`(${result.batch_code}) created by ${req.user.name} at ${moment().format()}`);
     
     res.status(201).json({ 
       success: true, 
@@ -146,20 +146,19 @@ router.post("/", auth.authMiddleware, async (req, res) => {
 // PUT /batches/:id
 router.put("/:id", auth.authMiddleware, async (req, res) => {
   const { id } = req.params
-  const { batch_name, start_date, end_date = null, capacity, location, schedule } = req.body
+  const {start_date, end_date = null, capacity, location, schedule } = req.body
 
-  if (!batch_name || !start_date) {
-    return res.status(400).json({ error: "batch_name and start_date are required" })
+  if (!start_date) {
+    return res.status(400).json({ error: "start_date are required" })
   }
 
   const sql = `
-    UPDATE batches SET batch_name = ?, start_date = ?, end_date = ?, capacity = ?, location = ?, schedule = ?
+    UPDATE batches SET  start_date = ?, end_date = ?, capacity = ?, location = ?, schedule = ?
     WHERE id = ?
   `
 
   try {
     const result = await db.queryPromise(sql, [
-      batch_name,
       start_date,
       end_date,
       capacity || 30,

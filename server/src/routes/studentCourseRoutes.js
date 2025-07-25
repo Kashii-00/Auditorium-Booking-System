@@ -49,7 +49,7 @@ router.get('/my-courses', studentAuthMiddleware, async (req, res) => {
     
     const query = `
       SELECT DISTINCT c.*, sc.enrollment_date, sc.status as enrollment_status,
-             b.batch_name, b.start_date, b.end_date,
+              b.start_date, b.end_date,
              (SELECT COUNT(DISTINCT cm.id) FROM course_modules cm WHERE cm.course_id = c.id AND cm.is_published = true) as total_modules,
              (SELECT COUNT(DISTINCT mp.module_id) 
               FROM module_progress mp 

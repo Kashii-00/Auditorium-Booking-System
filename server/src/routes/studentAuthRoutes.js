@@ -234,12 +234,14 @@ router.post('/refresh-token', async (req, res) => {
 });
 
 /**
- * Forgot Password - Request Reset
+ * Forgot Password - Request Reset (Enhanced Security)
  * POST /api/student-auth/forgot-password
  */
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
+    const clientIp = req.ip || req.connection.remoteAddress;
+    const userAgent = req.get('User-Agent') || 'Unknown';
     
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
@@ -257,45 +259,154 @@ router.post('/forgot-password', async (req, res) => {
     
     // For security, don't reveal if email exists or not
     if (students.length === 0) {
+      // Log failed attempt
+      await db.queryPromise(
+        'INSERT INTO password_reset_logs (user_type, user_id, email, action, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+        ['student', 0, email, 'failed_attempt', clientIp, userAgent]
+      );
       return res.status(200).json({ success: true, message: 'If your email is registered, you will receive reset instructions' });
     }
     
     const student = students[0];
     
+    // Check for rate limiting - no more than 3 requests per hour
+    const oneHourAgo = new Date(Date.now() - 3600000);
+    if (student.last_reset_request && new Date(student.last_reset_request) > oneHourAgo) {
+      const timeLeft = Math.ceil((60 - (Date.now() - new Date(student.last_reset_request).getTime()) / 60000));
+      
+      // Log rate limit attempt
+      await db.queryPromise(
+        'INSERT INTO password_reset_logs (user_type, user_id, email, action, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+        ['student', student.id, email, 'failed_attempt', clientIp, userAgent]
+      );
+      
+      return res.status(429).json({ 
+        error: `Too many password reset requests. Please try again in ${timeLeft} minutes.`,
+        retryAfter: timeLeft * 60
+      });
+    }
+    
+    // Check if user has recently reset password (within last 24 hours)
+    const twentyFourHoursAgo = new Date(Date.now() - 86400000);
+    if (student.last_password_reset && new Date(student.last_password_reset) > twentyFourHoursAgo) {
+      // Log this attempt
+      await db.queryPromise(
+        'INSERT INTO password_reset_logs (user_type, user_id, email, action, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+        ['student', student.id, email, 'failed_attempt', clientIp, userAgent]
+      );
+      
+      return res.status(400).json({ 
+        error: 'You have recently reset your password. Please wait 24 hours before requesting another reset.',
+        canRetryAt: new Date(new Date(student.last_password_reset).getTime() + 86400000).toISOString()
+      });
+    }
+    
+    // Check if there's already a valid, unused token
+    if (student.reset_token && student.reset_token_expires) {
+      const tokenExpiry = new Date(student.reset_token_expires);
+      if (tokenExpiry > new Date()) {
+        const timeLeft = Math.ceil((tokenExpiry.getTime() - Date.now()) / 60000);
+        
+        // Log duplicate request attempt
+        await db.queryPromise(
+          'INSERT INTO password_reset_logs (user_type, user_id, email, action, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+          ['student', student.id, email, 'failed_attempt', clientIp, userAgent]
+        );
+        
+        return res.status(400).json({ 
+          error: `A password reset email was already sent. Please check your email or wait ${timeLeft} minutes for the link to expire.`,
+          expiresIn: timeLeft * 60
+        });
+      }
+    }
+    
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
     
-    // Save reset token to database
+    // Update tracking fields and save reset token to database
+    const utcExpiryTime = resetTokenExpiry.toISOString().slice(0, 19).replace('T', ' ');
     await db.queryPromise(
-      'UPDATE student_users SET reset_token = ?, reset_token_expires = ? WHERE id = ?',
-      [resetToken, resetTokenExpiry, student.id]
+      `UPDATE student_users 
+       SET reset_token = ?, 
+           reset_token_expires = ?, 
+           last_reset_request = NOW(),
+           reset_request_count = reset_request_count + 1 
+       WHERE id = ?`,
+      [resetToken, utcExpiryTime, student.id]
+    );
+    
+    // Log the password reset request
+    await db.queryPromise(
+      'INSERT INTO password_reset_logs (user_type, user_id, email, action, ip_address, user_agent, token_used) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      ['student', student.id, email, 'request', clientIp, userAgent, resetToken]
     );
     
     // Send password reset email
     const resetUrl = `http://localhost:3000/student-reset-password?token=${resetToken}`;
     
-    await sendEmail({
-      to: email,
-      subject: 'Password Reset - Maritime Training Center',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-          <h2 style="color: #3b82f6;">Password Reset Request</h2>
-          <p>Dear ${student.full_name},</p>
-          <p>We received a request to reset your password. Click the button below to create a new password:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Your Password</a>
+    try {
+      await sendEmail({
+        to: email,
+        subject: '🔐 Password Reset Request - MPMA Student Portal',
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px;">
+            <div style="background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #2563eb; font-size: 28px; margin: 0; font-weight: 800;">🔐 Password Reset</h1>
+                <p style="color: #64748b; font-size: 16px; margin: 10px 0;">MPMA Student Portal</p>
+              </div>
+              
+              <div style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0); border-radius: 15px; padding: 25px; margin: 25px 0;">
+                <h2 style="color: #1e293b; font-size: 20px; margin: 0 0 15px 0;">Hello ${student.full_name},</h2>
+                <p style="color: #475569; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+                  We received a request to reset your password for your MPMA Student Portal account.
+                </p>
+                <p style="color: #dc2626; font-size: 14px; font-weight: 600; margin: 0;">
+                  ⚠️ This link will expire in 1 hour for security reasons.
+                </p>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; text-decoration: none; padding: 15px 30px; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transition: all 0.3s ease;">
+                  🔑 Reset My Password
+                </a>
+              </div>
+              
+              <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; border-radius: 8px; margin: 25px 0;">
+                <p style="color: #b91c1c; font-size: 14px; margin: 0; font-weight: 600;">
+                  🚨 Security Notice: If you didn't request this password reset, please ignore this email. Your account remains secure.
+                </p>
+              </div>
+              
+              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                <p style="color: #64748b; font-size: 12px; margin: 0;">
+                  © 2025 MPMA Student Portal. This is an automated message.
+                </p>
+              </div>
+            </div>
           </div>
-          <p>This link will expire in 1 hour for security reasons.</p>
-          <p>If you didn't request this password reset, please ignore this email or contact our support team if you have concerns.</p>
-          <p>Thank you,<br>Maritime Training Center Team</p>
-        </div>
-      `
-    });
+        `
+      });
+      
+      logger.info(`Password reset email sent successfully to student: ${email}`);
+      
+    } catch (emailError) {
+      logger.error('Failed to send password reset email:', emailError);
+      
+      // Clear the reset token if email failed
+      await db.queryPromise(
+        'UPDATE student_users SET reset_token = NULL, reset_token_expires = NULL WHERE id = ?',
+        [student.id]
+      );
+      
+      return res.status(500).json({ error: 'Failed to send password reset email. Please try again later.' });
+    }
     
     res.status(200).json({ 
       success: true, 
-      message: 'If your email is registered, you will receive reset instructions' 
+      message: 'Password reset instructions have been sent to your email',
+      expiresIn: 3600 // 1 hour in seconds
     });
     
   } catch (error) {
@@ -305,12 +416,14 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 /**
- * Reset Password with Token
+ * Reset Password with Token (Enhanced Security)
  * POST /api/student-auth/reset-password
  */
 router.post('/reset-password', async (req, res) => {
   try {
     const { token, newPassword } = req.body;
+    const clientIp = req.ip || req.connection.remoteAddress;
+    const userAgent = req.get('User-Agent') || 'Unknown';
     
     if (!token || !newPassword) {
       return res.status(400).json({ error: 'Token and new password are required' });
@@ -324,13 +437,19 @@ router.post('/reset-password', async (req, res) => {
     const query = `
       SELECT * FROM student_users 
       WHERE reset_token = ? 
-      AND reset_token_expires > NOW() 
+      AND reset_token_expires > UTC_TIMESTAMP() 
       AND status = 'ACTIVE'
     `;
     
     const students = await db.queryPromise(query, [token]);
     
     if (students.length === 0) {
+      // Log failed attempt
+      await db.queryPromise(
+        'INSERT INTO password_reset_logs (user_type, user_id, email, action, ip_address, user_agent, token_used) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        ['student', 0, 'unknown', 'failed_attempt', clientIp, userAgent, token]
+      );
+      
       return res.status(400).json({ error: 'Invalid or expired reset token' });
     }
     
@@ -339,19 +458,33 @@ router.post('/reset-password', async (req, res) => {
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     
-    // Update password and clear reset token
+    // Update password, clear reset token, and track the reset
     await db.queryPromise(
       `UPDATE student_users 
        SET password = ?, 
            is_temp_password = FALSE, 
            reset_token = NULL, 
            reset_token_expires = NULL, 
+           last_password_reset = NOW(),
+           password_reset_count = password_reset_count + 1,
            updated_at = NOW() 
        WHERE id = ?`,
       [hashedPassword, student.id]
     );
     
-    res.json({ success: true, message: 'Password has been reset successfully' });
+    // Log successful password reset
+    await db.queryPromise(
+      'INSERT INTO password_reset_logs (user_type, user_id, email, action, ip_address, user_agent, token_used) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      ['student', student.id, student.email, 'reset', clientIp, userAgent, token]
+    );
+    
+    logger.info(`Password reset successfully completed for student: ${student.email}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'Password has been reset successfully. You can now log in with your new password.',
+      redirectTo: '/student-login'
+    });
     
   } catch (error) {
     logger.error('Reset password error:', error);
@@ -401,7 +534,7 @@ router.get('/profile', studentAuthMiddleware, async (req, res) => {
     
     // Get batches the student is enrolled in with better sorting
     const batchesQuery = `
-      SELECT b.id, b.batch_name as batchName, c.courseName, 
+      SELECT b.id, as batchName, c.courseName, 
              b.start_date as startDate, b.end_date as endDate, 
              b.status, sb.enrollment_date as enrollmentDate,
              CASE
@@ -471,7 +604,7 @@ router.get('/payments', studentAuthMiddleware, async (req, res) => {
     // Get payments for the student
     const paymentsQuery = `
       SELECT p.id, p.amount, p.payment_date, p.status, p.payment_method,
-             c.courseName, b.batch_name
+             c.courseName,
       FROM payments p
       JOIN batches b ON p.batch_id = b.id
       JOIN courses c ON b.course_id = c.id
@@ -483,7 +616,7 @@ router.get('/payments', studentAuthMiddleware, async (req, res) => {
     
     // Get pending fees
     const pendingFeesQuery = `
-      SELECT b.id as batch_id, b.batch_name, c.courseName, c.fee as course_fee,
+      SELECT b.id as batch_id, c.courseName, c.fee as course_fee,
              (SELECT COUNT(*) FROM student_batches WHERE batch_id = b.id) as student_count,
              (c.fee / (SELECT COUNT(*) FROM student_batches WHERE batch_id = b.id)) as fee_per_student,
              COALESCE((SELECT SUM(amount) FROM payments WHERE student_id = ? AND batch_id = b.id), 0) as paid_amount
@@ -592,6 +725,144 @@ router.post('/change-password', studentAuthMiddleware, async (req, res) => {
     
   } catch (error) {
     logger.error('Change password error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Request Password Change OTP
+ * POST /api/student-auth/request-password-change-otp
+ */
+router.post('/request-password-change-otp', studentAuthMiddleware, async (req, res) => {
+  try {
+    const studentId = req.student.studentId;
+    
+    if (!studentId) {
+      return res.status(400).json({ error: 'Student ID not found in token' });
+    }
+    
+    // Get student information
+    const students = await db.queryPromise(
+      'SELECT s.*, u.email FROM students s JOIN student_users u ON s.id = u.student_id WHERE s.id = ?',
+      [studentId]
+    );
+    
+    if (students.length === 0) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+    
+    const student = students[0];
+    
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+    
+    // Store OTP in database (update student_users table) - use UTC time format
+    const utcExpiryTime = new Date(otpExpiry).toISOString().slice(0, 19).replace('T', ' ');
+    await db.queryPromise(
+      'UPDATE student_users SET reset_otp = ?, reset_otp_expires = ? WHERE student_id = ?',
+      [otp, utcExpiryTime, studentId]
+    );
+    
+    // Send OTP email
+    const emailResult = await sendEmail({
+      to: student.email,
+      subject: 'Password Change Verification Code - Maritime Training Center',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+          <h2 style="color: #3b82f6;">Password Change Request</h2>
+          <p>Dear ${student.full_name},</p>
+          <p>You have requested to change your password. Please use the verification code below:</p>
+          <div style="background-color: #f8fafc; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center;">
+            <h1 style="color: #1e40af; font-size: 32px; margin: 0; letter-spacing: 5px;">${otp}</h1>
+          </div>
+          <p style="color: #ef4444;">This code will expire in 10 minutes.</p>
+          <p>If you did not request this password change, please ignore this email and contact support immediately.</p>
+          <p>Thank you,<br>Maritime Training Center Team</p>
+        </div>
+      `
+    });
+    
+    if (emailResult.success) {
+      logger.info(`Password change OTP sent to student: ${student.email}`);
+      res.json({ success: true, message: 'Verification code sent to your email' });
+    } else {
+      logger.error(`Failed to send password change OTP to: ${student.email}`);
+      res.status(500).json({ error: 'Failed to send verification code' });
+    }
+    
+  } catch (error) {
+    logger.error('Request password change OTP error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Verify OTP and Change Password
+ * POST /api/student-auth/verify-otp-change-password
+ */
+router.post('/verify-otp-change-password', studentAuthMiddleware, async (req, res) => {
+  try {
+    const { otp, newPassword } = req.body;
+    const studentId = req.student.studentId;
+    
+    if (!otp || !newPassword) {
+      return res.status(400).json({ error: 'OTP and new password are required' });
+    }
+    
+    if (!studentId) {
+      return res.status(400).json({ error: 'Student ID not found in token' });
+    }
+    
+    // Get student user with OTP info
+    const users = await db.queryPromise(
+      'SELECT * FROM student_users WHERE student_id = ?',
+      [studentId]
+    );
+    
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+    
+    const user = users[0];
+    
+    // Check if OTP exists and is not expired
+    if (!user.reset_otp) {
+      return res.status(400).json({ error: 'No verification code found. Please request a new one.' });
+    }
+    
+    // Compare times properly - database now stores UTC time
+    const now = Date.now(); // Current time in UTC milliseconds
+    const expiryTime = new Date(user.reset_otp_expires + 'Z').getTime(); // Add Z to ensure UTC interpretation
+    
+    if (now > expiryTime) {
+      return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
+    }
+    
+    // Verify OTP
+    if (user.reset_otp !== otp) {
+      return res.status(400).json({ error: 'Invalid verification code' });
+    }
+    
+    // Validate new password
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+    
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Update password and clear OTP fields
+    await db.queryPromise(
+      'UPDATE student_users SET password = ?, is_temp_password = FALSE, reset_otp = NULL, reset_otp_expires = NULL, updated_at = NOW() WHERE student_id = ?',
+      [hashedPassword, studentId]
+    );
+    
+    logger.info(`Password changed successfully for student ID: ${studentId}`);
+    res.json({ success: true, message: 'Password changed successfully' });
+    
+  } catch (error) {
+    logger.error('Verify OTP and change password error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

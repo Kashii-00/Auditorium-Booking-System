@@ -231,12 +231,12 @@ const StudentEdit = () => {
     { title: "Basic Info", fields: ["full_name", "email", "identification_type", "id_number", "nationality", "date_of_birth", "country", "address"] },
     { title: "Contact", fields: ["emergency_contact_name", "emergency_contact_number"] },
     { title: "Courses", fields: ["selected_courses"] },
-    { title: "Additional", fields: ["department", "is_swimmer", "is_slpa_employee", "company", "sea_service", "cdc_number"] },
+    { title: "Additional", fields: ["is_swimmer", "is_slpa_employee", "company"] },
     { title: "Documents", fields: ["nic_document", "passport_document", "photo"] },
   ];
   
-  // Conditional fields when SLPA employee is selected
-  const slpaFields = ["designation", "division", "service_no", "section_unit"];
+  // Conditional fields when SLPA employee is selected - now includes department, sea_service, cdc_number
+  const slpaFields = ["designation", "division", "service_no", "section_unit", "department", "sea_service", "cdc_number"];
   
   // Form validation function - modified for edit mode
   const validateForm = (step) => {
@@ -263,7 +263,17 @@ const StudentEdit = () => {
         return;
       }
       
-      if (!formData[field] && fieldsToValidate.includes(field)) {
+      // Skip checkbox fields since false is a valid value
+      const checkboxFields = ["is_swimmer", "is_slpa_employee"];
+      if (checkboxFields.includes(field)) {
+        return;
+      }
+      
+      // Skip SLPA-specific fields when SLPA employee is not checked
+      const slpaSpecificFields = ["department", "sea_service", "cdc_number"];
+      const shouldSkipSlpaField = slpaSpecificFields.includes(field) && !formData.is_slpa_employee;
+      
+      if (!formData[field] && fieldsToValidate.includes(field) && !shouldSkipSlpaField) {
         newErrors[field] = `${field.replace('_', ' ')} is required`;
       }
     });
@@ -1063,6 +1073,57 @@ const StudentEdit = () => {
                 className={errors.section_unit ? 'error' : ''}
               />
               {errors.section_unit && <div className="error-message">{errors.section_unit}</div>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="department">
+                <FaBuilding className="field-icon" />
+                Department/Rank *
+              </label>
+              <input
+                type="text"
+                id="department"
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                placeholder="Enter department or rank"
+                className={errors.department ? 'error' : ''}
+              />
+              {errors.department && <div className="error-message">{errors.department}</div>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="sea_service">
+                <FaShip className="field-icon" />
+                Sea Services (Year/Month if applicable) *
+              </label>
+              <input
+                type="text"
+                id="sea_service"
+                name="sea_service"
+                value={formData.sea_service}
+                onChange={handleChange}
+                placeholder="Example: 2Y/6M"
+                className={errors.sea_service ? 'error' : ''}
+              />
+              {errors.sea_service && <div className="error-message">{errors.sea_service}</div>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="cdc_number">
+                <FaIdCard className="field-icon" />
+                CDC Number *
+              </label>
+              <input
+                type="text"
+                id="cdc_number"
+                name="cdc_number"
+                value={formData.cdc_number}
+                onChange={handleChange}
+                placeholder="Enter CDC number (if applicable)"
+                className={errors.cdc_number ? 'error' : ''}
+              />
+              {errors.cdc_number && <div className="error-message">{errors.cdc_number}</div>}
             </div>
           </div>
         )}

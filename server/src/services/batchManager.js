@@ -32,15 +32,14 @@ class BatchManager {
       // Create the batch
       const insertQuery = `
         INSERT INTO batches (
-          course_id, batch_name, batch_code, batch_number, year, 
+          course_id, batch_code, batch_number, year, 
           capacity, start_date, end_date, status, location, 
-          description, lecturer_id, max_students
+          description, lecturer_id, max_students, schedule
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       
       const values = [
         courseId,
-        batchData.batch_name,
         batchCode,
         nextBatchNumber,
         year,
@@ -51,7 +50,8 @@ class BatchManager {
         batchData.location,
         batchData.description,
         batchData.lecturer_id,
-        batchData.max_students || 30
+        batchData.max_students || 30,
+        batchData.schedule || ''
       ];
       
       const result = await db.queryPromise(insertQuery, values);
@@ -157,8 +157,8 @@ class BatchManager {
   async updateBatch(batchId, updateData) {
     try {
       const allowedFields = [
-        'batch_name', 'capacity', 'start_date', 'end_date', 
-        'status', 'location', 'description', 'lecturer_id', 'max_students'
+        'capacity', 'start_date', 'end_date', 
+        'status', 'location', 'description', 'lecturer_id', 'max_students', 'schedule'
       ];
       
       const updateFields = [];
