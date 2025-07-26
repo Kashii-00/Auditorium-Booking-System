@@ -149,8 +149,14 @@ export const authRequest = async (method, url, data = null) => {
       case 'put':
         response = await axios.put(url, data);
         break;
+
+      case "patch":
+        response = await axios.patch(url, data);
+        break;
+
       case 'delete':
         response = await axios.delete(url);
+        
         break;
       default:
         throw new Error(`Unsupported HTTP method: ${method}`);

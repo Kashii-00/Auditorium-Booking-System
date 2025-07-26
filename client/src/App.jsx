@@ -35,18 +35,27 @@ import SingleBookingFullDetails from "./pages/Classroom_Booking/SingleBookingFul
 import CancelRequestForm from "./pages/Classroom_Booking/CancelRequestForm"
 
 // Import the new student portal components
-import StudentLogin from "./pages/StudentPortal/StudentLogin"
 import StudentChangePassword from "./pages/StudentPortal/StudentChangePassword"
 import StudentForgotPassword from "./pages/StudentPortal/StudentForgotPassword"
+import StudentResetPassword from "./pages/StudentPortal/StudentResetPassword"
 import StudentDashboard from "./pages/StudentPortal/StudentDashboard"
 import StudentProfile from "./pages/StudentPortal/StudentProfile"
 import StudentPreferences from "./pages/StudentPortal/StudentPreferences"
+import StudentBatchDetail from "./pages/StudentPortal/StudentBatchDetail"
 
 // Import the new lecturer portal components
 import LecturerChangePassword from "./pages/LecturerPortal/LecturerChangePassword"
 import LecturerDashboard from "./pages/LecturerPortal/LecturerDashboard"
 import BatchDetail from "./pages/LecturerPortal/BatchDetail"
 import LecturerForgotPassword from "./pages/LecturerPortal/LecturerForgotPassword"
+import LecturerResetPassword from "./pages/LecturerPortal/LecturerResetPassword"
+import LecturerProfile from "./pages/LecturerPortal/LecturerProfile"
+
+//Import the new Finance Function components 
+import EditRatesPanel from "./pages/Accounts_section/EditRatesPanel";
+import CourseCostForm from "./pages/Accounts_section/CourseCostForm";
+import PaymentsDetailsTable from "./pages/Accounts_section/PaymentsDetailsTable";
+import PaymentSingleDetails from "./pages/Accounts_section/PaymentsSingleDetails";
 
 import "./styles/App.css"
 import "./styles/global.css"
@@ -182,6 +191,10 @@ function App() {
   const canAccess_CB_ADMIN = hasRole("SuperAdmin") || hasRole("cb_Admin_access")
   const canAccess_CB_COMMON = hasRole("SuperAdmin") || hasRole("cb_Admin_access") || hasRole("cb_SU_access")
 
+  //Finance
+  const canAccessFinanceCommon =hasRole("SuperAdmin") ||hasRole("finance_manager") ||hasRole("SU_finance_access");
+  const canAccessFinanceManager =hasRole("SuperAdmin") || hasRole("finance_manager");
+
   // Add a permission for the print report page (reuse annual plan permission)
   const canAccessAnnualPlanPrint = canAccessAnnualPlan;
 
@@ -195,9 +208,12 @@ function App() {
     if (userRoles.includes("busbookings_access")) return "/busbookings"
     if (userRoles.includes("calendar_access")) return "/calendar"
     if (userRoles.includes("bookings_access")) return "/bookings"
-    if (userRoles.includes("course_registration_access")) return "/courseregistration"
+    if (userRoles.includes("course_registration_access")) return "/course-registration"
     if (userRoles.includes("student_registration_access")) return "/student-registration"
     if (userRoles.includes("lecturer_management_access")) return "/lecturer-registration"
+    if (userRoles.includes("finance_manager")) return "/coursecost"
+    if (userRoles.includes("SU_finance_access")) return "/coursecost"
+
 
     if (userRoles.includes("SuperAdmin")) {
       return "/calendar"
@@ -288,6 +304,11 @@ function App() {
           />
 
           <Route
+            path="/course-registration"
+            element={<ProtectedRouteWithErrorBoundary element={C_Registration} canAccess={canAccessCRegistration} />}
+          />
+
+          <Route
             path="/student-registration"
             element={
               <ProtectedRouteWithErrorBoundary
@@ -332,6 +353,50 @@ function App() {
             path="/lecturer-registration"
             element={
               <ProtectedRouteWithErrorBoundary element={lecturerRegistration} canAccess={canAccessLecturerManagement} />
+            }
+          />
+
+          < Route
+            path="/coursecost"
+            element={
+              <ProtectedRoute
+                element={CourseCostForm}
+                canAccess={canAccessFinanceCommon}
+                user={loggedInUser}
+              />
+            }
+          />
+
+          < Route
+            path="/editpanel"
+            element={
+              <ProtectedRoute
+                element={EditRatesPanel}
+                canAccess={canAccessFinanceManager}
+                user={loggedInUser}
+              />
+            }
+          />
+
+          <Route
+            path="/PaymentTable"
+            element={
+              <ProtectedRoute
+                element={PaymentsDetailsTable}
+                canAccess={canAccessFinanceCommon}
+                user={loggedInUser}
+              />
+            }
+          />
+
+          <Route
+            path="/PaymentSingleDetails"
+            element={
+              <ProtectedRoute
+                element={PaymentSingleDetails}
+                canAccess={canAccessFinanceCommon}
+                user={loggedInUser}
+              />
             }
           />
 
@@ -472,8 +537,10 @@ function App() {
           <Route path="/student-dashboard" element={<StudentDashboard />} />
           <Route path="/student-change-password" element={<StudentChangePassword />} />
           <Route path="/student-forgot-password" element={<StudentForgotPassword />} />
+          <Route path="/student-reset-password" element={<StudentResetPassword />} />
           <Route path="/student-profile" element={<StudentProfile />} />
           <Route path="/student-preferences" element={<StudentPreferences />} />
+          <Route path="/student-batch-detail/:batchId" element={<StudentBatchDetail />} />
 
           {/* Lecturer Portal Routes */}
                   <Route path="/lecturer-login" element={<Navigate to="/?type=lecturer" replace />} />
@@ -481,6 +548,8 @@ function App() {
         <Route path="/lecturer/batch/:batchId" element={<BatchDetail />} />
         <Route path="/lecturer-change-password" element={<LecturerChangePassword />} />
         <Route path="/lecturer-forgot-password" element={<LecturerForgotPassword />} />
+        <Route path="/lecturer-reset-password" element={<LecturerResetPassword />} />
+        <Route path="/lecturer-profile" element={<LecturerProfile />} />
 
           <Route path="*" element={<AccessDenied />} />
         </Routes>

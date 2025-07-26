@@ -1,0 +1,120 @@
+import React, { useEffect, useState, useRef } from "react";
+import { authRequest } from "../../services/authService";
+import "./styles/styles.css";
+import { useLocation } from "react-router-dom";
+
+const CourseCostForm = () => {
+  const location = useLocation();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => location.state?.sidebarState ?? false
+  );
+
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const successTimeoutRef = useRef(null);
+  const errorTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    if (successMessage) {
+      if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
+      successTimeoutRef.current = setTimeout(() => {
+        setSuccessMessage("");
+      }, 5000);
+    }
+  }, [successMessage]);
+
+  useEffect(() => {
+    if (error) {
+      if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+      errorTimeoutRef.current = setTimeout(() => {
+        setError("");
+      }, 5000);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    const syncSidebarState = () => {
+      const stored = localStorage.getItem("sidebarState");
+      if (stored !== null) {
+        const isCollapsed = stored === "true";
+        setSidebarCollapsed(isCollapsed);
+        window.dispatchEvent(
+          new CustomEvent("sidebarToggle", {
+            detail: { isCollapsed },
+          })
+        );
+      }
+    };
+
+    syncSidebarState();
+    window.addEventListener("popstate", syncSidebarState);
+
+    const handleSidebarToggle = (e) => {
+      setSidebarCollapsed(e.detail.isCollapsed);
+      localStorage.setItem("sidebarState", e.detail.isCollapsed);
+    };
+
+    const handleSidebarHover = (e) => {
+      setSidebarCollapsed(!e.detail.isHovered);
+    };
+
+    window.addEventListener("sidebarToggle", handleSidebarToggle);
+    window.addEventListener("sidebarHover", handleSidebarHover);
+
+    return () => {
+      window.removeEventListener("sidebarToggle", handleSidebarToggle);
+      window.removeEventListener("sidebarHover", handleSidebarHover);
+      window.removeEventListener("popstate", syncSidebarState);
+    };
+  }, []);
+
+  return (
+    <div
+      className={`content-wrapper ${
+        sidebarCollapsed ? "expanded" : ""
+      } form-wp2`}
+    >
+      {successMessage && (
+        <div className="success-popup2" role="alert" aria-live="assertive">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={3}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          {successMessage}
+        </div>
+      )}
+
+      {error && (
+        <div className="error-popup2" role="alert" aria-live="assertive">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+          >
+            <circle cx="12" cy="12" r="10" strokeWidth={2} />
+            <line x1="12" y1="8" x2="12" y2="12" strokeWidth={2} />
+            <circle cx="12" cy="16" r="1" fill="currentColor" />
+          </svg>
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CourseCostForm;

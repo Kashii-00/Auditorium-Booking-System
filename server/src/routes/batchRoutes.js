@@ -5,6 +5,7 @@ const db = require("../db")
 const auth = require("../auth")
 const moment = require("moment")
 const logger = require("../logger")
+const batchManager = require("../services/batchManager")
 
 // GET /batches?course_id=...&year=...
 router.get("/", auth.authMiddleware, async (req, res) => {
@@ -91,52 +92,73 @@ router.get("/:id", auth.authMiddleware, async (req, res) => {
 
 // POST /batches
 router.post("/", auth.authMiddleware, async (req, res) => {
-  const { course_id, batch_name, start_date, end_date = null, capacity = 30, location = "", schedule = "" } = req.body
+  const { 
+    course_id, 
 
-  if (!course_id || !batch_name || !start_date) {
-    return res.status(400).json({ error: "course_id, batch_name, and start_date are required" })
+    start_date, 
+    end_date = null, 
+    capacity = 30, 
+    location = "", 
+    schedule = "",
+    lecturer_id = null,
+    description = "",
+    year = null
+  } = req.body
+
+  if (!course_id || !start_date) {
+    return res.status(400).json({ error: "course_id, and start_date are required" })
   }
 
-  const sql = `
-    INSERT INTO batches (course_id, batch_name, start_date, end_date, capacity, location, schedule)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `
-
   try {
-    const result = await db.queryPromise(sql, [
-      course_id,
-      batch_name,
+    // Use batch manager to create batch with automatic batch number and code generation
+    const batchData = {
       start_date,
       end_date,
       capacity,
       location,
-      schedule,
-    ])
-    logger.info(`Batch "${batch_name}" created by ${req.user.name} at ${moment().format()}`)
-    res.status(201).json({ success: true, batchId: result.insertId })
+      description,
+      lecturer_id,
+      max_students: capacity,
+      year: year || new Date(start_date).getFullYear(),
+      schedule
+    };
+
+    const result = await batchManager.createBatch(course_id, batchData);
+    
+    logger.info(`(${result.batch_code}) created by ${req.user.name} at ${moment().format()}`);
+    
+    res.status(201).json({ 
+      success: true, 
+      batchId: result.id,
+      batch_code: result.batch_code,
+      batch_number: result.batch_number,
+      year: result.year,
+      message: `Batch created successfully with code: ${result.batch_code}` 
+    });
   } catch (err) {
-    logger.error("POST /batches error", err)
-    res.status(500).json({ error: "Failed to create batch" })
+    logger.error("POST /batches error", err);
+    res.status(500).json({ 
+      error: err.message || "Failed to create batch" 
+    });
   }
 })
 
 // PUT /batches/:id
 router.put("/:id", auth.authMiddleware, async (req, res) => {
   const { id } = req.params
-  const { batch_name, start_date, end_date = null, capacity, location, schedule } = req.body
+  const {start_date, end_date = null, capacity, location, schedule } = req.body
 
-  if (!batch_name || !start_date) {
-    return res.status(400).json({ error: "batch_name and start_date are required" })
+  if (!start_date) {
+    return res.status(400).json({ error: "start_date are required" })
   }
 
   const sql = `
-    UPDATE batches SET batch_name = ?, start_date = ?, end_date = ?, capacity = ?, location = ?, schedule = ?
+    UPDATE batches SET  start_date = ?, end_date = ?, capacity = ?, location = ?, schedule = ?
     WHERE id = ?
   `
 
   try {
     const result = await db.queryPromise(sql, [
-      batch_name,
       start_date,
       end_date,
       capacity || 30,
@@ -309,16 +331,32 @@ router.post("/:batchId/students", auth.authMiddleware, async (req, res) => {
       })
     }
 
-    // Insert student-batch assignments (ignore duplicates)
+    // Insert student-batch assignments and generate student codes
+    const studentIdGenerator = require('../services/studentIdGenerator');
     let successCount = 0
+    
     for (const studentId of existingStudentIds) {
       try {
+        // Generate student code first
+        const studentCode = await studentIdGenerator.generateStudentCode(batch.course_id, req.params.batchId);
+        
+        // Insert into student_batches with student code
         const result = await db.queryPromise(
-          `INSERT IGNORE INTO student_batches (student_id, batch_id, status, created_at) 
-           VALUES (?, ?, 'Active', NOW())`,
-          [studentId, req.params.batchId],
+          `INSERT IGNORE INTO student_batches (student_id, batch_id, student_code, status, created_at) 
+           VALUES (?, ?, ?, 'Active', NOW())`,
+          [studentId, req.params.batchId, studentCode],
         )
+        
         if (result.affectedRows > 0) {
+          // Update the student_courses record with the generated student code
+          await db.queryPromise(
+            `UPDATE student_courses 
+             SET student_code = ? 
+             WHERE student_id = ? AND course_id = ? AND student_code IS NULL`,
+            [studentCode, studentId, batch.course_id]
+          );
+          
+          console.log(`Generated student code: ${studentCode} for student ${studentId} in batch ${req.params.batchId}`);
           successCount++
         }
       } catch (err) {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback, memo, lazy, Suspense, useRef } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import axios from "axios"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
@@ -230,8 +230,16 @@ const LecturerDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [notificationCount, setNotificationCount] = useState(2)
   const navigate = useNavigate()
+  const location = useLocation()
   const fetchTimeoutRef = useRef(null)
   const prefersReducedMotion = useReducedMotion()
+
+  // Handle navigation state for tab switching
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab)
+    }
+  }, [location.state])
 
   // Responsive breakpoint detection
   const [screenSize, setScreenSize] = useState({
@@ -324,11 +332,33 @@ const LecturerDashboard = () => {
   const batchData = useMemo(() => {
     if (!lecturer?.batches) return { activeBatches: 0, completedBatches: 0, recentBatches: [] }
     
-    const activeBatches = lecturer.batches.filter((b) => b.status === "Active").length
+    const activeBatches = lecturer.batches.filter((b) => b.status === "Active" || b.status === "current").length
     const completedBatches = lecturer.batches.filter((b) => b.status === "Completed").length
     const recentBatches = lecturer.batches.slice(0, 3)
     
     return { activeBatches, completedBatches, recentBatches }
+  }, [lecturer?.batches])
+
+  // Calculate total materials across all batches
+  const materialData = useMemo(() => {
+    if (!lecturer?.batches) return { totalMaterials: 0 }
+    
+    const totalMaterials = lecturer.batches.reduce((sum, batch) => {
+      return sum + (batch.materials_count || 0)
+    }, 0)
+    
+    return { totalMaterials }
+  }, [lecturer?.batches])
+
+  // Calculate total students across all batches
+  const studentData = useMemo(() => {
+    if (!lecturer?.batches) return { totalStudents: 0 }
+    
+    const totalStudents = lecturer.batches.reduce((sum, batch) => {
+      return sum + (batch.current_students || batch.stats?.students_count || 0)
+    }, 0)
+    
+    return { totalStudents }
   }, [lecturer?.batches])
 
   // Memoized quick actions data
@@ -380,14 +410,30 @@ const LecturerDashboard = () => {
         return
       }
 
+      // Get lecturer ID from token
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]))
+      const lecturerId = tokenPayload.lecturerId
+
+      // Fetch profile data
       const response = await axios.get(`${API_URL}/lecturer-auth/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
+      // Fetch batch data for statistics
+      let batchesData = []
+      try {
+        const { batchService } = await import('../../services/lecturerBatchService')
+        const batchResponse = await batchService.getLecturerBatches(lecturerId)
+        batchesData = batchResponse.batches || []
+      } catch (batchError) {
+        console.error("Error fetching batch data:", batchError)
+        batchesData = []
+      }
+
       const lecturerData = {
         ...response.data,
         courses: response.data.courses || [],
-        batches: response.data.batches || [],
+        batches: batchesData,
         materials: response.data.materials || [],
       }
       
@@ -498,19 +544,20 @@ const LecturerDashboard = () => {
 
         {/* Content Layer */}
         <div className="relative">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16 sm:h-20">
+          <div className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
+            <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
+              
               {/* Left Section - Logo and Title */}
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
                 {/* Mobile Menu Toggle */}
                 <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                   <SheetTrigger asChild className="lg:hidden">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="relative hover:bg-white/20"
+                      className="relative hover:bg-white/20 flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10"
                     >
-                      <Menu className="w-5 h-5" />
+                      <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="left" className="w-80 p-0">
@@ -579,86 +626,108 @@ const LecturerDashboard = () => {
                         <Key className="w-4 h-4 mr-3" />
                         Change Password
                       </Button>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => {
+                          handleLogout()
+                          setMobileMenuOpen(false)
+                        }}
+                      >
+                        <LogOut className="w-4 h-4 mr-3" />
+                        Logout
+                      </Button>
                     </nav>
                   </SheetContent>
                 </Sheet>
 
                 {/* Logo and Title */}
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-emerald-600 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                <motion.div
+                  className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                >
+                  <div className="relative flex-shrink-0">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-emerald-500/80 to-green-600/80 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-sm border border-white/20">
+                      <GraduationCap className="w-3 h-3 sm:w-4 sm:h-4 lg:w-6 lg:h-6 text-white drop-shadow-sm" />
+                    </div>
+                    <div className="absolute inset-0 w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-emerald-400/40 to-green-500/40 rounded-xl blur-md -z-10"></div>
                   </div>
-                  <div className="hidden sm:block">
-                    <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                      Lecturer Portal
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold bg-gradient-to-r from-slate-800 via-emerald-700 to-green-700 bg-clip-text text-transparent drop-shadow-sm truncate">
+                      <span className="hidden sm:inline">Lecturer Portal</span>
+                      <span className="sm:hidden">MPMA</span>
                     </h1>
-                    <p className="text-xs sm:text-sm text-slate-500">Welcome back, {lecturer?.full_name?.split(' ')[0] || 'Lecturer'}</p>
+                    <p className="text-xs sm:text-sm lg:text-base text-slate-600/80 font-medium truncate">
+                      Welcome back, {lecturer?.full_name?.split(" ")[0] || 'Lecturer'}
+                    </p>
                   </div>
-                </div>
+                </motion.div>
               </div>
 
-              {/* Right Section - User Profile */}
-              <div className="flex items-center space-x-2 sm:space-x-4">
-                {/* Notifications */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative hover:bg-white/20"
+              {/* Right Section - User Menu and Actions */}
+              <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3 flex-shrink-0">
+                
+                {/* Notification Button */}
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 >
-                  <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                  {notificationCount > 0 && (
-                    <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 bg-emerald-500 text-white text-xs flex items-center justify-center">
-                      {notificationCount}
-                    </Badge>
-                  )}
-                </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative bg-white/30 backdrop-blur-xl hover:bg-white/40 rounded-lg sm:rounded-2xl border border-white/30 shadow-lg transition-all duration-300 w-8 h-8 sm:w-10 sm:h-10"
+                  >
+                    <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700" />
+                    {notificationCount > 0 && (
+                      <motion.span
+                        className="absolute -top-1 -right-1 w-2 h-2 sm:w-3 sm:h-3 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full shadow-lg"
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                      />
+                    )}
+                    {/* Button glow */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-green-400/20 rounded-lg sm:rounded-2xl blur-md -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </Button>
+                </motion.div>
 
-                {/* Direct Logout Button for better visibility */}
-                <Button
-                  variant="ghost"
-                  onClick={handleLogout}
-                  className="hidden sm:flex items-center space-x-2 hover:bg-red-50 hover:text-red-600 text-slate-600"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden md:inline">Logout</span>
-                </Button>
-
-                {/* User Menu */}
+                {/* User Profile Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-white/20">
-                      <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border-2 border-white/30">
-                        <AvatarImage src={lecturer?.avatar || "/placeholder.svg"} alt={lecturer?.full_name} />
-                        <AvatarFallback className="bg-gradient-to-r from-emerald-500 to-green-500 text-white text-sm font-semibold">
+                    <motion.div
+                      className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3 bg-white/40 backdrop-blur-xl rounded-lg sm:rounded-xl lg:rounded-2xl px-1 sm:px-2 lg:px-4 py-1 sm:py-1.5 lg:py-2 shadow-lg border border-white/30 cursor-pointer hover:bg-white/50 transition-all duration-200 min-w-0"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Avatar className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 ring-1 sm:ring-2 ring-white/50 shadow-md flex-shrink-0">
+                        <AvatarImage src={lecturer?.avatar || "/placeholder.svg"} />
+                        <AvatarFallback className="bg-gradient-to-br from-emerald-500/90 to-green-600/90 text-white text-xs sm:text-sm font-semibold backdrop-blur-sm">
                           {getInitials(lecturer?.full_name)}
                         </AvatarFallback>
                       </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{lecturer?.full_name}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
+                      <div className="hidden md:block text-left min-w-0 flex-1">
+                        <p className="font-semibold text-slate-800/90 text-xs sm:text-sm lg:text-base drop-shadow-sm truncate max-w-[80px] lg:max-w-[120px] xl:max-w-[200px]">
+                          {lecturer?.full_name}
+                        </p>
+                        <p className="text-xs lg:text-sm text-slate-600/80 truncate max-w-[80px] lg:max-w-[120px] xl:max-w-[200px]">
                           {lecturer?.email}
                         </p>
                       </div>
-                    </DropdownMenuLabel>
+                      <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-slate-600 hidden sm:block flex-shrink-0" />
+                    </motion.div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 mt-2">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
                       className="cursor-pointer"
                       onClick={() => navigate("/lecturer-profile")}
                     >
                       <User className="w-4 h-4 mr-2" />
-                      Profile
+                      Profile Settings
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      className="cursor-pointer"
-                      onClick={() => navigate("/lecturer-preferences")}
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Preferences
-                    </DropdownMenuItem>
+
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
                       className="cursor-pointer text-red-600 hover:text-red-700"
@@ -677,7 +746,7 @@ const LecturerDashboard = () => {
 
       {/* Enhanced Scroll Progress Indicator */}
       <motion.div
-        className="fixed top-16 sm:top-20 left-0 right-0 h-0.5 z-40 overflow-hidden"
+        className="fixed top-14 sm:top-16 lg:top-20 left-0 right-0 h-0.5 z-40 overflow-hidden"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
@@ -707,13 +776,13 @@ const LecturerDashboard = () => {
       <div className={`transition-all duration-300 ${
         sidebarOpen && !screenSize.isMobile && !screenSize.isTablet ? 'lg:pl-80' : 'lg:pl-20'
       }`}>
-        <div className="min-h-screen pt-20 sm:pt-24 pb-8">
-          <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+        <div className="min-h-screen pt-16 sm:pt-18 lg:pt-24 pb-6 sm:pb-8">
+          <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 2xl:px-12">
             <motion.div variants={itemVariants}>
               {/* Welcome Section */}
-              <div className="mb-6 sm:mb-8">
+              <div className="mb-4 sm:mb-6 lg:mb-8">
                 <motion.div {...(shouldAnimate ? { variants: itemVariants } : {})}>
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-800 mb-2">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-800 mb-2">
                     Welcome back, {lecturer?.full_name?.split(' ')[0] || 'Lecturer'}! 👋
                   </h1>
                   <p className="text-slate-600 text-sm sm:text-base lg:text-lg">
@@ -724,7 +793,7 @@ const LecturerDashboard = () => {
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 {/* Mobile Tab Navigation */}
-                <div className="lg:hidden mb-6 -mx-4 px-4 overflow-x-auto">
+                <div className="lg:hidden mb-4 sm:mb-6 -mx-3 sm:-mx-4 px-3 sm:px-4 overflow-x-auto">
                   <TabsList className="inline-flex w-auto min-w-full bg-white/80 backdrop-blur-sm">
                     <TabsTrigger value="overview" className="flex-1 text-xs sm:text-sm">Overview</TabsTrigger>
                     <TabsTrigger value="courses" className="flex-1 text-xs sm:text-sm">Courses</TabsTrigger>
@@ -735,13 +804,13 @@ const LecturerDashboard = () => {
                 </div>
 
                 {/* Overview Tab */}
-                <TabsContent value="overview" className="space-y-6 sm:space-y-8">
+                <TabsContent value="overview" className="space-y-4 sm:space-y-6 lg:space-y-8">
                   {/* Quick Stats - Responsive Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                                           {[
                         {
                           title: "Active Courses",
-                          value: courseData.activeCourses || 3,
+                          value: courseData.activeCourses,
                           icon: BookOpen,
                           color: "from-emerald-500 to-emerald-600",
                           bgColor: "bg-emerald-50",
@@ -749,7 +818,7 @@ const LecturerDashboard = () => {
                         },
                         {
                           title: "Total Students",
-                          value: courseData.totalStudents || 127,
+                          value: studentData.totalStudents,
                           icon: Users,
                           color: "from-blue-500 to-blue-600",
                           bgColor: "bg-blue-50",
@@ -757,7 +826,7 @@ const LecturerDashboard = () => {
                         },
                         {
                           title: "Active Batches",
-                          value: batchData.activeBatches || 5,
+                          value: batchData.activeBatches,
                           icon: Calendar,
                           color: "from-purple-500 to-purple-600",
                           bgColor: "bg-purple-50",
@@ -765,7 +834,7 @@ const LecturerDashboard = () => {
                         },
                         {
                           title: "Materials Uploaded",
-                          value: lecturer?.materials?.length || 24,
+                          value: materialData.totalMaterials,
                           icon: FileText,
                           color: "from-amber-500 to-amber-600",
                           bgColor: "bg-amber-50",
@@ -782,12 +851,12 @@ const LecturerDashboard = () => {
                   </div>
 
                   {/* Quick Overview Cards - Responsive Grid */}
-                  <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
+                  <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
                     {/* Recent Courses */}
                     <motion.div {...(shouldAnimate ? { variants: itemVariants } : {})}>
                       <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm hover:shadow-2xl transition-all duration-300 h-full">
-                        <CardHeader className="flex flex-row items-center justify-between pb-4">
-                          <CardTitle className="flex items-center text-base sm:text-lg">
+                        <CardHeader className="flex flex-row items-center justify-between pb-3 sm:pb-4 p-4 sm:p-6">
+                          <CardTitle className="flex items-center text-sm sm:text-base lg:text-lg">
                             <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 text-emerald-600" />
                             My Courses
                           </CardTitle>
@@ -795,55 +864,96 @@ const LecturerDashboard = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => setActiveTab("courses")}
-                            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-xs sm:text-sm"
+                            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 text-xs sm:text-sm px-2 sm:px-3"
                           >
                             View All <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                           </Button>
                         </CardHeader>
-                        <CardContent>
-                          {courseData.recentCourses.length > 0 ? (
-                            <div className="space-y-4 sm:space-y-6">
-                              {courseData.recentCourses.map((course, index) => (
-                                <CourseCard 
-                                  key={course.id}
-                                  course={course} 
-                                  index={index} 
-                                  shouldAnimate={shouldAnimate}
-                                />
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              {/* Sample lecturer courses */}
-                              {[
-                                {
-                                  courseName: "Advanced JavaScript Programming",
-                                  enrolledStudents: 45,
-                                  progress: 78,
-                                  status: "Active"
-                                },
-                                {
-                                  courseName: "Database Management Systems",
-                                  enrolledStudents: 32,
-                                  progress: 65,
-                                  status: "Active"
-                                },
-                                {
-                                  courseName: "Web Development Fundamentals",
-                                  enrolledStudents: 50,
-                                  progress: 89,
-                                  status: "Active"
-                                }
-                              ].map((course, index) => (
-                                <CourseCard 
-                                  key={index}
-                                  course={course} 
-                                  index={index} 
-                                  shouldAnimate={shouldAnimate}
-                                />
-                              ))}
-                            </div>
-                          )}
+                        <CardContent className="p-4 sm:p-6 pt-0">
+                          <div className="space-y-3 sm:space-y-4">
+                            {/* Dynamic Course Cards */}
+                            {lecturer?.courses && lecturer.courses.length > 0 ? (
+                              lecturer.courses.slice(0, 2).map((course, index) => (
+                                <div
+                                  key={course.id || index}
+                                  className={`p-3 sm:p-4 rounded-lg bg-gradient-to-r border ${
+                                    index === 0
+                                      ? 'from-emerald-50 to-green-50 border-emerald-100'
+                                      : 'from-blue-50 to-indigo-50 border-blue-100'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between mb-2 sm:mb-3">
+                                    <h3 className={`text-sm sm:text-base lg:text-lg font-semibold truncate ${
+                                      index === 0 ? 'text-emerald-800' : 'text-blue-800'
+                                    }`}>
+                                      {course.courseName || course.course_name || 'Course Name'}
+                                    </h3>
+                                    <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex-shrink-0 ${
+                                      index === 0
+                                        ? 'bg-emerald-100 text-emerald-800'
+                                        : 'bg-blue-100 text-blue-800'
+                                    }`}>
+                                      {course.status || 'Active'}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between mb-2 sm:mb-3 text-xs sm:text-sm">
+                                    <span className={`font-medium ${
+                                      index === 0 ? 'text-emerald-700' : 'text-blue-700'
+                                    }`}>
+                                      Students: {course.enrolledStudents || course.student_count || 0}
+                                    </span>
+                                    <span className={`font-medium ${
+                                      index === 0 ? 'text-emerald-700' : 'text-blue-700'
+                                    }`}>
+                                      Progress: {course.progress || course.completion_percentage || 0}%
+                                    </span>
+                                  </div>
+                                  <div className={`w-full rounded-full h-1.5 sm:h-2 ${
+                                    index === 0 ? 'bg-emerald-200' : 'bg-blue-200'
+                                  }`}>
+                                    <div
+                                      className={`h-1.5 sm:h-2 rounded-full ${
+                                        index === 0 ? 'bg-emerald-600' : 'bg-blue-600'
+                                      }`}
+                                      style={{ width: `${course.progress || course.completion_percentage || 0}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <>
+                                {/* Fallback Information Technology Course */}
+                                <div className="p-3 sm:p-4 rounded-lg bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-100">
+                                  <div className="flex items-center justify-between mb-2 sm:mb-3">
+                                    <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-emerald-800 truncate">Information Technology</h3>
+                                    <span className="px-2 sm:px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs sm:text-sm font-medium flex-shrink-0">Active</span>
+                                  </div>
+                                  <div className="flex items-center justify-between mb-2 sm:mb-3 text-xs sm:text-sm">
+                                    <span className="text-emerald-700 font-medium">Students: {studentData.totalStudents || 0}</span>
+                                    <span className="text-emerald-700 font-medium">Progress: 5%</span>
+                                  </div>
+                                  <div className="w-full bg-emerald-200 rounded-full h-1.5 sm:h-2">
+                                    <div className="bg-emerald-600 h-1.5 sm:h-2 rounded-full" style={{ width: '5%' }}></div>
+                                  </div>
+                                </div>
+
+                                {/* Fallback Computer Science Course */}
+                                <div className="p-3 sm:p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
+                                  <div className="flex items-center justify-between mb-2 sm:mb-3">
+                                    <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-blue-800 truncate">Computer Science</h3>
+                                    <span className="px-2 sm:px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs sm:text-sm font-medium flex-shrink-0">Active</span>
+                                  </div>
+                                  <div className="flex items-center justify-between mb-2 sm:mb-3 text-xs sm:text-sm">
+                                    <span className="text-blue-700 font-medium">Students: {Math.floor(studentData.totalStudents / 2) || 0}</span>
+                                    <span className="text-blue-700 font-medium">Progress: 8%</span>
+                                  </div>
+                                  <div className="w-full bg-blue-200 rounded-full h-1.5 sm:h-2">
+                                    <div className="bg-blue-600 h-1.5 sm:h-2 rounded-full" style={{ width: '8%' }}></div>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </CardContent>
                       </Card>
                     </motion.div>
@@ -851,64 +961,40 @@ const LecturerDashboard = () => {
                     {/* Recent Batches */}
                     <motion.div {...(shouldAnimate ? { variants: itemVariants } : {})}>
                       <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm hover:shadow-2xl transition-all duration-300 h-full">
-                        <CardHeader className="flex flex-row items-center justify-between pb-4">
-                          <CardTitle className="flex items-center text-base sm:text-lg">
-                            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 text-green-600" />
+                        <CardHeader className="flex flex-row items-center justify-between pb-3 sm:pb-4 p-4 sm:p-6">
+                          <CardTitle className="flex items-center text-sm sm:text-base lg:text-lg">
+                            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 text-purple-600" />
                             My Batches
                           </CardTitle>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => setActiveTab("batches")}
-                            className="text-green-600 hover:text-green-700 hover:bg-green-50 text-xs sm:text-sm"
+                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 text-xs sm:text-sm px-2 sm:px-3"
                           >
                             View All <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                           </Button>
                         </CardHeader>
-                        <CardContent>
-                          {batchData.recentBatches.length > 0 ? (
-                            <div className="space-y-4 sm:space-y-6">
-                              {batchData.recentBatches.map((batch, index) => (
-                                <BatchCard 
-                                  key={batch.id}
-                                  batch={batch} 
-                                  index={index}
-                                  shouldAnimate={shouldAnimate}
-                                />
-                              ))}
+                        <CardContent className="p-4 sm:p-6 pt-0">
+                          <div className="space-y-3 sm:space-y-4">
+                            {/* Current Computer Science Batch */}
+                            <div className="p-3 sm:p-4 rounded-lg bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-100">
+                              <div className="flex items-center justify-between mb-1 sm:mb-2">
+                                <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-purple-800 truncate">Computer Science</h3>
+                                <span className="px-2 sm:px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs sm:text-sm font-medium flex-shrink-0">Current</span>
+                              </div>
+                              <p className="text-purple-700 text-xs sm:text-sm">Current batch</p>
                             </div>
-                          ) : (
-                            <div className="space-y-4">
-                              {/* Sample lecturer batches */}
-                              {[
-                                {
-                                  batchName: "JS-2024-A",
-                                  courseName: "Advanced JavaScript Programming",
-                                  completionPercentage: 78,
-                                  status: "Active"
-                                },
-                                {
-                                  batchName: "DB-2024-B",
-                                  courseName: "Database Management Systems",
-                                  completionPercentage: 65,
-                                  status: "Active"
-                                },
-                                {
-                                  batchName: "WEB-2024-C",
-                                  courseName: "Web Development Fundamentals",
-                                  completionPercentage: 89,
-                                  status: "Active"
-                                }
-                              ].map((batch, index) => (
-                                <BatchCard 
-                                  key={index}
-                                  batch={batch} 
-                                  index={index}
-                                  shouldAnimate={shouldAnimate}
-                                />
-                              ))}
+
+                            {/* Previous Computer Science Batch */}
+                            <div className="p-3 sm:p-4 rounded-lg bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200">
+                              <div className="flex items-center justify-between mb-1 sm:mb-2">
+                                <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-800 truncate">Computer Science</h3>
+                                <span className="px-2 sm:px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs sm:text-sm font-medium flex-shrink-0">Completed</span>
+                              </div>
+                              <p className="text-gray-700 text-xs sm:text-sm">Previous batch</p>
                             </div>
-                          )}
+                          </div>
                         </CardContent>
                       </Card>
                     </motion.div>
@@ -1088,17 +1174,24 @@ const BatchManagementTab = () => {
       setLoading(true)
       setError(null)
       
-      // Get lecturer ID from localStorage
+      // Get lecturer ID from token
       const lecturerToken = localStorage.getItem('lecturerToken')
-      const lecturerUser = JSON.parse(localStorage.getItem('lecturerUser') || '{}')
       
-      if (!lecturerToken || !lecturerUser.id) {
+      if (!lecturerToken) {
         throw new Error('Lecturer authentication not found')
+      }
+
+      // Decode token to get lecturer ID
+      const tokenPayload = JSON.parse(atob(lecturerToken.split('.')[1]))
+      const lecturerId = tokenPayload.lecturerId
+      
+      if (!lecturerId) {
+        throw new Error('Lecturer ID not found in token')
       }
 
       // Import the service and fetch real data
       const { batchService } = await import('../../services/lecturerBatchService')
-      const response = await batchService.getLecturerBatches(lecturerUser.id)
+      const response = await batchService.getLecturerBatches(lecturerId)
       
       setBatches(response.batches || [])
     } catch (error) {
@@ -1149,25 +1242,14 @@ const BatchManagementTab = () => {
   return (
     <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center">
-              <Calendar className="w-5 h-5 mr-3 text-green-600" />
-              My Batches ({filteredBatches.length})
-            </CardTitle>
-            <CardDescription>
-              Manage materials, assignments, grades, and announcements for your batches
-            </CardDescription>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {/* Add create batch functionality */}}
-            className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Batch
-          </Button>
+        <div>
+          <CardTitle className="flex items-center">
+            <Calendar className="w-5 h-5 mr-3 text-green-600" />
+            My Batches ({filteredBatches.length})
+          </CardTitle>
+          <CardDescription>
+            Manage materials, assignments, grades, and announcements for your batches
+          </CardDescription>
         </div>
 
         {/* Filter Tabs */}
@@ -1219,7 +1301,7 @@ const BatchManagementTab = () => {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <h3 className="font-semibold text-slate-900 text-lg mb-1">
-                      {batch.batch_name}
+                      {batch.batch_code}
                     </h3>
                     <p className="text-slate-600 text-sm mb-2">{batch.courseName}</p>
                     <div className="flex items-center space-x-2">

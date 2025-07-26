@@ -15,6 +15,7 @@ const {
   sendEmail
 } = require('../utils/emailService');
 const crypto = require('crypto');
+const studentIdGenerator = require('../services/studentIdGenerator');
 
 // Ensure uploads directory exists
 const baseUploadDir = path.join(__dirname, '../../uploads/students');
@@ -101,7 +102,7 @@ router.get('/', auth.authMiddleware, async (req, res) => {
   try {
     const sql = `
       SELECT s.*,
-        GROUP_CONCAT(DISTINCT c.courseName SEPARATOR ', ') AS enrolled_courses,
+        GROUP_CONCAT(DISTINCT c.courseId SEPARATOR ', ') AS enrolled_courses,
         (SELECT COUNT(*) FROM student_courses WHERE student_id = s.id) AS course_count,
         u.name AS created_by
       FROM students s
@@ -135,6 +136,10 @@ router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
       error: 'At least one course required'
     });
 
+    // Convert string booleans to actual booleans
+    const isSwimmer = data.is_swimmer === 'true' || data.is_swimmer === true;
+    const isSlpaEmployee = data.is_slpa_employee === 'true' || data.is_slpa_employee === true;
+
     // insert student
     const sqlIns = `
       INSERT INTO students (
@@ -147,15 +152,20 @@ router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
       ) VALUES (${new Array(27).fill('?').join(',')})
     `;
     const files = req.files;
-    const vals = [data.full_name, data.email, data.identification_type, data.id_number, data.nationality, data.date_of_birth, data.country || null, data.cdc_number || null, data.address, data.department || null, data.company || null, data.sea_service || null, data.emergency_contact_name, data.emergency_contact_number, data.is_swimmer ? 1 : 0, data.is_slpa_employee ? 1 : 0, data.designation || null, data.division || null, data.service_no || null, data.section_unit || null, files.nic_document?.[0].path || null, files.passport_document?.[0].path || null, files.photo?.[0].path || null, data.driving_details ? JSON.stringify(data.driving_details) : null, 'Active', 'Pending', req.user.id];
+    const vals = [data.full_name, data.email, data.identification_type, data.id_number, data.nationality, data.date_of_birth, data.country || null, data.cdc_number || null, data.address, data.department || null, data.company || null, data.sea_service || null, data.emergency_contact_name, data.emergency_contact_number, isSwimmer ? 1 : 0, isSlpaEmployee ? 1 : 0, data.designation || null, data.division || null, data.service_no || null, data.section_unit || null, files.nic_document?.[0].path || null, files.passport_document?.[0].path || null, files.photo?.[0].path || null, data.driving_details ? JSON.stringify(typeof data.driving_details === 'string' ? JSON.parse(data.driving_details) : data.driving_details) : null, 'Active', 'Pending', req.user.id];
     const {
       insertId
     } = await conn.queryPromise(sqlIns, vals);
 
-    // enroll courses
+    // enroll courses (no student codes yet - those are assigned when student joins a batch)
     for (let i = 0; i < courseIds.length; i++) {
+      const courseId = courseIds[i];
+      const isPrimary = i === 0; // First course is primary
+
+      // Insert course enrollment WITHOUT student code
       await conn.queryPromise(`INSERT INTO student_courses (student_id,course_id,enrollment_date,primary_course,status)
-         VALUES (?,?,CURDATE(),?,?)`, [insertId, courseIds[i], i === 0 ? 1 : 0, 'Active']);
+         VALUES (?,?,CURDATE(),?,?)`, [insertId, courseId, isPrimary ? 1 : 0, 'Active']);
+      console.log(`Enrolled student in course ${courseId}`);
     }
 
     // Create student login credentials with temporary password
@@ -178,10 +188,12 @@ router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
             <p>Dear ${data.full_name},</p>
             <p>Your student account has been created successfully. You can now access the student portal using the following credentials:</p>
             <div style="background-color: #f8fafc; padding: 15px; border-radius: 5px; margin: 20px 0;">
+              <p><strong>Student ID:</strong> ${insertId}</p>
               <p><strong>Email:</strong> ${data.email}</p>
               <p><strong>Temporary Password:</strong> ${tempPassword}</p>
               <p style="color: #ef4444; font-size: 14px;">Important: You will be required to change this password on your first login.</p>
             </div>
+            <p>You will receive a formatted student code when you are assigned to a batch for your courses.</p>
             <p>You can access the student portal at: <a href="http://localhost:5003/student-login" style="color: #3b82f6;">Student Portal</a></p>
             <p>If you have any questions or need assistance, please contact our support team.</p>
             <p>Thank you,<br>Maritime Training Center Team</p>
@@ -197,9 +209,11 @@ router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
       logger.error('Failed to send welcome email:', emailErr);
       // Continue despite email failure - don't fail the registration
     }
+    console.log(`Student registered successfully with ID: ${insertId}`);
     res.status(201).json({
       success: true,
-      studentId: insertId
+      studentId: insertId,
+      message: `Student registered successfully with ID: ${insertId}`
     });
   } catch (err) {
     if (conn) {
@@ -234,7 +248,7 @@ router.get('/:id', auth.authMiddleware, async (req, res) => {
        JOIN courses c ON sc.course_id = c.id
        WHERE sc.student_id = ? ORDER BY sc.primary_course DESC`, [req.params.id]);
     // batches
-    student.batches = await db.queryPromise(`SELECT b.id,b.batch_name,b.start_date,b.end_date,sb.status,sb.enrollment_date,sb.attendance_percentage
+    student.batches = await db.queryPromise(`SELECT b.id,b.start_date,b.end_date,sb.status,sb.enrollment_date,sb.attendance_percentage
        FROM student_batches sb
        JOIN batches b ON sb.batch_id=b.id
        WHERE sb.student_id = ? ORDER BY b.start_date DESC`, [req.params.id]);
@@ -264,17 +278,21 @@ router.put('/:id', auth.authMiddleware, uploadFields, async (req, res) => {
       }
     };
     ['full_name', 'email', 'identification_type', 'id_number', 'nationality', 'date_of_birth', 'country', 'cdc_number', 'address', 'department', 'company', 'sea_service', 'emergency_contact_name', 'emergency_contact_number', 'designation', 'division', 'service_no', 'section_unit'].forEach(key => mapField(key, key));
+
+    // Convert string booleans to actual booleans for update
     if (data.is_swimmer !== undefined) {
+      const isSwimmer = data.is_swimmer === 'true' || data.is_swimmer === true;
       fields.push('is_swimmer=?');
-      vals.push(data.is_swimmer ? 1 : 0);
+      vals.push(isSwimmer ? 1 : 0);
     }
     if (data.is_slpa_employee !== undefined) {
+      const isSlpaEmployee = data.is_slpa_employee === 'true' || data.is_slpa_employee === true;
       fields.push('is_slpa_employee=?');
-      vals.push(data.is_slpa_employee ? 1 : 0);
+      vals.push(isSlpaEmployee ? 1 : 0);
     }
     if (data.driving_details) {
       fields.push('driving_details=?');
-      vals.push(JSON.stringify(data.driving_details));
+      vals.push(JSON.stringify(typeof data.driving_details === 'string' ? JSON.parse(data.driving_details) : data.driving_details));
     }
     // file paths
     if (files.nic_document) {

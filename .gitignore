@@ -7,6 +7,18 @@ build/
 logs/
 
 .DS_Store/
+.DS_Store?
 
 .idea/
+
+.server/generateTestToken.js
+.server/generateTestTokenLecturer.js
+.server/test_lms_setup.js
+.server/uploads
+
+.uploads/
+
+.DS_Store
+
+.env.local
 

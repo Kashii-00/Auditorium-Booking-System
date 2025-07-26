@@ -89,6 +89,18 @@ export default function StudentView() {
           throw new Error("Student not found")
         }
 
+        // Parse driving_details if it's malformed
+        if (studentData.driving_details) {
+          try {
+            if (typeof studentData.driving_details === 'string') {
+              studentData.driving_details = JSON.parse(studentData.driving_details);
+            }
+          } catch (error) {
+            console.warn('Error parsing driving_details in StudentView:', error);
+            studentData.driving_details = null;
+          }
+        }
+
         setStudent(studentData)
       } catch (error) {
         console.error("Error fetching student data:", error)
@@ -442,42 +454,12 @@ export default function StudentView() {
               </CardHeader>
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Building className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-gray-500 uppercase tracking-wide">Department/Rank</Label>
-                    <p className="text-gray-900 font-medium">{student.department || "N/A"}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
                   <div className="p-2 bg-purple-100 rounded-lg">
                     <Building className="h-4 w-4 text-purple-600" />
                   </div>
                   <div>
                     <Label className="text-xs text-gray-500 uppercase tracking-wide">Company</Label>
                     <p className="text-gray-900 font-medium">{student.company || "N/A"}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Ship className="h-4 w-4 text-green-600" />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-gray-500 uppercase tracking-wide">Sea Service</Label>
-                    <p className="text-gray-900 font-medium">{student.sea_service || "N/A"}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-yellow-100 rounded-lg">
-                    <CreditCard className="h-4 w-4 text-yellow-600" />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-gray-500 uppercase tracking-wide">CDC Number</Label>
-                    <p className="text-gray-900 font-medium">{student.cdc_number || "N/A"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -553,6 +535,46 @@ export default function StudentView() {
                     <div>
                       <Label className="text-xs text-blue-700 uppercase tracking-wide">Section/Unit</Label>
                       <p className="text-gray-900 font-medium mt-1">{student.section_unit || "N/A"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-blue-700 uppercase tracking-wide">Department/Rank</Label>
+                      <p className="text-gray-900 font-medium mt-1">{student.department || "N/A"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-blue-700 uppercase tracking-wide">Sea Services</Label>
+                      <p className="text-gray-900 font-medium mt-1">{student.sea_service || "N/A"}</p>
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label className="text-xs text-blue-700 uppercase tracking-wide">CDC Number</Label>
+                      <p className="text-gray-900 font-medium mt-1">{student.cdc_number || "N/A"}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Equipment Course Driving Details */}
+              {student.driving_details && (student.driving_details.driving_license_no || student.driving_details.driving_class || student.driving_details.issue_date) && (
+                <div className="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                  <h3 className="font-medium text-orange-800 mb-3 flex items-center gap-2">
+                    <Ship className="h-4 w-4" />
+                    Equipment Course Requirements - Driving Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label className="text-xs text-orange-700 uppercase tracking-wide">Driving License Number</Label>
+                      <p className="text-gray-900 font-medium mt-1">{student.driving_details.driving_license_no || "N/A"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-orange-700 uppercase tracking-wide">Driving License Class</Label>
+                      <p className="text-gray-900 font-medium mt-1">{student.driving_details.driving_class || "N/A"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-orange-700 uppercase tracking-wide">License Issue Date</Label>
+                      <p className="text-gray-900 font-medium mt-1">
+                        {student.driving_details.issue_date 
+                          ? new Date(student.driving_details.issue_date).toLocaleDateString() 
+                          : "N/A"}
+                      </p>
                     </div>
                   </div>
                 </div>

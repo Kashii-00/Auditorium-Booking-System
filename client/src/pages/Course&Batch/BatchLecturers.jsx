@@ -3,14 +3,10 @@
 import React, { useState, useEffect, useCallback } from "react"
 import { useParams, Link } from "react-router-dom"
 import { authRequest } from "../../services/authService"
-import { FaPlus, FaArrowLeft, FaUserTie, FaCheck, FaSpinner, FaEdit, FaEye } from "react-icons/fa"
+import { FaPlus, FaArrowLeft, FaUserTie, FaCheck, FaSpinner, FaEdit, FaEye, FaTrash } from "react-icons/fa"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Trash2, GraduationCap, Calendar, AlertTriangle } from "lucide-react"
 import LoadingScreen from "../LoadingScreen/LoadingScreen"
 
 const BatchLecturers = React.memo(() => {
@@ -27,36 +23,6 @@ const BatchLecturers = React.memo(() => {
   const [currentLecturer, setCurrentLecturer] = useState(null)
   const [moduleValue, setModuleValue] = useState("")
   const [deleteError, setDeleteError] = useState(null)
-
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    const stored = localStorage.getItem("sidebarState")
-    return stored !== null ? stored === "true" : false
-  })
-
-  // Sidebar state management
-  useEffect(() => {
-    const syncSidebarState = () => {
-      const stored = localStorage.getItem("sidebarState")
-      if (stored !== null) {
-        setSidebarCollapsed(stored === "true")
-      }
-    }
-
-    const handleSidebarToggle = (e) => setSidebarCollapsed(e.detail.isCollapsed)
-    const handleSidebarHover = (e) => setSidebarCollapsed(!e.detail.isHovered)
-
-    window.addEventListener("sidebarToggle", handleSidebarToggle)
-    window.addEventListener("sidebarHover", handleSidebarHover)
-    window.addEventListener("popstate", syncSidebarState)
-
-    syncSidebarState()
-
-    return () => {
-      window.removeEventListener("sidebarToggle", handleSidebarToggle)
-      window.removeEventListener("sidebarHover", handleSidebarHover)
-      window.removeEventListener("popstate", syncSidebarState)
-    }
-  }, [])
 
   // Fetch batch and lecturer data
   const fetchBatchData = useCallback(async () => {
@@ -166,9 +132,9 @@ const BatchLecturers = React.memo(() => {
     if (!dateString) return "Not set"
     const date = new Date(dateString)
     return date.toLocaleDateString("en-US", {
-      year: "numeric",
       month: "short",
       day: "numeric",
+      year: "numeric",
     })
   }, [])
 
@@ -178,171 +144,222 @@ const BatchLecturers = React.memo(() => {
   }
 
   return (
-    <div
-      className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 ${sidebarCollapsed ? "ml-16" : "ml-64"} transition-all duration-300`}
-    >
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+    <div className="min-h-screen bg-gray-50">
+      {/* Blue Header */}
+      <div className="bg-blue-600 px-6 py-6">
+        <div className="flex items-center justify-between text-white w-full">
+          {/* Left side - Back to Batches */}
+          <div className="flex items-center">
             <Link
               to="/BatchRegistration"
-              className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors"
+              className="inline-flex items-center text-white hover:text-gray-200 transition-colors"
             >
-              <FaArrowLeft className="text-sm" />
-              <span className="font-medium">Back to Batches</span>
+              <FaArrowLeft className="w-4 h-4 mr-2" />
+              <span className="font-medium font-semibold">Back to Batches</span>
             </Link>
+          </div>
+
+          {/* Right side - Course ID and Lecturers */}
+          <div className="flex items-center">
+            <FaUserTie className="w-6 h-6 mr-3" />
+            <h1 className="text-xl font-semibold">
+              {batch?.courseId || "MP-PSSR25.2"} Lecturers
+            </h1>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-6 space-y-6">
+        {/* Info Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Course Card */}
+          <div className="bg-white rounded-lg p-6 border border-gray-200">
+            <div className="flex items-start">
+              <div className="p-2 bg-blue-100 rounded-lg mr-4">
+                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm font-medium">Course</p>
+                <h3 className="text-gray-900 font-semibold leading-tight">
+                  {batch?.courseName || "Proficiency in Personal Safety and Social Responsibility"}
+                </h3>
+              </div>
+            </div>
+          </div>
+
+          {/* Duration Card */}
+          <div className="bg-white rounded-lg p-6 border border-gray-200">
+            <div className="flex items-start">
+              <div className="p-2 bg-green-100 rounded-lg mr-4">
+                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm font-medium">Duration</p>
+                <h3 className="text-gray-900 font-semibold">
+                  {formatDate(batch?.start_date)} - {formatDate(batch?.end_date)}
+                </h3>
+              </div>
+            </div>
+          </div>
+
+          {/* Lecturers Card */}
+          <div className="bg-white rounded-lg p-6 border border-gray-200">
+            <div className="flex items-start">
+              <div className="p-2 bg-purple-100 rounded-lg mr-4">
+                <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm font-medium">Lecturers</p>
+                <h3 className="text-gray-900 font-semibold">
+                  {lecturers.length} Assigned
+                </h3>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Batch Info Card */}
-        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-t-lg">
-            <CardTitle className="flex items-center space-x-3">
-              <FaUserTie className="h-6 w-6" />
-              <span>Batch Lecturers: {batch?.batch_name || "Loading..."}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <GraduationCap className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Course</p>
-                  <p className="font-semibold text-gray-900">{batch?.courseName || "Loading..."}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Calendar className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Duration</p>
-                  <p className="font-semibold text-gray-900">
-                    {formatDate(batch?.start_date)} - {formatDate(batch?.end_date)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Success Message */}
         {successMessage && (
-          <Card className="bg-green-50 border-green-200">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <FaCheck className="text-green-600" />
-                <p className="text-green-700 font-medium">{successMessage}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center space-x-2">
+              <FaCheck className="text-green-600" />
+              <p className="text-green-700 font-medium">{successMessage}</p>
+            </div>
+          </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <Card className="bg-red-50 border-red-200">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-                <p className="text-red-600 font-medium">{error}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-600 font-medium">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-2 bg-red-600 hover:bg-red-700 text-white"
+            >
+              Try Again
+            </Button>
+          </div>
         )}
 
-        {/* Actions */}
-        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">Assigned Lecturers</h3>
-              <Link
-                to={`/batch/${id}/add-lecturers`}
-                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-200"
-              >
-                <FaPlus className="mr-2" />
+        {/* Actions Bar */}
+        <div className="bg-white rounded-lg p-6 border border-gray-200">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">Assigned Lecturers</h3>
+            <Link to={`/batch/${id}/add-lecturers`}>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <FaPlus className="w-4 h-4 mr-2" />
                 Add Lecturers
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Lecturers Table */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          {lecturers.length === 0 ? (
+            <div className="text-center py-12">
+              <FaUserTie className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No lecturers assigned</h3>
+              <p className="text-gray-500 mb-6">Assign lecturers to this batch to manage the teaching schedule.</p>
+              <Link to={`/batch/${id}/add-lecturers`}>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <FaPlus className="w-4 h-4 mr-2" />
+                  Add Lecturers
+                </Button>
               </Link>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Lecturers List */}
-        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-          <CardContent className="p-0">
-            {lecturers.length === 0 ? (
-              <div className="text-center py-12">
-                <FaUserTie className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No lecturers assigned</h3>
-                <p className="text-gray-500 mb-6">Assign lecturers to this batch to manage the teaching schedule.</p>
-                <Link
-                  to={`/batch/${id}/add-lecturers`}
-                  className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  <FaPlus className="mr-2" />
-                  Add Lecturers
-                </Link>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-50">
-                    <TableHead>ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Module</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {lecturers.map((lecturer) => (
-                    <TableRow key={lecturer.id} className="hover:bg-blue-50 transition-colors">
-                      <TableCell className="font-medium">{lecturer.id}</TableCell>
-                      <TableCell>{lecturer.full_name || lecturer.userName || lecturer.name || "N/A"}</TableCell>
-                      <TableCell>{lecturer.email || "N/A"}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{lecturer.category || "N/A"}</Badge>
-                      </TableCell>
-                      <TableCell>{lecturer.module || "Not specified"}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                      ID
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                      Name
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                      Email
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                      Category
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                      Module
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white">
+                  {lecturers.map((lecturer, index) => (
+                    <tr key={lecturer.id} className={`${index !== lecturers.length - 1 ? 'border-b border-gray-100' : ''} hover:bg-gray-50 transition-colors`}>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-gray-900">
+                          {lecturer.id}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-gray-900">
+                          {lecturer.full_name || lecturer.userName || lecturer.name || "N/A"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-600">
+                          {lecturer.email || "N/A"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                          {lecturer.category || "N/A"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-600">
+                          {lecturer.module || "Not specified"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-2">
+                          <button
                             onClick={() => window.open(`/lecturer/${lecturer.lecturer_id}`, "_blank")}
-                            className="h-8 w-8 p-0"
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition-colors"
+                            title="View Details"
                           >
-                            <FaEye className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
+                            <FaEye className="w-3 h-3" />
+                          </button>
+                          <button
                             onClick={() => handleEditModule(lecturer)}
-                            className="h-8 w-8 p-0"
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-600 transition-colors"
+                            title="Edit Module"
                           >
-                            <FaEdit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
+                            <FaEdit className="w-3 h-3" />
+                          </button>
+                          <button
                             onClick={() => confirmDeleteLecturer(lecturer)}
-                            className="h-8 w-8 p-0"
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors"
+                            title="Remove"
                           >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                            <FaTrash className="w-3 h-3" />
+                          </button>
                         </div>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Delete Confirmation Dialog */}
@@ -350,7 +367,9 @@ const BatchLecturers = React.memo(() => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <svg className="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
               <span>Confirm Removal</span>
             </DialogTitle>
           </DialogHeader>

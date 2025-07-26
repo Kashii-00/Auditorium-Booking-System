@@ -699,33 +699,6 @@ const StudentChangePassword = () => {
                       )}
             </form>
                   )}
-                  
-                  {/* Debug section - only in development */}
-                  {process.env.NODE_ENV === 'development' && step === 2 && (
-                    <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-                      <p className="text-xs text-gray-600 mb-2">Debug Tools (Development Only)</p>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            const token = localStorage.getItem("studentToken");
-                            const response = await axios.get(
-                              "http://localhost:5003/api/student-auth/debug-otp-status",
-                              { headers: { Authorization: `Bearer ${token}` } }
-                            );
-                            console.log('OTP Debug Info:', response.data);
-                            alert(`OTP Status: ${JSON.stringify(response.data.debug_info, null, 2)}`);
-                          } catch (error) {
-                            console.error('Debug error:', error);
-                            alert('Failed to get OTP status');
-                          }
-                        }}
-                        className="text-xs bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700"
-                      >
-                        Check OTP Status
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

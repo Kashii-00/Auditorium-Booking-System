@@ -76,11 +76,12 @@ router.get('/', auth.authMiddleware, async (req, res) => {
         l.id, 
         l.full_name, 
         l.email, 
-        l.phone,         -- <-- Add phone here
+        l.phone,
+        l.id_number,
         l.status,
         l.category,
         l.created_at,
-        GROUP_CONCAT(DISTINCT c.courseName SEPARATOR ', ') AS courses,
+        GROUP_CONCAT(DISTINCT c.courseId SEPARATOR ', ') AS assigned_courses,
         GROUP_CONCAT(DISTINCT c.id SEPARATOR ',') AS course_ids,
         u.name AS created_by
       FROM lecturers l
@@ -140,77 +141,96 @@ router.post('/', auth.authMiddleware, upload.fields([{
     conn = await db.getConnectionPromise();
     await conn.beginTransactionPromise();
 
-    // --- FIX: Use correct field names from frontend ---
+    // Updated field names to match frontend
     const {
-      fullName,
+      full_name,
       email,
-      identification_type = 'NIC',
       id_number,
       date_of_birth,
       address,
       phone,
       category,
-      cdcNumber,
-      vehicleNumber,
-      status = 'Active'
+      cdc_number,
+      vehicle_number,
+      status = 'Active',
+      highest_qualification,
+      other_qualifications,
+      bank_name,
+      branch_name,
+      account_number,
+      work_experiences
     } = req.body;
+
+    // Parse work experiences if provided
+    let workExperiencesData = [];
+    if (work_experiences) {
+      try {
+        workExperiencesData = JSON.parse(work_experiences);
+      } catch (e) {
+        logger.warn('Failed to parse work_experiences JSON:', e);
+        workExperiencesData = [];
+      }
+    }
+
+    // Validate required fields
+    if (!full_name || !email || !id_number) {
+      return res.status(400).json({
+        error: 'Full name, email, and ID number are required'
+      });
+    }
 
     // Insert lecturer
     const insertLec = `
         INSERT INTO lecturers
         (full_name,email,identification_type,id_number,date_of_birth,address,phone,
          category,cdc_number,vehicle_number,nic_file,photo_file,
-         driving_trainer_license_file,other_documents_file,status,user_id)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         driving_trainer_license_file,status,user_id)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
       `;
     const files = req.files || {};
-    const params = [fullName, email, identification_type, id_number, date_of_birth, address, phone, category, cdcNumber || null, vehicleNumber || null, files.nic_file?.[0]?.path || null, files.photo_file?.[0]?.path || null, files.driving_trainer_license_file?.[0]?.path || null, files.other_documents_file?.[0]?.path || null, status, req.user.id];
+    const params = [full_name, email, 'NIC', id_number, date_of_birth, address, phone, category, cdc_number || null, vehicle_number || null, files.nic_file?.[0]?.path || null, files.photo_file?.[0]?.path || null, files.driving_trainer_license_file?.[0]?.path || null, status, req.user.id];
     const result = await conn.queryPromise(insertLec, params);
     const lecturerId = result.insertId;
 
     // Academic details
-    let acad = {};
-    try {
-      acad = JSON.parse(req.body.academic_details || '{}');
-    } catch (e) {
-      logger.warn('Failed to parse academic_details JSON, using defaults');
-    }
-
-    // --- FIX: Save experience array if provided ---
     const insAcad = `
         INSERT INTO lecturer_academic_details
         (lecturer_id,highest_qualification,other_qualifications,experience,education_certificate_file)
         VALUES (?,?,?,?,?)
       `;
-    await conn.queryPromise(insAcad, [lecturerId, acad.highest_qualification || req.body.highestQualification || null, acad.other_qualifications || req.body.otherQualifications || null, JSON.stringify(acad.experience || req.body.experience || []), files.education_certificate_file?.[0]?.path || null]);
+
+    // Convert work experiences to the expected JSON format
+    let experienceJson = "[]";
+    if (workExperiencesData && workExperiencesData.length > 0) {
+      const formattedExperiences = workExperiencesData.map(exp => ({
+        institution: exp.institution || "",
+        years: exp.start_year && exp.end_year && !exp.is_current ? (parseInt(exp.end_year) - parseInt(exp.start_year)).toString() : exp.is_current ? (new Date().getFullYear() - parseInt(exp.start_year)).toString() : "0",
+        start: exp.start_year || "",
+        end: exp.is_current ? "Present" : exp.end_year || "",
+        designation: exp.position || "",
+        nature: exp.department || ""
+      }));
+      experienceJson = JSON.stringify(formattedExperiences);
+    }
+    await conn.queryPromise(insAcad, [lecturerId, highest_qualification || null, other_qualifications || null, experienceJson, files.education_certificate_file?.[0]?.path || null]);
 
     // Bank details
-    let bank = {};
-    try {
-      bank = JSON.parse(req.body.bank_details || '{}');
-    } catch (e) {
-      logger.warn('Failed to parse bank_details JSON, using defaults');
-    }
     const insBank = `
         INSERT INTO lecturer_bank_details
-        (lecturer_id,bank_name,branch_name,account_number,passbook_file)
-        VALUES (?,?,?,?,?)
+        (lecturer_id,bank_name,branch_name,account_number)
+        VALUES (?,?,?,?)
       `;
-    await conn.queryPromise(insBank, [lecturerId, bank.bank_name || req.body.bankName || null, bank.branch_name || req.body.branchName || null, bank.account_number || req.body.accountNumber || null, files.passbook_file?.[0]?.path || null]);
+    await conn.queryPromise(insBank, [lecturerId, bank_name || null, branch_name || null, account_number || null]);
 
-    // Courses mapping - handle both single course_id and course_ids array
+    // Courses mapping - handle course_ids array from frontend
     let courseIds = [];
     if (req.body.course_ids) {
       try {
         courseIds = JSON.parse(req.body.course_ids);
       } catch (e) {
-        logger.warn('Failed to parse course_ids JSON, using single course_id');
+        logger.warn('Failed to parse course_ids JSON:', e);
+        courseIds = [];
       }
-    }
-
-    // If course_ids parsing failed or wasn't provided, use single course_id
-    if (courseIds.length === 0 && req.body.course_id) {
-      courseIds = [req.body.course_id];
     }
 
     // Ensure we have at least one course
@@ -221,8 +241,8 @@ router.post('/', auth.authMiddleware, upload.fields([{
     }
     for (let i = 0; i < courseIds.length; i++) {
       await conn.queryPromise(`INSERT INTO lecturer_courses
-            (lecturer_id,course_id,primary_course,stream,module)
-           VALUES (?,?,?,?,?)`, [lecturerId, courseIds[i], i === 0 ? 1 : 0, req.body.stream || null, req.body.module || null]);
+            (lecturer_id,course_id,primary_course)
+           VALUES (?,?,?)`, [lecturerId, courseIds[i], i === 0 ? 1 : 0]);
     }
 
     // Create lecturer user account with temporary password
@@ -243,7 +263,7 @@ router.post('/', auth.authMiddleware, upload.fields([{
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
               <h2 style="color: #3b82f6;">Welcome to Maritime Training Center</h2>
-              <p>Dear ${fullName},</p>
+              <p>Dear ${full_name},</p>
               <p>Your lecturer account has been successfully created. Here are your login credentials:</p>
               <div style="background-color: #f0f9ff; padding: 20px; border-radius: 5px; margin: 20px 0;">
                 <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
@@ -259,6 +279,7 @@ router.post('/', auth.authMiddleware, upload.fields([{
             </div>
           `
       });
+      logger.info(`Welcome email sent to lecturer: ${email}`);
     } catch (emailError) {
       logger.error('Failed to send lecturer welcome email:', emailError);
       // Don't fail the registration if email fails
@@ -325,23 +346,39 @@ router.put('/:id', auth.authMiddleware, (req, res, next) => {
   try {
     await conn.beginTransactionPromise();
 
-    // --- FIX: Use correct field names from frontend ---
+    // Updated field names to match frontend
     const {
-      fullName,
+      full_name,
       email,
-      identification_type,
       id_number,
       date_of_birth,
       address,
       phone,
       category,
-      cdcNumber,
-      vehicleNumber,
-      status = 'Active'
+      cdc_number,
+      vehicle_number,
+      status = 'Active',
+      highest_qualification,
+      other_qualifications,
+      bank_name,
+      branch_name,
+      account_number,
+      work_experiences
     } = req.body;
 
+    // Parse work experiences if provided
+    let workExperiencesData = [];
+    if (work_experiences) {
+      try {
+        workExperiencesData = JSON.parse(work_experiences);
+      } catch (e) {
+        logger.warn('Failed to parse work_experiences JSON:', e);
+        workExperiencesData = [];
+      }
+    }
+
     // First, get the current lecturer data to preserve existing file paths if no new files uploaded
-    const [currentLecturer] = await conn.queryPromise('SELECT nic_file, photo_file, driving_trainer_license_file, other_documents_file FROM lecturers WHERE id = ?', [req.params.id]);
+    const [currentLecturer] = await conn.queryPromise('SELECT nic_file, photo_file, driving_trainer_license_file FROM lecturers WHERE id = ?', [req.params.id]);
 
     // Update lecturer with conditional file paths
     const files = req.files || {};
@@ -353,17 +390,15 @@ router.put('/:id', auth.authMiddleware, (req, res, next) => {
             ${files.nic_file ? 'nic_file = ?,' : ''}
             ${files.photo_file ? 'photo_file = ?,' : ''}
             ${files.driving_trainer_license_file ? 'driving_trainer_license_file = ?,' : ''}
-            ${files.other_documents_file ? 'other_documents_file = ?,' : ''}
             updated_at = NOW()
         WHERE id = ?
       `;
 
     // Build params array based on whether files were uploaded
-    const params = [fullName, email, identification_type, id_number, date_of_birth, address, phone, category, cdcNumber || null, vehicleNumber || null, status];
+    const params = [full_name, email, 'NIC', id_number, date_of_birth, address, phone, category, cdc_number || null, vehicle_number || null, status];
     if (files.nic_file) params.push(files.nic_file[0].path);
     if (files.photo_file) params.push(files.photo_file[0].path);
     if (files.driving_trainer_license_file) params.push(files.driving_trainer_license_file[0].path);
-    if (files.other_documents_file) params.push(files.other_documents_file[0].path);
     params.push(req.params.id);
     await conn.queryPromise(updateLec, params);
 
@@ -374,47 +409,56 @@ router.put('/:id', auth.authMiddleware, (req, res, next) => {
     await conn.queryPromise('DELETE FROM lecturer_academic_details WHERE lecturer_id = ?', [req.params.id]);
 
     // Insert updated academic details
-    // --- FIX: Save experience array if provided ---
-    const acad = JSON.parse(req.body.academic_details || '{}');
-    await conn.queryPromise('DELETE FROM lecturer_academic_details WHERE lecturer_id = ?', [req.params.id]);
     const insAcad = `
         INSERT INTO lecturer_academic_details
         (lecturer_id, highest_qualification, other_qualifications, experience, education_certificate_file)
         VALUES (?, ?, ?, ?, ?)
       `;
-    await conn.queryPromise(insAcad, [req.params.id, acad.highest_qualification || null, acad.other_qualifications || null, JSON.stringify(acad.experience || req.body.experience || []), files.education_certificate_file ? files.education_certificate_file[0].path : currentAcademicDetails ? currentAcademicDetails.education_certificate_file : null]);
 
-    // Bank details - get current to preserve existing files
-    const [currentBankDetails] = await conn.queryPromise('SELECT passbook_file FROM lecturer_bank_details WHERE lecturer_id = ?', [req.params.id]);
+    // Convert work experiences to the expected JSON format
+    let experienceJson = "[]";
+    if (workExperiencesData && workExperiencesData.length > 0) {
+      const formattedExperiences = workExperiencesData.map(exp => ({
+        institution: exp.institution || "",
+        years: exp.start_year && exp.end_year && !exp.is_current ? (parseInt(exp.end_year) - parseInt(exp.start_year)).toString() : exp.is_current ? (new Date().getFullYear() - parseInt(exp.start_year)).toString() : "0",
+        start: exp.start_year || "",
+        end: exp.is_current ? "Present" : exp.end_year || "",
+        designation: exp.position || "",
+        nature: exp.department || ""
+      }));
+      experienceJson = JSON.stringify(formattedExperiences);
+    }
+    await conn.queryPromise(insAcad, [req.params.id, highest_qualification || null, other_qualifications || null, experienceJson, files.education_certificate_file ? files.education_certificate_file[0].path : currentAcademicDetails ? currentAcademicDetails.education_certificate_file : null]);
 
+    // Bank details
     // Delete existing bank details
     await conn.queryPromise('DELETE FROM lecturer_bank_details WHERE lecturer_id = ?', [req.params.id]);
 
     // Insert updated bank details
-    const bank = JSON.parse(req.body.bank_details || '{}');
     const insBank = `
         INSERT INTO lecturer_bank_details
-        (lecturer_id, bank_name, branch_name, account_number, passbook_file)
-        VALUES (?, ?, ?, ?, ?)
+        (lecturer_id, bank_name, branch_name, account_number)
+        VALUES (?, ?, ?, ?)
       `;
-    await conn.queryPromise(insBank, [req.params.id, bank.bank_name || null, bank.branch_name || null, bank.account_number || null, files.passbook_file ? files.passbook_file[0].path : currentBankDetails ? currentBankDetails.passbook_file : null]);
+    await conn.queryPromise(insBank, [req.params.id, bank_name || null, branch_name || null, account_number || null]);
 
     // Courses mapping
     await conn.queryPromise(`DELETE FROM lecturer_courses WHERE lecturer_id = ?`, [req.params.id]);
 
-    // Handle single course_id or array of course_ids
-    let courseIds;
+    // Handle course_ids array from frontend
+    let courseIds = [];
     if (req.body.course_ids) {
-      courseIds = JSON.parse(req.body.course_ids);
-    } else if (req.body.course_id) {
-      courseIds = [req.body.course_id];
-    } else {
-      courseIds = [];
+      try {
+        courseIds = JSON.parse(req.body.course_ids);
+      } catch (e) {
+        logger.warn('Failed to parse course_ids JSON:', e);
+        courseIds = [];
+      }
     }
     for (let i = 0; i < courseIds.length; i++) {
       await conn.queryPromise(`INSERT INTO lecturer_courses
-            (lecturer_id, course_id, primary_course, stream, module)
-           VALUES (?, ?, ?, ?, ?)`, [req.params.id, courseIds[i], i === 0 ? 1 : 0, req.body.stream || null, req.body.module || null]);
+            (lecturer_id, course_id, primary_course)
+           VALUES (?, ?, ?)`, [req.params.id, courseIds[i], i === 0 ? 1 : 0]);
     }
     await conn.commitPromise();
     res.json({
@@ -449,7 +493,7 @@ router.get('/:id', auth.authMiddleware, async (req, res) => {
     const [academicDetails] = await db.queryPromise(`SELECT * FROM lecturer_academic_details 
        WHERE lecturer_id = ?`, [req.params.id]);
     if (academicDetails) {
-      lecturer.academic_details = academicDetails;
+      lecturer.academicDetails = academicDetails;
       // Parse experience JSON if it exists
       if (academicDetails.experience) {
         try {
@@ -465,24 +509,37 @@ router.get('/:id', auth.authMiddleware, async (req, res) => {
     const [bankDetails] = await db.queryPromise(`SELECT * FROM lecturer_bank_details 
        WHERE lecturer_id = ?`, [req.params.id]);
     if (bankDetails) {
-      lecturer.bank_details = bankDetails;
+      lecturer.bankDetails = bankDetails;
     }
 
     // Get course details - include primary course in lecturer object
-    const courses = await db.queryPromise(`SELECT lc.*, c.courseName, c.courseId, c.stream as course_stream
+    const courses = await db.queryPromise(`SELECT lc.*, c.courseName, c.courseId, c.stream as course_stream, c.medium, c.location
        FROM lecturer_courses lc
        JOIN courses c ON lc.course_id = c.id
        WHERE lc.lecturer_id = ?
        ORDER BY lc.primary_course DESC`, [req.params.id]);
     if (courses && courses.length > 0) {
-      lecturer.courses = courses;
-      // Set course_id to the primary course for backward compatibility
-      const primaryCourse = courses.find(c => c.primary_course === 1);
+      lecturer.courses = courses.map(course => ({
+        id: course.course_id,
+        courseId: course.courseId,
+        courseName: course.courseName,
+        stream: course.stream || course.course_stream,
+        module: course.module,
+        primary_course: course.primary_course,
+        status: course.status
+      }));
+
+      // Set primary course info for backward compatibility
+      const primaryCourse = courses.find(c => c.primary_course === 1) || courses[0];
       if (primaryCourse) {
         lecturer.course_id = primaryCourse.course_id;
         lecturer.stream = primaryCourse.stream || primaryCourse.course_stream;
         lecturer.module = primaryCourse.module;
       }
+    } else {
+      lecturer.courses = [];
+      lecturer.stream = null;
+      lecturer.module = null;
     }
     res.json(lecturer);
   } catch (err) {

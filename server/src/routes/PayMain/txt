@@ -1,0 +1,152 @@
+// const express = require("express");
+// const router = express.Router();
+// const db = require("../db");
+// const logger = require("../logger");
+// const auth = require("../auth");
+
+// // POST /course-materials
+// router.post("/", auth.authMiddleware, (req, res) => {
+//   const user_id = req.user.id;
+//   const items = req.body.items;
+
+//   if (!Array.isArray(items) || items.length === 0) {
+//     return res.status(400).json({ error: "Items must be a non-empty array" });
+//   }
+
+//   const payments_main_details_id = items[0].payments_main_details_id;
+
+//   // Authorization check: ensure the current user owns the payment entry
+//   const checkSql = "SELECT user_id FROM payments_main_details WHERE id = ?";
+//   db.query(checkSql, [payments_main_details_id], (err, results) => {
+//     if (err || results.length === 0) {
+//       return res
+//         .status(403)
+//         .json({ error: "Access denied or entry not found" });
+//     }
+
+//     const ownerId = results[0].user_id;
+//     if (ownerId !== user_id) {
+//       return res.status(403).json({ error: "Unauthorized access" });
+//     }
+
+//     // Proceed to insert items
+//     const insertValues = [];
+
+//     const fetchRateAndInsert = (index) => {
+//       if (index >= items.length) {
+//         const sql = `
+//           INSERT INTO course_materials (
+//             payments_main_details_id, item_description, required_quantity, rate, cost
+//           ) VALUES ?
+//         `;
+//         db.query(sql, [insertValues], (err, result) => {
+//           if (err) {
+//             logger.error("Error inserting course materials:", err);
+//             return res.status(500).json({ error: "Database error" });
+//           }
+//           return res.json({ success: true, added: result.affectedRows });
+//         });
+//         return;
+//       }
+
+//       const item = items[index];
+//       const { item_description, required_quantity } = item;
+
+//       if (!item_description || !required_quantity) {
+//         return res
+//           .status(400)
+//           .json({
+//             error: "Each item must have item_description and required_quantity",
+//           });
+//       }
+
+//       const rateSql = `SELECT rate FROM rates WHERE item_description = ? AND category = ? LIMIT 1`;
+//       db.query(
+//         rateSql,
+//         [item_description, "Course Delivery (Materials)"],
+//         (err, rateResults) => {
+//           if (err || rateResults.length === 0) {
+//             return res
+//               .status(400)
+//               .json({ error: `Rate not found for item: ${item_description}` });
+//           }
+
+//           const rate = parseFloat(rateResults[0].rate);
+//           const cost = parseFloat(required_quantity) * rate;
+
+//           insertValues.push([
+//             payments_main_details_id,
+//             item_description,
+//             required_quantity,
+//             rate,
+//             cost,
+//           ]);
+
+//           fetchRateAndInsert(index + 1);
+//         }
+//       );
+//     };
+
+//     fetchRateAndInsert(0);
+//   });
+// });
+
+// // GET /course-materials/:paymentId
+// router.get("/:paymentId", auth.authMiddleware, (req, res) => {
+//   const user_id = req.user.id;
+//   const { paymentId } = req.params;
+
+//   const checkSql = "SELECT user_id FROM payments_main_details WHERE id = ?";
+//   db.query(checkSql, [paymentId], (err, results) => {
+//     if (err || results.length === 0) {
+//       return res
+//         .status(403)
+//         .json({ error: "Access denied or entry not found" });
+//     }
+
+//     const ownerId = results[0].user_id;
+//     if (ownerId !== user_id) {
+//       return res.status(403).json({ error: "Unauthorized access" });
+//     }
+
+//     const sql =
+//       "SELECT * FROM course_materials WHERE payments_main_details_id = ?";
+//     db.query(sql, [paymentId], (err, materials) => {
+//       if (err) {
+//         return res.status(500).json({ error: "Database error" });
+//       }
+//       return res.json({ materials });
+//     });
+//   });
+// });
+
+// // DELETE /course-materials/:paymentId
+// router.delete("/:paymentId", auth.authMiddleware, (req, res) => {
+//   const user_id = req.user.id;
+//   const { paymentId } = req.params;
+
+//   const checkSql = "SELECT user_id FROM payments_main_details WHERE id = ?";
+//   db.query(checkSql, [paymentId], (err, results) => {
+//     if (err || results.length === 0) {
+//       return res
+//         .status(403)
+//         .json({ error: "Access denied or entry not found" });
+//     }
+
+//     const ownerId = results[0].user_id;
+//     if (ownerId !== user_id) {
+//       return res.status(403).json({ error: "Unauthorized access" });
+//     }
+
+//     const deleteSql =
+//       "DELETE FROM course_materials WHERE payments_main_details_id = ?";
+//     db.query(deleteSql, [paymentId], (err, result) => {
+//       if (err) {
+//         return res.status(500).json({ error: "Database error" });
+//       }
+//       return res.json({ success: true, deleted: result.affectedRows });
+//     });
+//   });
+// });
+
+// module.exports = router;

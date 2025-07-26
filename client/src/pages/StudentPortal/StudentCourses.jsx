@@ -167,7 +167,7 @@ const StudentCourses = () => {
                     <div className="text-sm text-slate-600">
                       <div className="flex items-center mb-1">
                         <Users className="w-4 h-4 mr-2" />
-                        Batch: {course.batch_name}
+                        Batch: {course.batch_code}
                       </div>
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 mr-2" />

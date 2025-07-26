@@ -36,6 +36,45 @@ export const submitAssignment = async (assignmentId, formData) => {
   });
 };
 
+export const downloadSubmission = async (submissionId) => {
+  try {
+    const token = localStorage.getItem('studentToken');
+    const response = await fetch(`${API_URL}/submissions/${submissionId}/download`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to download submission');
+    }
+
+    // Get filename from response headers
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'submission';
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="(.+)"/);
+      if (match) {
+        filename = match[1];
+      }
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+  } catch (error) {
+    console.error('Error downloading submission:', error);
+    throw error;
+  }
+};
+
 // Announcements
 export const getCourseAnnouncements = async (courseId) => {
   return studentAuthRequest('GET', `${API_URL}/courses/${courseId}/announcements`);

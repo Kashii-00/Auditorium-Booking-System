@@ -26,6 +26,7 @@ const Sidebar = ({ user, onLogout }) => {
     if (pathname.startsWith("/bus") || pathname.startsWith("/busbookings")) return "bus"
     if (
       pathname.startsWith("/courseregistration") ||
+      pathname.startsWith("/course-registration") ||
       pathname.startsWith("/student-registration") ||
       pathname.startsWith("/BatchRegistration") ||
       pathname.startsWith("/annual-plan")
@@ -48,6 +49,13 @@ const Sidebar = ({ user, onLogout }) => {
     )
       return "crbooking"
 
+      if (
+        pathname.startsWith("/coursecost") ||
+        pathname.startsWith("/PaymentTable") ||
+        pathname.startsWith("/editpanel")
+      )
+        return "finance"
+
     if (pathname.startsWith("/users")) return "users"
     return "audi" // default
   }
@@ -67,32 +75,7 @@ const Sidebar = ({ user, onLogout }) => {
 
   const TIMEOUT_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 
-  // Function to determine the default section and navigate to the first accessible page
-  const getDefaultSectionAndNavigate = () => {
-    if (!user?.role || user.role.length === 0) return // Wait until roles are loaded
-    if (hasRole("SuperAdmin") || hasRole("calendar_access")) {
-      if (hasRole("calendar_access")) navigate("/calendar") // Navigate only if the user has access
-      return "audi"
-    }
-    if (hasRole("bus_access") || hasRole("busbookings_access")) {
-      navigate(hasRole("bus_access") ? "/bus" : "/busbookings")
-      return "bus"
-    }
-    if (hasRole("course_registration_access")) {
-      navigate("/courseregistration")
-      return "Course"
-    }
-    if (hasRole("lecturer_management_access")) {
-      navigate("/lecturer-registration")
-      return "Lecturers"
-    }
-    if (hasRole("class_request_access")) {
-      navigate("/ClassBooking")
-      return "ClassRoom"
-    }
-    navigate("/access-denied") // If no access, navigate to Access Denied
-    return "audi" // Default to 'audi'
-  }
+
 
   // Set the default section and navigate to the first accessible page
   useEffect(() => {
@@ -371,7 +354,7 @@ const Sidebar = ({ user, onLogout }) => {
     },
     users: () => (hasRole("SuperAdmin") ? "/users" : null),
     Course: () => {
-      if (hasRole("SuperAdmin") || hasRole("course_registration_access")) return "/courseregistration"
+      if (hasRole("SuperAdmin") || hasRole("course_registration_access")) return "/course-registration"
       if (hasRole("SuperAdmin") || hasRole("student_registration_access")) return "/student-registration"
       if (hasRole("SuperAdmin") || hasRole("batch_registration_access")) return "/BatchRegistration"
       return null
@@ -381,6 +364,14 @@ const Sidebar = ({ user, onLogout }) => {
       return null
     },
     ClassRoom: () => (hasRole("SuperAdmin") || hasRole("class_request_access") ? "/ClassBooking" : null),
+
+    finance: () => {
+      if (hasRole("SuperAdmin") || hasRole("finance_manager") || hasRole("SU_finance_access"))
+        return "/coursecost"
+      if (hasRole("finance_manager")) return "/editpanel"
+      return null
+    },
+    
   }
 
   // Handle dropdown change: navigate to first link if exists
@@ -400,15 +391,17 @@ const Sidebar = ({ user, onLogout }) => {
   const renderDropdownNavigation = () => {
     const dropdownOptions = [
       { value: "audi", label: "ᴀᴜᴅɪᴛᴏʀɪᴜᴍ ʀᴇꜱᴇʀᴠᴀᴛɪᴏɴ", roles: ["calendar_access", "bookings_access"] },
-      { value: "bus", label: "ᴛʀᴀɴꜱᴘᴏʀᴛ ᴍᴀɴᴀɡᴇᴍᴇɴᴛ", roles: ["bus_access", "busbookings_access"] },
+      { value: "bus", label: "ᴛʀᴀɴꜱᴘᴏʀᴛ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ", roles: ["bus_access", "busbookings_access"] },
       {
         value: "Course",
         label: "ᴄᴏᴜʀꜱᴇ ᴀʟʟᴏᴄᴀᴛɪᴏɴ ᴘᴀɴᴇʟ",
         roles: ["course_registration_access", "student_registration_access"],
       },
-      { value: "Lecturers", label: "ʟᴇᴄᴛᴜʀᴇʀꜱ ᴍᴀɴᴀɡᴇᴍᴇɴᴛ", roles: ["lecturer_management_access"] },
+      { value: "Lecturers", label: "ʟᴇᴄᴛᴜʀᴇʀꜱ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ", roles: ["lecturer_management_access"] },
       { value: "crbooking", label: "ᴄʟᴀꜱꜱʀᴏᴏᴍ ʀᴇꜱᴏᴜʀᴄᴇ ʜᴜʙ", roles: ["cb_Admin_access", "cb_SU_access"] },
       { value: "users", label: "ᴀᴅᴍɪɴɪꜱᴛʀᴀᴛɪᴏɴ", roles: ["SuperAdmin"] },
+
+      { value: "finance", label: "ꜰɪɴᴀɴᴄᴇ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ", roles: ["finance_manager", "SU_finance_access"] },
     ]
 
     // Ensure SuperAdmin has access to all options
@@ -509,12 +502,46 @@ const Sidebar = ({ user, onLogout }) => {
               <span className="sidebar-text">ᴀᴄᴄᴇꜱꜱ ᴄᴏɴᴛʂᴏʀʟ</span>
             </Link>
           )}
+
+          {selectedSection === "finance" && (
+            <>
+              {(hasRole("SuperAdmin") || hasRole("finance_manager") || hasRole("SU_finance_access")) && (
+                <Link
+                  to="/coursecost"
+                  className={`sidebar-link ${location.pathname === "/coursecost" ? "active" : ""}`}
+                >
+                  <img src={List || "/placeholder.svg"} alt="Finances Form" className="sidebar-icon" />
+                  <span className="sidebar-text">Finances Form</span>
+                </Link>
+              )}
+              {(hasRole("SuperAdmin") || hasRole("finance_manager") || hasRole("SU_finance_access")) && (
+                <Link
+                  to="/PaymentTable"
+                  className={`sidebar-link ${location.pathname === "/PaymentTable" ? "active" : ""}`}
+                >
+                  <img src={List || "/placeholder.svg"} alt="Finance Records Table" className="sidebar-icon" />
+                  <span className="sidebar-text">Finances Records Table</span>
+                </Link>
+              )}
+              {(hasRole("SuperAdmin") || hasRole("finance_manager")) && (
+                <Link
+                  to="/editpanel"
+                  className={`sidebar-link ${location.pathname === "/editpanel" ? "active" : ""}`}
+                >
+                  <img src={List || "/placeholder.svg"} alt="Finance Rates Table" className="sidebar-icon" />
+                  <span className="sidebar-text">Finances Rates Table</span>
+                </Link>
+              )}
+            </>
+          )}
+
+
           {selectedSection === "Course" && (
             <>
               {(hasRole("SuperAdmin") || hasRole("course_registration_access")) && (
                 <Link
-                  to="/courseregistration"
-                  className={`sidebar-link ${location.pathname === "/courseregistration" ? "active" : ""}`}
+                  to="/course-registration"
+                  className={`sidebar-link ${(location.pathname === "/courseregistration" || location.pathname === "/course-registration" || location.pathname.startsWith("/course-registration")) ? "active" : ""}`}
                 >
                   <img src={courseIcon || "/placeholder.svg"} alt="Course Registration" className="sidebar-icon" />
                   <span className="sidebar-text">Course Registration</span>
@@ -560,7 +587,7 @@ const Sidebar = ({ user, onLogout }) => {
                 className={`sidebar-link ${location.pathname === "/lecturer-registration" || location.pathname.includes("/LRegistration/edit/") ? "active" : ""}`}
               >
                 <img src={Lecturers || "/placeholder.svg"} alt="Student Registration" className="sidebar-icon" />
-                <span className="sidebar-text">ʟᴇᴄᴛᴜʀᴇʀ ʀᴇɡɪꜱᴛʀᴀᴛɪᴏɴ</span>
+                <span className="sidebar-text">ʟᴇᴄᴛᴜʀᴇʀ ʀᴇɢɪꜱᴛʀᴀᴛɪᴏɴ</span>
               </Link>
             </>
           )}

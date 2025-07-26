@@ -106,8 +106,7 @@ export const materialsService = {
       const formData = new FormData();
       formData.append('title', materialData.title);
       formData.append('description', materialData.description);
-      formData.append('material_type', materialData.material_type);
-      formData.append('lecturer_id', materialData.lecturer_id);
+      formData.append('material_type', materialData.material_type || 'lecture');
       
       if (materialData.file) {
         formData.append('file', materialData.file);
@@ -161,6 +160,17 @@ export const assignmentsService = {
     }
   },
 
+  // Update assignment
+  updateAssignment: async (assignmentId, assignmentData) => {
+    try {
+      const response = await api.put(`/lecturer-batches/assignments/${assignmentId}`, assignmentData);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating assignment:', error);
+      throw error;
+    }
+  },
+
   // Get assignment submissions
   getAssignmentSubmissions: async (assignmentId) => {
     try {
@@ -172,13 +182,91 @@ export const assignmentsService = {
     }
   },
 
-  // Grade assignment
+    // Grade assignment (deprecated - use gradeSubmission instead)
   gradeAssignment: async (assignmentId, gradeData) => {
     try {
       const response = await api.post(`/lecturer-batches/assignments/${assignmentId}/grade`, gradeData);
       return response.data;
     } catch (error) {
       console.error('Error grading assignment:', error);
+      throw error;
+    }
+  },
+
+  // Grade submission and provide feedback
+  gradeSubmission: async (submissionId, gradeData) => {
+    try {
+      const response = await api.put(`/lecturer-batches/submissions/${submissionId}/grade`, gradeData);
+      return response.data;
+    } catch (error) {
+      console.error('Error grading submission:', error);
+      throw error;
+    }
+  },
+
+  // Download submission file
+  downloadSubmission: async (submissionId) => {
+    try {
+      const response = await api.get(`/lecturer-batches/submissions/${submissionId}/download`, {
+        responseType: 'blob',
+        // Ensure headers are included in response
+        headers: {
+          'Accept': '*/*'
+        }
+      });
+      
+      // Get content type from response headers
+      const contentType = response.headers['content-type'] || 'application/octet-stream';
+      
+      // Create blob with the correct content type
+      const blob = new Blob([response.data], { type: contentType });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extract filename from Content-Disposition header
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'submission-download';
+      if (contentDisposition) {
+        // Handle both encoded and non-encoded filenames
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+          // Decode if URL encoded
+          try {
+            filename = decodeURIComponent(filename);
+          } catch (e) {
+            // If decoding fails, use the original filename
+          }
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      setTimeout(() => {
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      }, 100);
+      
+      return { success: true, filename };
+    } catch (error) {
+      console.error('Error downloading submission:', error);
+      throw error;
+    }
+  },
+
+  // Get assignment statistics
+  getAssignmentStats: async (assignmentId) => {
+    try {
+      const response = await api.get(`/lecturer-batches/assignments/${assignmentId}/stats`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching assignment statistics:', error);
       throw error;
     }
   },

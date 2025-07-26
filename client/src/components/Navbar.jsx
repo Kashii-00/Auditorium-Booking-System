@@ -24,6 +24,7 @@ const Navbar = ({ user, onLogout }) => {
       '/users': 'User Management',
       '/create-user': 'Create User',
       '/courseregistration': 'Course Registration',
+      '/course-registration': 'Course Registration',
       '/BatchRegistration': 'Batch Registration',
       '/lecturer-registration': 'Lecturer Management',
       '/ClassBooking': 'Class Management',
