@@ -1,0 +1,191 @@
+/* Scoped only inside CourseCostForm */
+.course-cost-form input::placeholder {
+  color: transparent;
+}
+
+.course-cost-form input:focus::placeholder {
+  color: #ccc; /* or any other visible color */
+}
+
+/* Optional: textarea and select support */
+.course-cost-form textarea::placeholder,
+.course-cost-form select::placeholder {
+  color: transparent;
+}
+
+.course-cost-form textarea:focus::placeholder,
+.course-cost-form select:focus::placeholder {
+  color: #ccc;
+}
+
+.aid-request-form-type2 label.active2 {
+  top: -8px;
+  font-size: 10px;
+  color: #02f7ff;
+  font-weight: 600;
+  background: #003b5a;
+  border-radius: 8px;
+}
+
+.course-cost-form h2 {
+  text-align: center;
+}
+
+.course-cost-form {
+  padding: 10px;
+}
+
+.mainCostCon {
+  background: #00141fd3;
+  border-radius: 10px;
+  padding: 10px;
+  border: 3px solid white;
+}
+
+button .ccfbtn {
+  background-color: #007bff;
+  color: #fff;
+  border: 3px solid white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 5px;
+  margin-top: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button .ccfbtn:hover {
+  background-color: #0056b3;
+}
+
+.page-header-type2 {
+  text-align: center;
+}
+
+.page-header-type2 h1 {
+  border: none;
+  color: #02f7ff;
+}
+
+.page-description-type3 {
+  color: #02f7ff;
+  margin: 0 auto;
+  margin-bottom: 10px;
+  font-size: 0.8rem;
+  border-left: 2px solid #02f7ff;
+  border-right: 2px solid #02f7ff;
+  width: fit-content;
+  padding: 5px;
+}
+
+.review-grid-1 .valueTxt {
+  color: white;
+  display: inline;
+}
+
+.h2-type2 {
+  font-size: 1rem;
+}
+
+.btnHalf {
+  width: 67%;
+  margin: 0 auto;
+}
+
+@media (max-width: 620px) {
+  .btnHalf {
+    width: 100%;
+    margin: 0;
+  }
+  .navbtn2 {
+    display: block;
+  }
+  .navbtn2 button {
+    margin: 2px;
+  }
+}
+
+.form-navigation-buttons .ccfbtn {
+  background-color: #024d769d;
+  color: #e3eaf5;
+  padding: 6px 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 3px solid white;
+  font-size: 0.8rem;
+  margin: 5px 2px;
+}
+
+.form-navigation-buttons .ccfbtn.active {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+}
+
+.form-navigation-buttons {
+  margin: 0 auto;
+  width: fit-content;
+}
+
+.PMD_id-box {
+  background-color: #0b3b5b;
+  border: 3px solid #02f7ff;
+  border-radius: 4px;
+  color: #eee;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.PMD_id-box p {
+  font-size: 0.85rem;
+  color: #ffffff;
+}
+
+.PMD_id-text {
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.PMD_copy-btn,
+.PMD_clear-btn {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 5px;
+  background-color: #024d769d;
+  color: white;
+  border: 3px solid white;
+  cursor: pointer;
+  margin-right: 5px;
+  font-weight: 600;
+}
+
+.PMD_clear-btn {
+  background-color: #bf0a03;
+}
+.PMD_copy-btn:active {
+  transform: scale(0.95);
+  background-color: #013c5b9d;
+}
+
+.PMD_clear-btn:active {
+  transform: scale(0.95);
+  background-color: #9f0600;
+}
+
+.PMD_copy-btn:hover {
+  background-color: #013c5b9d;
+}
+
+.PMD_clear-btn:hover {
+  background-color: #9f0600;
+}

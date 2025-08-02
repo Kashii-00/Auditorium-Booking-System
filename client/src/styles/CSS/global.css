@@ -1,0 +1,39 @@
+/* Global transition constants */
+:root {
+  --sidebar-width-expanded: 280px;
+  --sidebar-width-collapsed: 90px;
+  --navbar-height: 64px;
+  --transition-timing: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --main-bg-color: #f5f6fa;
+}
+
+/* Ensure all main content containers transition smoothly */
+.main-content,
+.content-wrapper,
+.bus-content-wrapper, 
+.transport-content-wrapper,
+#event-calendar-container,
+.navbar {
+  transition: left var(--transition-timing), 
+              width var(--transition-timing),
+              margin-left var(--transition-timing);
+  will-change: left, width, margin-left;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* Mobile transitions */
+@media (max-width: 900px) {
+  .main-content,
+  .content-wrapper,
+  .bus-content-wrapper, 
+  .transport-content-wrapper,
+  #event-calendar-container,
+  .navbar {
+    left: 0 !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    transition: none !important;
+  }
+}
