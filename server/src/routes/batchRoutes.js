@@ -9,6 +9,11 @@ const batchManager = require("../services/batchManager")
 
 // GET /batches?course_id=...&year=...
 router.get("/", auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/batches`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { course_id, year } = req.query
     let sql = `
@@ -92,6 +97,10 @@ router.get("/:id", auth.authMiddleware, async (req, res) => {
 
 // POST /batches
 router.post("/", auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/batches`);
+  console.log('POST body:', req.body);
+
   const { 
     course_id, 
 

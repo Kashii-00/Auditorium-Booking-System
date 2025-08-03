@@ -38,6 +38,10 @@ router.options('/logout', (req, res) => {
 
 
 router.post('/login', (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/login`);
+  console.log('POST body:', req.body);
+
   const { email, password } = req.body;
   const sql = 'SELECT * FROM users WHERE email = ?';
   db.query(sql, [email], async (err, results) => {
@@ -85,6 +89,10 @@ router.post('/login', (req, res) => {
 });
 
 router.post('/refresh', (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/refresh`);
+  console.log('POST body:', req.body);
+
   try {
     const ip = req.ip || req.connection.remoteAddress;
     if (!refreshAttempts[ip]) {
@@ -131,6 +139,10 @@ router.post('/refresh', (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/logout`);
+  console.log('POST body:', req.body);
+
   const refreshToken = req.cookies.refreshToken;
   if (refreshToken) {
     let userId = null;

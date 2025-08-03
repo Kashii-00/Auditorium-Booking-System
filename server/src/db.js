@@ -126,8 +126,8 @@ db.query('SELECT 1', (err) => {
   if (err) {
     console.error('Database connection failed:', err);
   } else {
-    logger.info('Connected to MySQL database');
-    logger.info(`DB HOST: ${process.env.DB_HOST}`);
+    logger.info('Connection to Database successful ✅');
+    logger.info(`DB HOST: ${process.env.DB_HOST} 🛜`);
     logger.info(`DB: ${process.env.DB_DATABASE}`);
   }
 });

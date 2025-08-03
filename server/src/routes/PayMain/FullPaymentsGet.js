@@ -1,24 +1,13 @@
 const express = require("express");
 const db = require("../../db");
 const auth = require("../../auth");
-const rateLimit = require("express-rate-limit");
+const { standardLimiter } = require("../../middleware/rateLimiter");
 
 const router = express.Router();
 
 // ✅ Middleware
 router.use(auth.authMiddleware);
-router.use(
-  rateLimit({
-    windowMs: 60 * 1000,
-    max: 15,
-    keyGenerator: (req) => req.user?.id || req.ip,
-    handler: (req, res) => {
-      res
-        .status(429)
-        .json({ error: "Too many requests. Please try again later." });
-    },
-  })
-);
+router.use(standardLimiter);
 
 // ✅ Role Utils
 const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager", "admin"];

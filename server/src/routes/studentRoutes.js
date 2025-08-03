@@ -70,6 +70,11 @@ function generateTemporaryPassword(length = 10) {
 
 // GET /students/courses
 router.get('/courses', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/students/courses`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const sql = `SELECT id, courseId, courseName, stream FROM courses WHERE status = ? ORDER BY courseName`;
     const courses = await db.queryPromise(sql, ['Active']);
@@ -82,6 +87,11 @@ router.get('/courses', auth.authMiddleware, async (req, res) => {
 
 // GET /students
 router.get('/', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/students`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const sql = `
       SELECT s.*,
@@ -105,6 +115,10 @@ router.get('/', auth.authMiddleware, async (req, res) => {
 
 // POST /students
 router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/students`);
+  console.log('POST body:', req.body);
+
   let conn;
   try {
     // acquire connection
@@ -232,6 +246,11 @@ router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
 
 // GET /students/:id
 router.get('/:id', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/students/:id`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const [student] = await db.queryPromise('SELECT * FROM students WHERE id = ?', [req.params.id]);
     if (!student) return res.status(404).json({ error: 'Not found' });
@@ -262,6 +281,10 @@ router.get('/:id', auth.authMiddleware, async (req, res) => {
 
 // PUT /students/:id
 router.put('/:id', auth.authMiddleware, uploadFields, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] PUT /api/students/:id`);
+  console.log('PUT body:', req.body);
+
   let conn;
   try {
     conn = await db.getConnectionPromise();
@@ -378,6 +401,10 @@ router.put('/:id', auth.authMiddleware, uploadFields, async (req, res) => {
 
 // DELETE /students/:id
 router.delete('/:id', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] DELETE /api/students/:id`);
+  console.log('DELETE params:', req.params);
+
   let conn;
   try {
     conn = await db.getConnectionPromise();

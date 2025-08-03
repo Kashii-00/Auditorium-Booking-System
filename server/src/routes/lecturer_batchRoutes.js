@@ -78,6 +78,11 @@ const upload = multer({
 
 // Get all batches for a lecturer
 router.get('/batches/:lecturerId', lecturerAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/lecturer-batches/batches/:lecturerId`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { lecturerId } = req.params;
     const { status } = req.query;
@@ -139,6 +144,11 @@ router.get('/batches/:lecturerId', lecturerAuthMiddleware, async (req, res) => {
 
 // Get single batch details
 router.get('/batch/:batchId', lecturerAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/lecturer-batches/batch/:batchId`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { batchId } = req.params;
     
@@ -231,6 +241,11 @@ router.get('/batch/:batchId', lecturerAuthMiddleware, async (req, res) => {
 
 // Get batch materials
 router.get('/batch/:batchId/materials', lecturerAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/lecturer-batches/batch/:batchId/materials`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { batchId } = req.params;
     
@@ -264,6 +279,10 @@ router.get('/batch/:batchId/materials', lecturerAuthMiddleware, async (req, res)
 
 // Upload material
 router.post('/batch/:batchId/materials', lecturerAuthMiddleware, upload.single('file'), async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/lecturer-batches/batch/:batchId/materials`);
+  console.log('POST body:', req.body);
+
   try {
     const { batchId } = req.params;
     const { title, description, material_type = 'lecture' } = req.body;

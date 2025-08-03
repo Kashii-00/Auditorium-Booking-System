@@ -4,23 +4,17 @@ const Joi = require("joi");
 const db = require("../../db");
 const logger = require("../../logger");
 const auth = require("../../auth");
-const rateLimit = require("express-rate-limit");
+const { standardLimiter } = require("../../middleware/rateLimiter");
 
 const router = express.Router();
 
 // Express RateLimiter Middleware
-const limiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 20, // max requests per user per window
-  keyGenerator: (req) => req.user?.id || req.ip, // rate limit per user ID or IP
-  handler: (req, res) => {
-    res.status(429).json({ error: "Too many requests. Please slow down." });
-  },
-});
+// Using standardLimiter for IPv6-compatible rate limiting
+
 
 // Apply authentication first, then rate limiting to all routes in this router
 router.use(auth.authMiddleware);
-router.use(limiter);
+router.use(standardLimiter);
 
 // Roles with special privileges (can update/delete any record)
 const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager"];

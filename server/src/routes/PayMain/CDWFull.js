@@ -3,22 +3,14 @@ const db = require("../../db");
 const auth = require("../../auth");
 const logger = require("../../logger");
 const Joi = require("joi");
-const rateLimit = require("express-rate-limit");
+const { standardLimiter } = require("../../middleware/rateLimiter");
 
-const limiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 15,
-  keyGenerator: (req) => req.user?.id || req.ip,
-  handler: (req, res) => {
-    res
-      .status(429)
-      .json({ error: "Too many requests. Please try again later." });
-  },
-});
+// Using standardLimiter for IPv6-compatible rate limiting
+
 
 const router = express.Router();
 router.use(auth.authMiddleware);
-router.use(limiter);
+router.use(standardLimiter);
 
 const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager", "admin"];
 const CATEGORY = "Course Development Work";

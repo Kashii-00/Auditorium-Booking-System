@@ -6,6 +6,11 @@ const studentIdGenerator = require('../services/studentIdGenerator');
 
 // GET /student-ids/stats - Get student code statistics
 router.get('/stats', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-ids/stats`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { course_id, year } = req.query;
     const currentYear = year || new Date().getFullYear();
@@ -43,6 +48,11 @@ router.get('/stats', auth.authMiddleware, async (req, res) => {
 
 // GET /student-ids/search/:studentCode - Search student by student code
 router.get('/search/:studentCode', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-ids/search/:studentCode`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { studentCode } = req.params;
 
@@ -81,6 +91,11 @@ router.get('/search/:studentCode', auth.authMiddleware, async (req, res) => {
 
 // GET /student-ids/search - Search students by partial code
 router.get('/search', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-ids/search`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { q, limit = 10 } = req.query;
 
@@ -98,6 +113,10 @@ router.get('/search', auth.authMiddleware, async (req, res) => {
 
 // POST /student-ids/generate - Generate a new student code (for testing)
 router.post('/generate', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/student-ids/generate`);
+  console.log('POST body:', req.body);
+
   try {
     const { course_id, batch_id, year } = req.body;
 
@@ -122,6 +141,10 @@ router.post('/generate', auth.authMiddleware, async (req, res) => {
 
 // POST /student-ids/validate - Validate student code format
 router.post('/validate', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/student-ids/validate`);
+  console.log('POST body:', req.body);
+
   try {
     const { student_code } = req.body;
 
@@ -153,6 +176,11 @@ router.post('/validate', auth.authMiddleware, async (req, res) => {
 
 // GET /student-ids/next/:courseId - Get next student code for a course (preview)
 router.get('/next/:courseId', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-ids/next/:courseId`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { courseId } = req.params;
     const { batch_id, year } = req.query;
@@ -175,6 +203,11 @@ router.get('/next/:courseId', auth.authMiddleware, async (req, res) => {
 
 // GET /student-ids/student/:studentId/codes - Get all codes for a student
 router.get('/student/:studentId/codes', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-ids/student/:studentId/codes`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { studentId } = req.params;
 
@@ -193,6 +226,11 @@ router.get('/student/:studentId/codes', auth.authMiddleware, async (req, res) =>
 
 // GET /student-ids/student/:studentId/primary - Get primary code for a student
 router.get('/student/:studentId/primary', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-ids/student/:studentId/primary`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { studentId } = req.params;
 

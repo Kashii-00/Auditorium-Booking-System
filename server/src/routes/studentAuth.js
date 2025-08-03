@@ -25,7 +25,7 @@ const sendWelcomeEmail = async (email, fullName, tempPassword) => {
   try {
     const result = await sendEmail({
       to: email,
-      subject: 'Welcome to SLPA Training Institute Portal',
+      subject: 'Welcome to MPMA Training Institute Portal',
       userType: 'student', // Add user type for email control
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">

@@ -9,6 +9,11 @@ const { studentAuthMiddleware } = require('./studentAuthRoutes');
  * GET /api/student-payments
  */
 router.get('/', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-payments`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const studentId = req.student.studentId;
     
@@ -34,6 +39,11 @@ router.get('/', studentAuthMiddleware, async (req, res) => {
  * GET /api/student-payments/pending
  */
 router.get('/pending', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-payments/pending`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const studentId = req.student.studentId;
     
@@ -64,6 +74,10 @@ router.get('/pending', studentAuthMiddleware, async (req, res) => {
  * POST /api/student-payments
  */
 router.post('/', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/student-payments`);
+  console.log('POST body:', req.body);
+
   let conn;
   try {
     const { course_id, batch_id, amount, payment_method, reference_number, notes } = req.body;

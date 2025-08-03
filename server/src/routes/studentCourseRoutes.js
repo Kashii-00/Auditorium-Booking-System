@@ -44,6 +44,11 @@ const upload = multer({
  * Get student's enrolled courses with progress
  */
 router.get('/my-courses', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-courses/my-courses`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const studentId = req.student.studentId;
     
@@ -82,6 +87,11 @@ router.get('/my-courses', studentAuthMiddleware, async (req, res) => {
  * Get modules for a course (student view)
  */
 router.get('/courses/:courseId/modules', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-courses/courses/:courseId/modules`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { courseId } = req.params;
     const studentId = req.student.studentId;
@@ -124,6 +134,11 @@ router.get('/courses/:courseId/modules', studentAuthMiddleware, async (req, res)
  * Get materials for a module (student view)
  */
 router.get('/modules/:moduleId/materials', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-courses/modules/:moduleId/materials`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { moduleId } = req.params;
     const studentId = req.student.studentId;
@@ -152,6 +167,11 @@ router.get('/modules/:moduleId/materials', studentAuthMiddleware, async (req, re
  * Download course material
  */
 router.get('/materials/:materialId/download', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-courses/materials/:materialId/download`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { materialId } = req.params;
     
@@ -185,6 +205,11 @@ router.get('/materials/:materialId/download', studentAuthMiddleware, async (req,
  * Get assignments for a module (student view)
  */
 router.get('/modules/:moduleId/assignments', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-courses/modules/:moduleId/assignments`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { moduleId } = req.params;
     const studentId = req.student.studentId;
@@ -214,6 +239,11 @@ router.get('/modules/:moduleId/assignments', studentAuthMiddleware, async (req, 
  * Get assignment details
  */
 router.get('/assignments/:assignmentId', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-courses/assignments/:assignmentId`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { assignmentId } = req.params;
     const studentId = req.student.studentId;
@@ -249,6 +279,10 @@ router.get('/assignments/:assignmentId', studentAuthMiddleware, async (req, res)
  * Submit assignment
  */
 router.post('/assignments/:assignmentId/submit', studentAuthMiddleware, upload.single('submission'), async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/student-courses/assignments/:assignmentId/submit`);
+  console.log('POST body:', req.body);
+
   try {
     const { assignmentId } = req.params;
     const { submission_text } = req.body;
@@ -312,6 +346,11 @@ router.post('/assignments/:assignmentId/submit', studentAuthMiddleware, upload.s
  * Get course announcements
  */
 router.get('/courses/:courseId/announcements', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-courses/courses/:courseId/announcements`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { courseId } = req.params;
     const studentId = req.student.studentId;
@@ -352,6 +391,11 @@ router.get('/courses/:courseId/announcements', studentAuthMiddleware, async (req
  * Get student's attendance for a course
  */
 router.get('/courses/:courseId/attendance', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-courses/courses/:courseId/attendance`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { courseId } = req.params;
     const studentId = req.student.studentId;
@@ -404,6 +448,10 @@ router.get('/courses/:courseId/attendance', studentAuthMiddleware, async (req, r
  * Update module progress
  */
 router.post('/modules/:moduleId/progress', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/student-courses/modules/:moduleId/progress`);
+  console.log('POST body:', req.body);
+
   try {
     const { moduleId } = req.params;
     const { completion_percentage } = req.body;
@@ -427,6 +475,11 @@ router.post('/modules/:moduleId/progress', studentAuthMiddleware, async (req, re
  * Get batch details for student
  */
 router.get('/batches/:batchId', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-courses/batches/:batchId`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { batchId } = req.params;
     const studentId = req.student.studentId;
@@ -465,6 +518,11 @@ router.get('/batches/:batchId', studentAuthMiddleware, async (req, res) => {
  * Get modules for a batch
  */
 router.get('/batch/:batchId/modules', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-courses/batch/:batchId/modules`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { batchId } = req.params;
     const studentId = req.student.studentId;
@@ -510,6 +568,11 @@ router.get('/batch/:batchId/modules', studentAuthMiddleware, async (req, res) =>
  * Get materials for a batch
  */
 router.get('/batch/:batchId/materials', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-courses/batch/:batchId/materials`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { batchId } = req.params;
     const studentId = req.student.studentId;
@@ -555,6 +618,11 @@ router.get('/batch/:batchId/materials', studentAuthMiddleware, async (req, res) 
  * Get assignments for a batch
  */
 router.get('/batch/:batchId/assignments', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-courses/batch/:batchId/assignments`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { batchId } = req.params;
     const studentId = req.student.studentId;
@@ -606,6 +674,11 @@ router.get('/batch/:batchId/assignments', studentAuthMiddleware, async (req, res
  * Get all submissions for a student
  */
 router.get('/submissions', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-courses/submissions`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const studentId = req.student.studentId;
     
@@ -630,6 +703,10 @@ router.get('/submissions', studentAuthMiddleware, async (req, res) => {
  * Submit assignment (batch context)
  */
 router.post('/submissions', studentAuthMiddleware, upload.single('submission'), async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/student-courses/submissions`);
+  console.log('POST body:', req.body);
+
   try {
     const { assignment_id, submission_text } = req.body;
     const studentId = req.student.studentId;
@@ -692,6 +769,11 @@ router.post('/submissions', studentAuthMiddleware, upload.single('submission'), 
  * Download student's own submission file
  */
 router.get('/submissions/:submissionId/download', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-courses/submissions/:submissionId/download`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { submissionId } = req.params;
     const studentId = req.student.studentId;

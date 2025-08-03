@@ -55,6 +55,11 @@ const ensureJsonField = (value) => {
 
 // Get all courses
 router.get('/', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/courses`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const query = 'SELECT * FROM courses ORDER BY courseName';
     const courses = await db.queryPromise(query);
@@ -78,6 +83,10 @@ router.get('/check/:courseId', auth.authMiddleware, async (req, res) => {
 
 // Create a new course
 router.post('/', auth.authMiddleware, upload.none(), async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/courses`);
+  console.log('POST body:', req.body);
+
   try {
     const {
       courseId, stream, courseName, medium, location, assessmentCriteria, 

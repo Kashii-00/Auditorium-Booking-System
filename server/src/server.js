@@ -58,7 +58,7 @@ const backupService = require('./services/backupService');
 const app = express();
 
 // Enable debug mode for development
-const DEBUG = process.env.NODE_ENV !== 'production';
+const DEBUG = process.env.NODE_ENV !== 'development';
 
 // Debug middleware to log requests
 if (DEBUG) {

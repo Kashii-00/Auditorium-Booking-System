@@ -79,6 +79,11 @@ const studentAuthMiddleware = (req, res, next) => {
  * GET /api/student-batches/:batchId
  */
 router.get('/:batchId', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-batches/:batchId`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { batchId } = req.params;
     const studentId = req.student.studentId;
@@ -150,6 +155,11 @@ router.get('/:batchId', studentAuthMiddleware, async (req, res) => {
  * GET /api/student-batches/:batchId/materials
  */
 router.get('/:batchId/materials', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-batches/:batchId/materials`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { batchId } = req.params;
     const studentId = req.student.studentId;
@@ -192,6 +202,11 @@ router.get('/:batchId/materials', studentAuthMiddleware, async (req, res) => {
  * GET /api/student-batches/:batchId/assignments
  */
 router.get('/:batchId/assignments', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-batches/:batchId/assignments`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { batchId } = req.params;
     const studentId = req.student.studentId;
@@ -245,6 +260,11 @@ router.get('/:batchId/assignments', studentAuthMiddleware, async (req, res) => {
  * GET /api/student-batches/:batchId/announcements
  */
 router.get('/:batchId/announcements', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-batches/:batchId/announcements`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { batchId } = req.params;
     const studentId = req.student.studentId;
@@ -282,6 +302,11 @@ router.get('/:batchId/announcements', studentAuthMiddleware, async (req, res) =>
  * GET /api/student-batches/materials/:materialId/download
  */
 router.get('/materials/:materialId/download', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-batches/materials/:materialId/download`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { materialId } = req.params;
     const studentId = req.student.studentId;
@@ -351,6 +376,10 @@ router.get('/materials/:materialId/download', studentAuthMiddleware, async (req,
  * POST /api/student-batches/assignments/:assignmentId/submit
  */
 router.post('/assignments/:assignmentId/submit', studentAuthMiddleware, upload.single('assignmentFile'), async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/student-batches/assignments/:assignmentId/submit`);
+  console.log('POST body:', req.body);
+
   try {
     const { assignmentId } = req.params;
     const studentId = req.student.studentId;
@@ -458,6 +487,10 @@ router.post('/assignments/:assignmentId/submit', studentAuthMiddleware, upload.s
  * PUT /api/student-batches/assignments/:assignmentId/submit/:submissionId
  */
 router.put('/assignments/:assignmentId/submit/:submissionId', studentAuthMiddleware, upload.single('assignmentFile'), async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] PUT /api/student-batches/assignments/:assignmentId/submit/:submissionId`);
+  console.log('PUT body:', req.body);
+
   try {
     const { assignmentId, submissionId } = req.params;
     const studentId = req.student.studentId;
@@ -572,6 +605,11 @@ router.put('/assignments/:assignmentId/submit/:submissionId', studentAuthMiddlew
  * GET /api/student-batches/submissions/:submissionId/download
  */
 router.get('/submissions/:submissionId/download', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-batches/submissions/:submissionId/download`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { submissionId } = req.params;
     const studentId = req.student.studentId;
@@ -678,6 +716,11 @@ router.get('/submissions/:submissionId/download', studentAuthMiddleware, async (
  * GET /api/student-batches/announcements/all
  */
 router.get('/announcements/all', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-batches/announcements/all`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const studentId = req.student.studentId;
     
@@ -735,6 +778,10 @@ router.get('/announcements/all', studentAuthMiddleware, async (req, res) => {
  * POST /api/student-batches/announcements/:announcementId/read
  */
 router.post('/announcements/:announcementId/read', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/student-batches/announcements/:announcementId/read`);
+  console.log('POST body:', req.body);
+
   try {
     const { announcementId } = req.params;
     const studentId = req.student.studentId;
@@ -791,6 +838,10 @@ router.post('/announcements/:announcementId/read', studentAuthMiddleware, async 
  * POST /api/student-batches/announcements/read-all
  */
 router.post('/announcements/read-all', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] POST /api/student-batches/announcements/read-all`);
+  console.log('POST body:', req.body);
+
   try {
     const studentId = req.student.studentId;
     
@@ -836,6 +887,11 @@ router.post('/announcements/read-all', studentAuthMiddleware, async (req, res) =
  * GET /api/student-batches/announcements/unread-count
  */
 router.get('/announcements/unread-count', studentAuthMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/student-batches/announcements/unread-count`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const studentId = req.student.studentId;
     

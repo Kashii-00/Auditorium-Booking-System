@@ -88,6 +88,11 @@ router.post('/create/incremental', async (req, res) => {
  * Get list of available backups
  */
 router.get('/list', (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/list`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const backups = backupService.getAvailableBackups();
     const stats = backupService.getBackupStats();
@@ -113,6 +118,11 @@ router.get('/list', (req, res) => {
  * Get backup statistics
  */
 router.get('/stats', (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/stats`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const stats = backupService.getBackupStats();
     
@@ -172,6 +182,11 @@ router.post('/restore/:filename', async (req, res) => {
  * Download backup file
  */
 router.get('/download/:filename', (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/download/:filename`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const { filename } = req.params;
     const filePath = path.join(backupService.getBackupDir(), filename);
@@ -211,6 +226,10 @@ router.get('/download/:filename', (req, res) => {
  * Delete backup file
  */
 router.delete('/:filename', (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] DELETE /api/:filename`);
+  console.log('DELETE params:', req.params);
+
   try {
     const { filename } = req.params;
     const filePath = path.join(backupService.getBackupDir(), filename);

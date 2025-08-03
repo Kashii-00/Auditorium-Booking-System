@@ -45,6 +45,11 @@ const generateTempPassword = () => {
 
 // GET /lecturers/courses
 router.get('/courses', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/lecturers/courses`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const sql = 'SELECT id, courseName, courseId, stream FROM courses WHERE status = ? ORDER BY courseName';
     const courses = await db.queryPromise(sql, ['Active']);
@@ -57,6 +62,11 @@ router.get('/courses', auth.authMiddleware, async (req, res) => {
 
 // GET /lecturers
 router.get('/', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/lecturers`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     const sql = `
       SELECT 
@@ -109,6 +119,10 @@ router.post('/', auth.authMiddleware,
   },
 
   async (req, res) => {
+    const now = new Date().toISOString();
+    console.log(`[${now}] POST /api/lecturers`);
+    console.log('POST body:', req.body);
+
     let conn;
     try {
       conn = await db.getConnectionPromise();
@@ -326,6 +340,10 @@ router.put('/:id', auth.authMiddleware,
     });
   },
   async (req, res) => {
+    const now = new Date().toISOString();
+    console.log(`[${now}] PUT /api/lecturers/:id`);
+    console.log('PUT body:', req.body);
+
     const conn = await db.getConnectionPromise();
     try {
       await conn.beginTransactionPromise();
@@ -488,6 +506,11 @@ router.put('/:id', auth.authMiddleware,
 
 // GET /lecturers/:id - Get a single lecturer with detailed information
 router.get('/:id', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] GET /api/lecturers/:id`);
+  console.log('GET params:', req.params);
+  console.log('GET query:', req.query);
+
   try {
     // Get basic lecturer information
     const [lecturer] = await db.queryPromise(
@@ -575,6 +598,10 @@ router.get('/:id', auth.authMiddleware, async (req, res) => {
 
 // DELETE /lecturers/:id
 router.delete('/:id', auth.authMiddleware, async (req, res) => {
+  const now = new Date().toISOString();
+  console.log(`[${now}] DELETE /api/lecturers/:id`);
+  console.log('DELETE params:', req.params);
+
   const conn = await db.getConnectionPromise();
   try {
     await conn.beginTransactionPromise();
