@@ -48,6 +48,10 @@ import {
   Trash2,
   Layers,
   Hash,
+  Key,
+  Send,
+  FileSpreadsheet,
+  UploadCloud,
 
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -60,9 +64,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Separator } from "@/components/ui/separator"
 import { authRequest } from "../../services/authService"
 import { getApiUrl } from '../../utils/apiUrl'
 import { cn } from "@/lib/utils"
+import * as XLSX from 'xlsx'
 
 // Optimized Performance CSS with reduced complexity
 const PERFORMANCE_CSS = `
@@ -212,12 +219,13 @@ const CourseTooltip = memo(({ courseIds, coursesMap }) => {
 CourseTooltip.displayName = "CourseTooltip"
 
 // Optimized Student Row Component
-const StudentRow = memo(({ student, onView, onEdit, onDelete, onSendPasswordReset, confirmDeleteId, loading, coursesMap }) => {
+const StudentRow = memo(({ student, onView, onEdit, onDelete, onSendPasswordReset, onSendCredentials, confirmDeleteId, loading, coursesMap }) => {
   const handleView = useCallback(() => onView(student.id), [onView, student.id])
   const handleEdit = useCallback(() => onEdit(student.id), [onEdit, student.id])
   const handleDelete = useCallback(() => onDelete(student.id), [onDelete, student.id])
   const handleCancelDelete = useCallback(() => onDelete(null), [onDelete])
   const handleSendPasswordReset = useCallback(() => onSendPasswordReset(student), [onSendPasswordReset, student])
+  const handleSendCredentials = useCallback(() => onSendCredentials(student), [onSendCredentials, student])
 
   return (
     <tr className="table-row border-b border-slate-200">
@@ -272,7 +280,7 @@ const StudentRow = memo(({ student, onView, onEdit, onDelete, onSendPasswordRese
         </Badge>
       </td>
       <td className="p-4">
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             size="sm"
             variant="outline"
@@ -294,11 +302,20 @@ const StudentRow = memo(({ student, onView, onEdit, onDelete, onSendPasswordRese
           <Button
             size="sm"
             variant="outline"
+            onClick={handleSendCredentials}
+            className="flex items-center gap-1 hover:bg-indigo-50 hover:border-indigo-300 border transition-colors"
+            title="Send Login Credentials"
+          >
+            <Key className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
             onClick={handleSendPasswordReset}
-            className="flex items-center gap-1 hover:bg-purple-50 hover:border-purple-300 border transition-colors"
+            className="flex items-center gap-1 hover:bg-orange-50 hover:border-orange-300 border transition-colors"
             title="Send Password Reset Email"
           >
-            <Mail className="w-4 h-4" />
+            <Send className="w-4 h-4" />
           </Button>
           {confirmDeleteId === student.id ? (
             <div className="flex gap-1">
@@ -578,6 +595,21 @@ export default function StudentManagementSystem() {
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
   const [notificationMessage, setNotificationMessage] = useState("")
 
+  // CSV Upload state
+  const [csvFile, setCsvFile] = useState(null)
+  const [csvUploading, setCsvUploading] = useState(false)
+  const [csvUploadProgress, setCsvUploadProgress] = useState(0)
+  const [csvUploadResults, setCsvUploadResults] = useState(null)
+
+  // Upload modal states
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [fileValidation, setFileValidation] = useState(null)
+  const [filePreview, setFilePreview] = useState(null)
+  const [isValidating, setIsValidating] = useState(false)
+  const [editMode, setEditMode] = useState(false)
+  const [editableData, setEditableData] = useState([])
+
   // Courses mapping for tooltips
   const [coursesMap, setCoursesMap] = useState({})
 
@@ -587,6 +619,7 @@ export default function StudentManagementSystem() {
   const tableRef = useRef(null)
   const searchInputRef = useRef(null)
   const searchSuggestionsRef = useRef(null)
+  const csvFileInputRef = useRef(null)
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
@@ -971,14 +1004,41 @@ export default function StudentManagementSystem() {
     [confirmDeleteId, fetchStudents],
   )
 
+  // Send login credentials email handler
+  const handleSendCredentials = useCallback(async (student) => {
+    try {
+      setLoading(true)
+      
+      const response = await authRequest("post", getApiUrl(`/students/${student.id}/send-credentials`), {})
+
+      if (response.success) {
+        setNotificationMessage(`Login credentials sent to ${student.email}`)
+        setShowSuccessNotification(true)
+        
+        setTimeout(() => {
+          setShowSuccessNotification(false)
+        }, 4000)
+      } else {
+        throw new Error(response.message || "Failed to send login credentials")
+      }
+    } catch (error) {
+      console.error("Error sending login credentials:", error)
+      setErrorMessage(`Failed to send login credentials to ${student.email}. Please try again.`)
+      
+      setTimeout(() => {
+        setErrorMessage("")
+      }, 5000)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   // Send password reset email handler
   const handleSendPasswordReset = useCallback(async (student) => {
     try {
       setLoading(true)
       
-              const response = await authRequest("post", getApiUrl("/student-auth/forgot-password"), {
-        email: student.email
-      })
+      const response = await authRequest("post", getApiUrl(`/students/${student.id}/send-password-reset`), {})
 
       if (response.success) {
         setNotificationMessage(`Password reset email sent to ${student.email}`)
@@ -1519,6 +1579,914 @@ export default function StudentManagementSystem() {
     document.body.removeChild(link)
   }, [getFilteredAndSortedStudents])
 
+  // Download static Excel template for bulk student registration
+  const downloadExcelTemplate = useCallback(() => {
+    // Create a link to download the static Excel template
+    const link = document.createElement('a')
+    link.href = '/student_registration_template.xlsx'
+    link.download = `student_registration_template_${new Date().toISOString().split('T')[0]}.xlsx`
+    link.style.display = 'none'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }, [])
+
+  // Handle CSV/Excel file selection (original function for backward compatibility)
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0]
+    if (file && (file.type === "text/csv" || 
+                 file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+                 file.type === "application/vnd.ms-excel" ||
+                 file.name.endsWith('.csv') || 
+                 file.name.endsWith('.xlsx') || 
+                 file.name.endsWith('.xls'))) {
+      setCsvFile(file)
+      setErrorMessage("") // Clear any previous errors
+    } else {
+      setErrorMessage("Please select a valid CSV or Excel file")
+    }
+  }
+
+  // Helper function to convert Excel date serial numbers to YYYY-MM-DD format
+  const convertExcelDate = useCallback((value) => {
+    if (!value) return ""
+    
+    const stringValue = String(value).trim()
+    if (!stringValue) return ""
+    
+    // Check if it's an Excel serial date (numeric value)
+    const numericValue = parseFloat(stringValue)
+    if (!isNaN(numericValue) && numericValue > 1 && numericValue < 100000) {
+      // Convert Excel serial date to JavaScript Date
+      // Excel epoch is January 1, 1900 (but Excel incorrectly treats 1900 as leap year)
+      const excelEpoch = new Date(1900, 0, 1)
+      const days = numericValue - 2 // Adjust for Excel's leap year bug
+      const jsDate = new Date(excelEpoch.getTime() + (days * 24 * 60 * 60 * 1000))
+      
+      // Format as YYYY-MM-DD for database
+      const year = jsDate.getFullYear()
+      const month = String(jsDate.getMonth() + 1).padStart(2, '0')
+      const day = String(jsDate.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    } else if (stringValue.includes('/') || stringValue.includes('-')) {
+      // Handle already formatted dates
+      try {
+        const parsedDate = new Date(stringValue)
+        if (!isNaN(parsedDate.getTime())) {
+          const year = parsedDate.getFullYear()
+          const month = String(parsedDate.getMonth() + 1).padStart(2, '0')
+          const day = String(parsedDate.getDate()).padStart(2, '0')
+          return `${year}-${month}-${day}`
+        }
+      } catch (error) {
+        console.warn('Date parsing error:', stringValue, error)
+      }
+    }
+    
+    return stringValue // Return as-is if can't parse
+  }, [])
+
+  // Parse CSV or Excel content
+  const parseFileContent = async (file) => {
+    let data = []
+    
+    // Field mapping for backend processing - handles various possible column names
+    const fieldMapping = {
+      // Standard format
+      "Full Name *": "full_name",
+      "Email Address *": "email", 
+      "ID Type *": "identification_type",
+      "ID Number *": "id_number",
+      "Nationality": "nationality",
+      "Date of Birth": "date_of_birth",
+      "Country": "country",
+      "Address": "address",
+      "Emergency Contact Name": "emergency_contact_name",
+      "Emergency Contact Phone": "emergency_contact_number",
+      "Can Swim": "is_swimmer",
+      "SLPA Employee": "is_slpa_employee",
+      "Company (if employed)": "company",
+      "Designation": "designation",
+      "Division": "division",
+      "Service Number": "service_no",
+      "Section/Unit": "section_unit",
+      "Department": "department",
+      "Sea Service": "sea_service",
+      "CDC Number": "cdc_number",
+      "Driving License No": "driving_license_no",
+      "Driving License Class": "driving_class",
+      "License Issue Date": "driving_license_issue_date",
+      "Selected Courses *": "selected_courses",
+      
+      // Alternative formats (in case your template uses different names)
+      "Full Name": "full_name",
+      "Email": "email",
+      "Email Address": "email",
+      "ID Type": "identification_type",
+      "ID Number": "id_number",
+      "Identification Type": "identification_type",
+      "ID Numberr": "id_number", // typo handling
+      "Emergency Contact Number": "emergency_contact_number",
+      "Can Swim?": "is_swimmer",
+      "Swimming": "is_swimmer",
+      "SLPA Employee?": "is_slpa_employee",
+      "Company": "company",
+      "Service No": "service_no",
+      "Section": "section_unit",
+      "Unit": "section_unit",
+      "CDC": "cdc_number",
+      "Driving License": "driving_license_no",
+      "License Class": "driving_class",
+      "Issue Date": "driving_license_issue_date",
+      "Selected Courses": "selected_courses",
+      "Courses": "selected_courses"
+    }
+    
+    if (file.name.endsWith('.csv')) {
+      // Handle CSV files
+      const csvText = await file.text()
+      const lines = csvText.split('\n').filter(line => line.trim())
+      if (lines.length < 2) {
+        throw new Error("CSV file must contain headers and at least one data row")
+      }
+
+      const headers = lines[0].split(',').map(header => header.replace(/"/g, '').trim())
+      
+      for (let i = 1; i < lines.length; i++) {
+        const row = lines[i].split(',').map(cell => cell.replace(/"/g, '').trim())
+        if (row.length === headers.length && row.some(cell => cell.trim() !== '')) {
+          const studentData = {}
+          headers.forEach((header, index) => {
+            const fieldName = fieldMapping[header] || header
+            studentData[fieldName] = row[index] || ''
+          })
+          data.push(studentData)
+        }
+      }
+    } else {
+      // Handle Excel files
+      const arrayBuffer = await file.arrayBuffer()
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' })
+      const sheetName = workbook.SheetNames[0] // Use first sheet
+      const worksheet = workbook.Sheets[sheetName]
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+      
+      if (jsonData.length < 2) {
+        throw new Error("Excel file must contain headers and at least one data row")
+      }
+      
+      // Find the header row (first non-empty row)
+      let headerRowIndex = 0
+      let headers = []
+      
+      for (let i = 0; i < jsonData.length; i++) {
+        if (jsonData[i] && jsonData[i].length > 0 && jsonData[i].some(cell => cell !== undefined && cell !== '')) {
+          headers = jsonData[i]
+          headerRowIndex = i
+          break
+        }
+      }
+      
+      if (headers.length === 0) {
+        throw new Error("No valid headers found in Excel file")
+      }
+      
+      // Process data rows (start from row after headers)
+      for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
+        const row = jsonData[i]
+        if (row && row.length > 0 && row.some(cell => cell !== undefined && cell !== '')) {
+          // Skip sample/example rows (common example names)
+          const firstCell = String(row[0] || '').toLowerCase()
+          if (firstCell.includes('john') || firstCell.includes('jane') || 
+              firstCell.includes('sample') || firstCell.includes('example')) {
+            continue
+          }
+          
+          const studentData = {}
+          headers.forEach((header, index) => {
+            const headerKey = String(header || '').trim()
+            const fieldName = fieldMapping[headerKey] || headerKey.toLowerCase().replace(/[^a-z0-9]/g, '_')
+            let value = row[index] || ''
+            
+            // Clean and process the value
+            if (value !== undefined && value !== null) {
+              value = String(value).trim()
+            }
+            
+            // Handle date conversion from Excel serial number
+            if ((fieldName === 'date_of_birth' || fieldName === 'driving_license_issue_date' || fieldName === 'issue_date') && value) {
+              value = convertExcelDate(value)
+            }
+            
+            // Handle course selection parsing (extract course codes from various formats)
+            if (fieldName === 'selected_courses' && value) {
+              value = value.toString().split(',').map(course => {
+                const trimmed = course.trim()
+                
+                // Handle different formats:
+                // "28" -> "28" (numeric ID)
+                // "MP-BTOCTCO" -> "MP-BTOCTCO" (course code)
+                // "MP-CAA - Computer Application Assistant (NVQ – L3)" -> "MP-CAA"
+                // "MP-COX - Coxswain with License Fee" -> "MP-COX"
+                
+                // Check if it's a numeric value (like "28", "31")
+                if (/^\d+$/.test(trimmed)) {
+                  return trimmed // Keep numeric IDs as-is
+                } else if (trimmed.includes(' - ')) {
+                  // Format: "MP-CAA - Description"
+                  return trimmed.split(' - ')[0].trim()
+                } else if (trimmed.includes('-') && trimmed.match(/^[A-Z]{2}-[A-Z]+/)) {
+                  // Format: "MP-BTOCTCO" (already clean)
+                  return trimmed
+                } else {
+                  // Fallback: return as is
+                  return trimmed
+                }
+              }).filter(code => code && code.trim() !== '').join(', ')
+            }
+            
+            studentData[fieldName] = value
+          })
+          
+          // Only add if we have essential data (name and email)
+          if (studentData.full_name || studentData.email) {
+            data.push(studentData)
+          }
+        }
+      }
+    }
+
+    return data
+  }
+
+  // Comprehensive validation function
+  const performComprehensiveValidation = useCallback(async (data) => {
+    const results = {
+      errors: [],
+      warnings: [],
+      detailedErrors: [],
+      validRows: 0,
+      invalidRows: 0
+    }
+
+    // Validation helper functions
+    const validateEmail = (email) => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      return emailRegex.test(email)
+    }
+
+    const validatePhoneNumber = (phone) => {
+      if (!phone) return true // Optional field
+      // Remove spaces, dashes, parentheses for validation
+      const cleanPhone = phone.replace(/[\s\-\(\)]/g, '')
+      // Sri Lankan phone number pattern: exactly 9 digits (Excel filters automatically)
+      // Accepts: 775645645 (exactly 9 digits)
+      const phoneRegex = /^[0-9]{9}$/
+      return phoneRegex.test(cleanPhone)
+    }
+
+    const validateComputerNumber = (computerNo) => {
+      if (!computerNo) return true // Optional field
+      // Computer number format: 6 numbers with or without a letter
+      const computerRegex = /^[A-Z]?[0-9]{6}$/i
+      return computerRegex.test(computerNo.trim())
+    }
+
+    const validatePassportNumber = (passport) => {
+      if (!passport) return true // Optional field
+      // Passport format: letter (N, Z, etc.) + 8 numbers
+      const passportRegex = /^[A-Z][0-9]{8}$/i
+      return passportRegex.test(passport.trim())
+    }
+
+    const validateNIC = (nic) => {
+      if (!nic) return true // Optional field
+      // NIC validation for Sri Lanka format (from registration form)
+      const nicPattern = /^([0-9]{9}[vVxX]|[0-9]{12})$/
+      return nicPattern.test(nic.trim())
+    }
+
+    const hasExtraSpaces = (value) => {
+      if (!value) return false
+      return value !== value.trim() || value.includes('  ') // Multiple spaces
+    }
+
+    const hasForeignCharacters = (value) => {
+      if (!value) return false
+      // Allow basic Latin characters, numbers, and common punctuation
+      const allowedRegex = /^[a-zA-Z0-9\s\.\-\(\)@_,\/]*$/
+      return !allowedRegex.test(value)
+    }
+
+    const validateDateFormat = (dateStr) => {
+      if (!dateStr) return true // Optional or will be handled elsewhere
+      // Check if it's already in YYYY-MM-DD format or valid date
+      const date = new Date(dateStr)
+      return !isNaN(date.getTime())
+    }
+
+    // Track duplicate IDs and emails
+    const seenEmails = new Set()
+    const seenIds = new Set()
+    const duplicateEmails = new Set()
+    const duplicateIds = new Set()
+
+    // Validate each row
+    data.forEach((student, index) => {
+      const rowNumber = index + 1
+      const rowErrors = []
+      const rowWarnings = []
+
+      // Check mandatory fields
+      const mandatoryFields = [
+        { field: 'full_name', name: 'Full Name' },
+        { field: 'email', name: 'Email' },
+        { field: 'id_number', name: 'ID Number' },
+        { field: 'date_of_birth', name: 'Date of Birth' }
+      ]
+
+      mandatoryFields.forEach(({ field, name }) => {
+        if (!student[field] || !student[field].trim()) {
+          rowWarnings.push(`Missing mandatory field: ${name}`)
+        }
+      })
+
+      // Email validation
+      if (student.email) {
+        // Check for extra spaces
+        if (hasExtraSpaces(student.email)) {
+          rowWarnings.push('Email has extra spaces')
+        }
+
+        // Check email format
+        const trimmedEmail = student.email.trim()
+        if (!validateEmail(trimmedEmail)) {
+          rowErrors.push('Invalid email format')
+        }
+
+        // Check for duplicates
+        if (seenEmails.has(trimmedEmail.toLowerCase())) {
+          duplicateEmails.add(trimmedEmail.toLowerCase())
+          rowErrors.push('Duplicate email address')
+        } else {
+          seenEmails.add(trimmedEmail.toLowerCase())
+        }
+      }
+
+      // ID Number validation
+      if (student.id_number) {
+        // Check for extra spaces
+        if (hasExtraSpaces(student.id_number)) {
+          rowWarnings.push('ID Number has extra spaces')
+        }
+
+        const trimmedId = student.id_number.trim()
+        
+        // ID Type-specific validation
+        if (student.identification_type === 'NIC' && !validateNIC(trimmedId)) {
+          rowErrors.push('Invalid NIC format (9 digits + V/X or 12 digits)')
+        }
+        
+        // Computer Number validation (6 numbers with or without letter)
+        if (student.identification_type === 'C_NO' && !validateComputerNumber(trimmedId)) {
+          rowErrors.push('Invalid Computer Number format (6 numbers with/without letter)')
+        }
+
+        // Passport validation (letter + 8 numbers)
+        if (student.identification_type === 'Passport' && !validatePassportNumber(trimmedId)) {
+          rowErrors.push('Invalid Passport Number format (letter + 8 numbers)')
+        }
+
+        // Check for duplicates in current upload
+        if (seenIds.has(trimmedId.toLowerCase())) {
+          duplicateIds.add(trimmedId.toLowerCase())
+          rowErrors.push('Duplicate ID number in upload')
+        } else {
+          seenIds.add(trimmedId.toLowerCase())
+        }
+
+        // Check if ID already exists in the system
+        const existingStudent = students.find(s => s.id_number && s.id_number.toLowerCase() === trimmedId.toLowerCase())
+        if (existingStudent) {
+          rowErrors.push(`ID Number already exists in system (Student: ${existingStudent.full_name})`)
+        }
+      }
+
+      // Phone number validation
+      if (student.emergency_contact_number && !validatePhoneNumber(student.emergency_contact_number)) {
+        rowErrors.push('Invalid phone number format')
+      }
+
+      // Date format validation
+      if (student.date_of_birth && !validateDateFormat(student.date_of_birth)) {
+        rowErrors.push('Invalid date format')
+      }
+
+      // Foreign characters validation
+      const textFields = ['full_name', 'address', 'company', 'designation']
+      textFields.forEach(field => {
+        if (student[field] && hasForeignCharacters(student[field])) {
+          rowWarnings.push(`${field.replace('_', ' ')} contains foreign characters or symbols`)
+        }
+      })
+
+      // Extra spaces validation for text fields
+      const allFields = Object.keys(student)
+      allFields.forEach(field => {
+        if (student[field] && typeof student[field] === 'string' && hasExtraSpaces(student[field])) {
+          if (field !== 'email' && field !== 'id_number') { // Already checked above
+            rowWarnings.push(`${field.replace('_', ' ')} has extra spaces`)
+          }
+        }
+      })
+
+      // Store detailed errors for this row
+      if (rowErrors.length > 0 || rowWarnings.length > 0) {
+        results.detailedErrors.push({
+          row: rowNumber,
+          studentName: student.full_name || `Row ${rowNumber}`,
+          errors: rowErrors,
+          warnings: rowWarnings
+        })
+      }
+
+      // Count valid/invalid rows
+      if (rowErrors.length > 0) {
+        results.invalidRows++
+      } else {
+        results.validRows++
+      }
+    })
+
+    // Course validation (check against existing courses - Excel should only contain numeric IDs)
+    const invalidCourses = new Set()
+    
+    // Only validate courses if they are loaded
+    if (courses && courses.length > 0) {
+      const courseNumericIds = courses.map(c => c.id.toString()) // Convert all course IDs to strings
+      
+      data.forEach(student => {
+        if (student.selected_courses) {
+          const studentCourses = student.selected_courses.split(',').map(c => c.trim())
+          
+          studentCourses.forEach(courseId => {
+            // Only validate non-empty course IDs against numeric IDs from database
+            if (courseId && !courseNumericIds.includes(courseId)) {
+              invalidCourses.add(courseId)
+            }
+          })
+        }
+      })
+
+      // Add course validation errors only if invalid courses found
+      if (invalidCourses.size > 0) {
+        const validExamples = courseNumericIds.slice(0, 5).join(', ') + (courseNumericIds.length > 5 ? '...' : '')
+        results.errors.push(`Invalid course IDs found: ${Array.from(invalidCourses).join(', ')}. Valid numeric IDs include: ${validExamples}`)
+      }
+    } else {
+      results.warnings.push('Courses not loaded - course validation skipped')
+    }
+
+    // Add summary errors and warnings
+    if (duplicateEmails.size > 0) {
+      results.errors.push(`Found ${duplicateEmails.size} duplicate email address(es)`)
+    }
+
+    if (duplicateIds.size > 0) {
+      results.errors.push(`Found ${duplicateIds.size} duplicate ID number(s)`)
+    }
+
+    if (results.invalidRows > 0) {
+      results.warnings.push(`${results.invalidRows} row(s) have validation issues`)
+    }
+
+    return results
+  }, [courses, students])
+
+  // Validate file immediately when selected
+  const validateFile = useCallback(async (file) => {
+    setIsValidating(true)
+    setFileValidation(null)
+    setFilePreview(null)
+
+    try {
+      // Basic file checks
+      const validation = {
+        isValid: true,
+        errors: [],
+        warnings: [],
+        info: {},
+        detailedErrors: []
+      }
+
+      // Check file type
+      const isValidType = file.type === "text/csv" || 
+                         file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+                         file.type === "application/vnd.ms-excel" ||
+                         file.name.endsWith('.csv') || 
+                         file.name.endsWith('.xlsx') || 
+                         file.name.endsWith('.xls')
+
+      if (!isValidType) {
+        validation.isValid = false
+        validation.errors.push("Invalid file type. Please select a CSV or Excel file (.csv, .xlsx, .xls)")
+        setFileValidation(validation)
+        return
+      }
+
+      // Check file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024
+      if (file.size > maxSize) {
+        validation.isValid = false
+        validation.errors.push("File too large. Maximum size is 5MB")
+        setFileValidation(validation)
+        return
+      }
+
+      // Parse file content for validation
+      let parsedData = []
+      try {
+        parsedData = await parseFileContent(file)
+      } catch (error) {
+        validation.isValid = false
+        validation.errors.push(`File parsing error: ${error.message}`)
+        setFileValidation(validation)
+        return
+      }
+
+      // Validate parsed data
+      if (parsedData.length === 0) {
+        validation.isValid = false
+        validation.errors.push("No valid student data found in file")
+        setFileValidation(validation)
+        return
+      }
+
+      // Ensure courses are loaded before comprehensive validation
+      if (!courses || courses.length === 0) {
+        console.log('Courses not loaded, fetching courses first...')
+        await fetchCourses()
+        // Wait a bit for courses to be set in state
+        await new Promise(resolve => setTimeout(resolve, 200))
+      }
+
+      // Comprehensive validation
+      const validationResults = await performComprehensiveValidation(parsedData)
+      
+      validation.errors.push(...validationResults.errors)
+      validation.warnings.push(...validationResults.warnings)
+      validation.detailedErrors = validationResults.detailedErrors
+
+      // If there are critical errors, mark as invalid
+      if (validationResults.errors.length > 0) {
+        validation.isValid = false
+      }
+
+      // Success - set file info
+      validation.info = {
+        fileName: file.name,
+        fileSize: (file.size / 1024).toFixed(1) + ' KB',
+        fileType: file.name.split('.').pop().toUpperCase(),
+        rowCount: parsedData.length,
+        lastModified: new Date(file.lastModified).toLocaleDateString(),
+        validRows: validationResults.validRows,
+        invalidRows: validationResults.invalidRows
+      }
+
+      // Preview first few rows
+      setFilePreview(parsedData.slice(0, 3))
+      setFileValidation(validation)
+
+    } catch (error) {
+      setFileValidation({
+        isValid: false,
+        errors: [`Validation error: ${error.message}`],
+        warnings: [],
+        info: {},
+        detailedErrors: []
+      })
+    } finally {
+      setIsValidating(false)
+    }
+  }, [courses, fetchCourses, parseFileContent, performComprehensiveValidation])
+
+  // Handle file selection in modal
+  const handleModalFileSelect = (event) => {
+    const file = event.target.files[0]
+    if (file) {
+      setSelectedFile(file)
+      validateFile(file)
+    }
+  }
+
+  // Confirm upload from modal
+  const handleConfirmUpload = () => {
+    if (selectedFile && fileValidation?.isValid) {
+      setCsvFile(selectedFile)
+      setShowUploadModal(false)
+      // Reset modal state
+      setSelectedFile(null)
+      setFileValidation(null)
+      setFilePreview(null)
+    }
+  }
+
+  // Handle edit mode
+  const handleEditData = async () => {
+    if (selectedFile) {
+      try {
+        const parsedData = await parseFileContent(selectedFile)
+        setEditableData(parsedData)
+        setEditMode(true)
+      } catch (error) {
+        alert(`Error parsing file: ${error.message}`)
+      }
+    }
+  }
+
+  // Handle saving edited data
+  const handleSaveEditedData = async () => {
+    setIsValidating(true)
+    try {
+      // Re-validate the edited data
+      const validationResults = await performComprehensiveValidation(editableData)
+      
+      const validation = {
+        isValid: validationResults.errors.length === 0,
+        errors: validationResults.errors,
+        warnings: validationResults.warnings,
+        detailedErrors: validationResults.detailedErrors,
+        info: {
+          fileName: selectedFile?.name || 'edited_data',
+          fileSize: 'N/A',
+          fileType: 'EDITED',
+          rowCount: editableData.length,
+          validRows: validationResults.validRows,
+          invalidRows: validationResults.invalidRows
+        }
+      }
+
+      setFileValidation(validation)
+      setFilePreview(editableData.slice(0, 3))
+      setEditMode(false)
+    } catch (error) {
+      alert(`Validation error: ${error.message}`)
+    } finally {
+      setIsValidating(false)
+    }
+  }
+
+  // Handle canceling edit mode
+  const handleCancelEdit = () => {
+    setEditMode(false)
+    setEditableData([])
+  }
+
+  // Handle field change in edit mode
+  const handleFieldChange = (rowIndex, fieldName, value) => {
+    const updatedData = [...editableData]
+    updatedData[rowIndex] = {
+      ...updatedData[rowIndex],
+      [fieldName]: value
+    }
+    setEditableData(updatedData)
+  }
+
+  // Handle adding course to student (store as numeric ID)
+  const handleAddCourse = (rowIndex, courseSelection) => {
+    const updatedData = [...editableData]
+    const currentCourses = updatedData[rowIndex].selected_courses || ''
+    const coursesArray = currentCourses ? currentCourses.split(',').map(c => c.trim()) : []
+    
+    // Find the course by courseId and get its numeric ID
+    const course = courses.find(c => c.courseId === courseSelection)
+    const numericId = course ? course.id.toString() : courseSelection
+    
+    if (!coursesArray.includes(numericId)) {
+      coursesArray.push(numericId)
+      updatedData[rowIndex].selected_courses = coursesArray.join(', ')
+      setEditableData(updatedData)
+    }
+  }
+
+  // Handle removing course from student (remove by numeric ID)
+  const handleRemoveCourse = (rowIndex, numericIdToRemove) => {
+    const updatedData = [...editableData]
+    const currentCourses = updatedData[rowIndex].selected_courses || ''
+    const coursesArray = currentCourses.split(',').map(c => c.trim()).filter(c => c !== numericIdToRemove)
+    updatedData[rowIndex].selected_courses = coursesArray.join(', ')
+    setEditableData(updatedData)
+  }
+
+  // Get populated columns from data
+  const getPopulatedColumns = useCallback(() => {
+    if (!editableData.length) return []
+    
+    const columnChecks = {
+      full_name: 'Full Name*',
+      email: 'Email Address*',
+      identification_type: 'ID Type*',
+      id_number: 'ID Number*',
+      nationality: 'Nationality',
+      date_of_birth: 'Date of Birth',
+      selected_courses: 'Course Selection',
+      emergency_contact_number: 'Phone Number',
+      company: 'Company',
+      is_swimmer: 'Can Swim'
+    }
+
+    const populatedColumns = []
+    
+    Object.entries(columnChecks).forEach(([field, label]) => {
+      const hasData = editableData.some(student => 
+        student[field] && String(student[field]).trim() !== ''
+      )
+      if (hasData) {
+        populatedColumns.push({ field, label })
+      }
+    })
+
+    return populatedColumns
+  }, [editableData])
+
+  // Process file upload (CSV or Excel)
+  const handleFileUpload = useCallback(async () => {
+    if (!csvFile) {
+      setErrorMessage("Please select a file first")
+      return
+    }
+
+    setCsvUploading(true)
+    setCsvUploadProgress(0)
+    setCsvUploadResults(null)
+    setErrorMessage("")
+
+    try {
+      // Use edited data if available, otherwise parse file
+      const studentsData = editableData.length > 0 ? editableData : await parseFileContent(csvFile)
+      
+      setCsvUploadProgress(25)
+
+      // Validate and process each student
+      const processedStudents = []
+      const errors = []
+
+      for (let i = 0; i < studentsData.length; i++) {
+        const student = studentsData[i]
+        
+        try {
+          // Convert CSV data to form format
+          const formattedStudent = {
+            full_name: student.full_name || "",
+            email: student.email || "",
+            identification_type: student.identification_type || "NIC",
+            id_number: student.id_number || "",
+            nationality: student.nationality || "",
+            date_of_birth: convertExcelDate(student.date_of_birth) || "",
+            country: student.country || "",
+            cdc_number: student.cdc_number || "",
+            address: student.address || "",
+            department: student.department || "",
+            company: student.company || "",
+            sea_service: student.sea_service || "",
+            emergency_contact_name: student.emergency_contact_name || "",
+            emergency_contact_number: student.emergency_contact_number || "",
+            is_swimmer: student.is_swimmer?.toLowerCase() === 'yes',
+            is_slpa_employee: student.is_slpa_employee?.toLowerCase() === 'yes',
+            designation: student.designation || "",
+            division: student.division || "",
+            service_no: student.service_no || "",
+            section_unit: student.section_unit || "",
+            driving_details: {
+              driving_license_no: student.driving_license_no || "",
+              driving_class: student.driving_class || "",
+              issue_date: convertExcelDate(student.driving_license_issue_date) || "",
+            },
+            selected_courses: student.selected_courses ? 
+              student.selected_courses.split(',')
+                .map(course => {
+                  const trimmed = course.trim()
+                  
+                  // Handle various course formats:
+                  // "MP-BTOCTCO" -> "MP-BTOCTCO"
+                  // "MP-CAA - Computer Application Assistant (NVQ – L3)" -> "MP-CAA"
+                  // "MP-COX - Coxswain with License Fee" -> "MP-COX"
+                  
+                  if (trimmed.includes(' - ')) {
+                    // Format: "MP-CAA - Description"
+                    return trimmed.split(' - ')[0].trim()
+                  } else if (trimmed.includes('-') && trimmed.match(/^[A-Z]{2}-[A-Z]+/)) {
+                    // Format: "MP-BTOCTCO" (already clean)
+                    return trimmed
+                  } else {
+                    // Fallback: return as is
+                    return trimmed
+                  }
+                })
+                .filter(id => id && id.trim() !== '') : []
+          }
+
+          // Basic validation
+          if (!formattedStudent.full_name) {
+            throw new Error("Full name is required")
+          }
+          if (!formattedStudent.email) {
+            throw new Error("Email is required")
+          }
+          if (!formattedStudent.id_number) {
+            throw new Error("ID number is required")
+          }
+
+          processedStudents.push(formattedStudent)
+        } catch (error) {
+          errors.push(`Row ${i + 2}: ${error.message}`)
+        }
+      }
+
+      setCsvUploadProgress(50)
+
+      if (errors.length > 0) {
+        throw new Error(`Validation errors:\n${errors.join('\n')}`)
+      }
+
+      // Submit students to backend
+      const results = {
+        total: processedStudents.length,
+        successful: 0,
+        failed: 0,
+        errors: [],
+        successfulRecords: [],
+        failedRecords: []
+      }
+
+      for (let i = 0; i < processedStudents.length; i++) {
+        try {
+          // Convert to FormData format that backend expects
+          const studentData = { ...processedStudents[i] }
+          
+          // Convert selected_courses to course_ids for backend compatibility
+          const formDataObj = new FormData()
+          Object.entries(studentData).forEach(([key, value]) => {
+            if (key === "driving_details") {
+              formDataObj.append(key, JSON.stringify(value))
+            } else if (key === "selected_courses") {
+              formDataObj.append("course_ids", JSON.stringify(value))
+            } else if (key === "is_swimmer" || key === "is_slpa_employee") {
+              formDataObj.append(key, value ? "true" : "false")
+            } else if (typeof value !== "undefined" && value !== null) {
+              formDataObj.append(key, value)
+            }
+          })
+          
+          // Add primary course if available
+          if (studentData.selected_courses.length > 0) {
+            formDataObj.append("primary_course_id", studentData.selected_courses[0])
+          }
+          
+          await authRequest("post", getApiUrl("/students"), formDataObj, {
+            headers: { "Content-Type": "multipart/form-data" }
+          })
+          results.successful++
+          results.successfulRecords.push({
+            name: processedStudents[i].full_name,
+            email: processedStudents[i].email,
+            id_number: processedStudents[i].id_number,
+            courses: processedStudents[i].selected_courses?.length || 0
+          })
+        } catch (error) {
+          results.failed++
+          results.errors.push(`${processedStudents[i].full_name}: ${error.message}`)
+          results.failedRecords.push({
+            name: processedStudents[i].full_name,
+            email: processedStudents[i].email,
+            id_number: processedStudents[i].id_number,
+            error: error.message
+          })
+        }
+        
+        setCsvUploadProgress(50 + ((i + 1) / processedStudents.length) * 50)
+      }
+
+      setCsvUploadResults(results)
+      
+      if (results.successful > 0) {
+        fetchStudents() // Refresh the students list
+        setNotificationMessage(`Successfully registered ${results.successful} students via CSV upload`)
+        setShowSuccessNotification(true)
+      }
+
+    } catch (error) {
+      console.error("CSV upload error:", error)
+      setErrorMessage(error.message || "Failed to process CSV file")
+    } finally {
+      setCsvUploading(false)
+      setCsvFile(null)
+      if (csvFileInputRef.current) {
+        csvFileInputRef.current.value = ""
+      }
+    }
+  }, [csvFile, fetchStudents])
+
   // Memoized calculations
   const totalStudents = useMemo(() => students.length, [students])
   const activeStudents = useMemo(() => students.filter((s) => s.status === "Active" || !s.status).length, [students])
@@ -1605,6 +2573,13 @@ export default function StudentManagementSystem() {
                     <RadioGroupItem value="Passport" id="passport" />
                     <Label htmlFor="passport" className="text-sm font-semibold">
                       Passport
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="C_NO" id="C_NO" />
+                    <Label htmlFor="C_NO" className="text-sm font-semibold">
+                      Computer
                     </Label>
                   </div>
                 </RadioGroup>
@@ -2401,6 +3376,590 @@ export default function StudentManagementSystem() {
                 Export CSV
               </Button>
               <Button
+                variant="outline"
+                onClick={downloadExcelTemplate}
+                className="gap-2 border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl font-bold transition-colors"
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                Download Excel Template
+              </Button>
+              <div className="flex items-center gap-2">
+                {showUploadModal && (
+                  <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className={`bg-white rounded-2xl shadow-2xl border border-slate-200 ${fileValidation ? 'w-[96vw] max-w-none' : 'w-full max-w-3xl'} max-h-[95vh] overflow-hidden`}>
+                      {/* Header */}
+                      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 text-white">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                              <FileSpreadsheet className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <h2 className="text-xl font-bold">Upload Student Data</h2>
+                              <p className="text-blue-100 text-sm">CSV/Excel file validation & import</p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowUploadModal(false)}
+                            className="h-8 w-8 p-0 text-white hover:bg-white/20 rounded-full"
+                          >
+                            <X className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className={`${fileValidation ? 'p-6' : 'p-8'} space-y-6 max-h-[80vh] overflow-y-auto`}>
+                        {!selectedFile && (
+                          <div className="text-center space-y-4">
+                            <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                              <p className="text-slate-700 font-medium">
+                                📊 Select a CSV or Excel file with student registration data
+                              </p>
+                              <p className="text-sm text-slate-600 mt-1">
+                                File will be automatically validated for errors and duplicates
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* File Selection */}
+                        <div className="space-y-4">
+                          {!selectedFile && <Label htmlFor="modal-file" className="text-base font-semibold text-slate-700">Choose Your File</Label>}
+                          <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
+                            selectedFile 
+                              ? 'border-green-300 bg-green-50' 
+                              : 'border-slate-300 hover:border-indigo-400 hover:bg-indigo-50'
+                          }`}>
+                            <input
+                              id="modal-file"
+                              type="file"
+                              accept=".csv,.xlsx,.xls"
+                              onChange={handleModalFileSelect}
+                              className="hidden"
+                            />
+                            
+                            {selectedFile ? (
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-center">
+                                  <CheckCircle className="h-8 w-8 text-green-600" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-green-800">{selectedFile.name}</p>
+                                  <p className="text-sm text-green-600">
+                                    {(selectedFile.size / 1024).toFixed(1)} KB • {selectedFile.name.split('.').pop().toUpperCase()}
+                                  </p>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => document.getElementById('modal-file')?.click()}
+                                  className="gap-2 border-green-300 text-green-700 hover:bg-green-100"
+                                >
+                                  <Upload className="h-4 w-4" />
+                                  Change File
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="space-y-4">
+                                <div className="flex items-center justify-center">
+                                  <div className="p-3 bg-indigo-100 rounded-full">
+                                    <FileSpreadsheet className="h-8 w-8 text-indigo-600" />
+                                  </div>
+                                </div>
+                                <div>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => document.getElementById('modal-file')?.click()}
+                                    className="gap-2 text-lg px-6 py-3 border-2 border-indigo-300 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-400 font-semibold"
+                                  >
+                                    <Upload className="h-5 w-5" />
+                                    Select File to Upload
+                                  </Button>
+                                  <p className="text-sm text-slate-500 mt-3">
+                                    📁 Supports CSV, Excel (.xlsx, .xls) files up to 5MB
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* File Validation Status */}
+                        {isValidating && (
+                          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl">
+                            <div className="p-2 bg-blue-100 rounded-full">
+                              <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-blue-800">Validating file content...</p>
+                              <p className="text-sm text-blue-600">Checking for errors, duplicates, and data quality</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {fileValidation && (
+                          <div className="space-y-4">
+                            {/* File Info */}
+                            {fileValidation.info.fileName && (
+                              <div className="bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 rounded-xl p-5">
+                                <div className="flex items-center gap-2 mb-4">
+                                  <FileSpreadsheet className="h-5 w-5 text-slate-600" />
+                                  <h4 className="font-bold text-slate-800">File Analysis</h4>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4">
+                                  <div className="bg-white p-3 rounded-lg border border-slate-200">
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Filename</p>
+                                    <p className="font-semibold text-slate-800 text-sm truncate" title={fileValidation.info.fileName}>
+                                      {fileValidation.info.fileName}
+                                    </p>
+                                  </div>
+                                  <div className="bg-white p-3 rounded-lg border border-slate-200">
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Size & Type</p>
+                                    <p className="font-semibold text-slate-800 text-sm">
+                                      {fileValidation.info.fileSize} • {fileValidation.info.fileType}
+                                    </p>
+                                  </div>
+                                  <div className="bg-white p-3 rounded-lg border border-slate-200">
+                                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Total Records</p>
+                                    <p className="font-semibold text-slate-800 text-lg">{fileValidation.info.rowCount}</p>
+                                  </div>
+                                  {fileValidation.info.validRows !== undefined && (
+                                    <>
+                                      <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                                        <p className="text-xs text-green-600 uppercase tracking-wide mb-1">Valid Records</p>
+                                        <p className="font-bold text-green-700 text-lg">{fileValidation.info.validRows}</p>
+                                      </div>
+                                      <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+                                        <p className="text-xs text-red-600 uppercase tracking-wide mb-1">Invalid Records</p>
+                                        <p className="font-bold text-red-700 text-lg">{fileValidation.info.invalidRows}</p>
+                                      </div>
+                                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                        <p className="text-xs text-blue-600 uppercase tracking-wide mb-1">Success Rate</p>
+                                        <p className="font-bold text-blue-700 text-lg">
+                                          {Math.round((fileValidation.info.validRows / fileValidation.info.rowCount) * 100)}%
+                                        </p>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Validation Results */}
+                            {fileValidation.isValid ? (
+                              <Alert className="border-green-200 bg-green-50">
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                                <AlertDescription className="text-green-700">
+                                  File is valid and ready for upload!
+                                </AlertDescription>
+                              </Alert>
+                            ) : (
+                              <Alert className="border-red-200 bg-red-50">
+                                <AlertTriangle className="h-4 w-4 text-red-600" />
+                                <AlertDescription className="text-red-700">
+                                  <div className="space-y-1">
+                                    {fileValidation.errors.map((error, index) => (
+                                      <div key={index}>• {error}</div>
+                                    ))}
+                                  </div>
+                                </AlertDescription>
+                              </Alert>
+                            )}
+
+                            {/* Warnings */}
+                            {fileValidation.warnings.length > 0 && (
+                              <Alert className="border-yellow-200 bg-yellow-50">
+                                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                                <AlertDescription className="text-yellow-700">
+                                  <div className="space-y-1">
+                                    {fileValidation.warnings.map((warning, index) => (
+                                      <div key={index}>• {warning}</div>
+                                    ))}
+                                  </div>
+                                </AlertDescription>
+                              </Alert>
+                            )}
+
+                            {/* Detailed Validation Errors */}
+                            {fileValidation.detailedErrors && fileValidation.detailedErrors.length > 0 && (
+                              <div className="space-y-2">
+                                <h4 className="font-semibold text-slate-700">Detailed Validation Issues</h4>
+                                <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-lg">
+                                  {fileValidation.detailedErrors.map((detail, index) => (
+                                    <div key={index} className="p-3 border-b border-slate-100 last:border-b-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-sm font-medium text-slate-700">
+                                          Row {detail.row}: {detail.studentName}
+                                        </span>
+                                      </div>
+                                      {detail.errors.length > 0 && (
+                                        <div className="mb-1">
+                                          <span className="text-xs font-medium text-red-600">Errors:</span>
+                                          <div className="text-xs text-red-700 ml-2">
+                                            {detail.errors.map((error, errorIndex) => (
+                                              <div key={errorIndex}>• {error}</div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                      {detail.warnings.length > 0 && (
+                                        <div>
+                                          <span className="text-xs font-medium text-yellow-600">Warnings:</span>
+                                          <div className="text-xs text-yellow-700 ml-2">
+                                            {detail.warnings.map((warning, warningIndex) => (
+                                              <div key={warningIndex}>• {warning}</div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Data Preview - Full Width Table */}
+                            {filePreview && filePreview.length > 0 && (
+                              <div className="space-y-4">
+                                <h4 className="font-semibold text-slate-700 text-lg">Data Preview (First 3 rows)</h4>
+                                <div className="w-full overflow-x-auto border border-slate-200 rounded-lg">
+                                  <table className="w-full text-sm border-collapse" style={{ minWidth: '1400px' }}>
+                                    <thead className="bg-slate-100">
+                                      <tr>
+                                        <th className="px-4 py-3 text-left border-r" style={{ minWidth: '150px' }}>Full Name</th>
+                                        <th className="px-4 py-3 text-left border-r" style={{ minWidth: '220px' }}>Email</th>
+                                        <th className="px-4 py-3 text-left border-r" style={{ minWidth: '80px' }}>ID Type</th>
+                                        <th className="px-4 py-3 text-left border-r" style={{ minWidth: '130px' }}>ID Number</th>
+                                        <th className="px-4 py-3 text-left border-r" style={{ minWidth: '100px' }}>Nationality</th>
+                                        <th className="px-4 py-3 text-left border-r" style={{ minWidth: '120px' }}>Date of Birth</th>
+                                        <th className="px-4 py-3 text-left border-r" style={{ minWidth: '180px' }}>Courses</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {filePreview.map((student, index) => (
+                                        <tr key={index} className="border-t border-slate-200 hover:bg-slate-50">
+                                          <td className="px-4 py-3 border-r" title={student.full_name}>{student.full_name || '-'}</td>
+                                          <td className="px-4 py-3 border-r" title={student.email}>{student.email || '-'}</td>
+                                          <td className="px-4 py-3 border-r text-center">{student.identification_type || '-'}</td>
+                                          <td className="px-4 py-3 border-r" title={student.id_number}>{student.id_number || '-'}</td>
+                                          <td className="px-4 py-3 border-r text-center">{student.nationality || '-'}</td>
+                                          <td className="px-4 py-3 border-r text-center">{student.date_of_birth || '-'}</td>
+                                          <td className="px-4 py-3 border-r" title={student.selected_courses}>{student.selected_courses || '-'}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Modal Actions */}
+                        <div className="flex justify-between pt-4 border-t">
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowUploadModal(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <div className="flex gap-3">
+                            <Button
+                              variant="outline"
+                              onClick={handleEditData}
+                              disabled={!selectedFile}
+                              className="gap-2 px-6 py-2 border-2 border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400 font-semibold rounded-xl transition-all"
+                            >
+                              <FileSpreadsheet className="h-4 w-4" />
+                              Edit Data
+                            </Button>
+                            <Button
+                              onClick={handleConfirmUpload}
+                              disabled={!fileValidation?.isValid || !selectedFile}
+                              className="gap-2 px-6 py-2 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg transition-all transform hover:scale-105"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                              Confirm Upload
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Edit Data Modal */}
+                {editMode && (
+                  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2">
+                    <div className="bg-white rounded-2xl shadow-2xl w-[99vw] max-w-none max-h-[97vh] overflow-hidden border border-slate-200">
+                      {/* Enhanced Header */}
+                      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-6 text-white">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                              <FileSpreadsheet className="h-7 w-7" />
+                            </div>
+                            <div>
+                              <h3 className="text-2xl font-bold">Edit Student Data</h3>
+                              <p className="text-emerald-100 text-sm">
+                                {editableData.length} student records • Make changes and save to validate
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-3">
+                            <Button
+                              variant="ghost"
+                              onClick={handleCancelEdit}
+                              className="text-white hover:bg-white/20 border border-white/30 rounded-xl px-4 py-2"
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={handleSaveEditedData}
+                              disabled={isValidating}
+                              className="bg-white text-emerald-700 hover:bg-emerald-50 border-0 rounded-xl px-6 py-2 font-semibold"
+                            >
+                              {isValidating ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                  Validating...
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="h-4 w-4 mr-2" />
+                                  Save & Validate
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Content Area */}
+                      <div className="p-6 max-h-[80vh] overflow-y-auto">
+                        {/* Instructions */}
+                        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="p-1 bg-blue-100 rounded-full">
+                              <FileSpreadsheet className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <p className="font-semibold text-blue-900">Editing Instructions</p>
+                          </div>
+                          <p className="text-sm text-blue-700">
+                            ✏️ Edit fields directly in the table below • Fields marked with * are mandatory • 
+                            📞 Phone numbers should follow Sri Lankan format (775645645, 0775645645, +94775645645) • 
+                            Click "Save & Validate" when done
+                          </p>
+                        </div>
+
+                        {/* Enhanced Editable Table */}
+                        <div className="w-full overflow-x-auto border-2 border-slate-200 rounded-xl shadow-sm">
+                          <table className="w-full text-sm border-collapse bg-white">
+                            <thead className="bg-gradient-to-r from-slate-100 to-slate-200">
+                              <tr>
+                                <th className="px-4 py-3 text-left border-r border-slate-300 font-bold text-slate-700" style={{ minWidth: '50px' }}>
+                                  #
+                                </th>
+                                {getPopulatedColumns().map((column, index) => (
+                                  <th 
+                                    key={column.field} 
+                                    className={`px-4 py-3 text-left font-bold text-slate-700 ${
+                                      index < getPopulatedColumns().length - 1 ? 'border-r border-slate-300' : ''
+                                    }`}
+                                    style={{ 
+                                      minWidth: column.field === 'selected_courses' ? '300px' : 
+                                               column.field === 'email' ? '220px' :
+                                               column.field === 'full_name' ? '160px' : '120px' 
+                                    }}
+                                  >
+                                    <div className="flex items-center gap-1">
+                                      <span>{column.label.replace('*', '')}</span>
+                                      {column.label.includes('*') && <span className="text-red-500">*</span>}
+                                    </div>
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {editableData.map((student, index) => (
+                                <tr key={index} className="border-t border-slate-200 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 transition-colors">
+                                  <td className="px-4 py-3 border-r border-slate-200 text-center">
+                                    <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full">
+                                      <span className="font-bold text-blue-700 text-sm">{index + 1}</span>
+                                    </div>
+                                  </td>
+                                  {getPopulatedColumns().map((column, colIndex) => (
+                                    <td 
+                                      key={column.field} 
+                                      className={`px-4 py-3 ${
+                                        colIndex < getPopulatedColumns().length - 1 ? 'border-r border-slate-200' : ''
+                                      }`}
+                                    >
+                                      {column.field === 'selected_courses' ? (
+                                        // Special course selection interface
+                                        <div className="space-y-2">
+                                          {/* Show selected courses */}
+                                          <div className="flex flex-wrap gap-1 min-h-[32px]">
+                                            {(student.selected_courses || '').split(',').map(numericId => numericId.trim()).filter(Boolean).map(numericId => {
+                                              // Find course by numeric ID since Excel stores numeric IDs
+                                              const course = courses.find(c => c.id.toString() === numericId)
+                                              return course ? (
+                                                <div key={numericId} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                                                  <span title={`ID: ${numericId} - ${course.courseName}`}>
+                                                    {course.courseId} ({numericId})
+                                                  </span>
+                                                  <button
+                                                    onClick={() => handleRemoveCourse(index, numericId)}
+                                                    className="text-red-500 hover:text-red-700 font-bold"
+                                                    title="Remove course"
+                                                  >
+                                                    ×
+                                                  </button>
+                                                </div>
+                                              ) : (
+                                                <div key={numericId} className="flex items-center gap-1 bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">
+                                                  <span>ID: {numericId} (Invalid)</span>
+                                                  <button
+                                                    onClick={() => handleRemoveCourse(index, numericId)}
+                                                    className="text-red-500 hover:text-red-700 font-bold"
+                                                    title="Remove invalid course"
+                                                  >
+                                                    ×
+                                                  </button>
+                                                </div>
+                                              )
+                                            })}
+                                          </div>
+                                          {/* Add new course dropdown */}
+                                          <select
+                                            onChange={(e) => {
+                                              if (e.target.value) {
+                                                handleAddCourse(index, e.target.value)
+                                                e.target.value = '' // Reset dropdown
+                                              }
+                                            }}
+                                            className="w-full px-3 py-1 border border-slate-300 rounded-lg text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-all bg-white"
+                                          >
+                                            <option value="">+ Add Course</option>
+                                            {courses.filter(course => {
+                                              const currentCourses = (student.selected_courses || '').split(',').map(c => c.trim())
+                                              // Only check against numeric IDs since that's what's stored
+                                              return !currentCourses.includes(course.id.toString())
+                                            }).map(course => (
+                                              <option key={course.id} value={course.courseId}>
+                                                {course.courseId} (ID: {course.id}) - {course.courseName}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                      ) : column.field === 'identification_type' ? (
+                                        <select
+                                          value={student[column.field] || ''}
+                                          onChange={(e) => handleFieldChange(index, column.field, e.target.value)}
+                                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white"
+                                        >
+                                          <option value="">Select Type</option>
+                                          <option value="NIC">🆔 NIC</option>
+                                          <option value="Passport">🛂 Passport</option>
+                                          <option value="Computer">💻 Computer</option>
+                                        </select>
+                                      ) : column.field === 'is_swimmer' ? (
+                                        <select
+                                          value={student[column.field] || ''}
+                                          onChange={(e) => handleFieldChange(index, column.field, e.target.value)}
+                                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white"
+                                        >
+                                          <option value="">🏊‍♂️ Select</option>
+                                          <option value="true">✅ Yes</option>
+                                          <option value="false">❌ No</option>
+                                        </select>
+                                      ) : column.field === 'date_of_birth' ? (
+                                        <input
+                                          type="date"
+                                          value={student[column.field] || ''}
+                                          onChange={(e) => handleFieldChange(index, column.field, e.target.value)}
+                                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                                        />
+                                      ) : column.field === 'emergency_contact_number' ? (
+                                        <input
+                                          type="tel"
+                                          value={student[column.field] || ''}
+                                          onChange={(e) => handleFieldChange(index, column.field, e.target.value)}
+                                          placeholder="0771234567"
+                                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                                        />
+                                      ) : column.field === 'email' ? (
+                                        <input
+                                          type="email"
+                                          value={student[column.field] || ''}
+                                          onChange={(e) => handleFieldChange(index, column.field, e.target.value)}
+                                          placeholder="email@example.com"
+                                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                                        />
+                                      ) : (
+                                        <input
+                                          type="text"
+                                          value={student[column.field] || ''}
+                                          onChange={(e) => handleFieldChange(index, column.field, e.target.value)}
+                                          placeholder={
+                                            column.field === 'full_name' ? 'Enter full name' :
+                                            column.field === 'id_number' ? 'Enter ID number' :
+                                            column.field === 'nationality' ? 'Sri Lankan' :
+                                            column.field === 'company' ? 'Company name' :
+                                            `Enter ${column.label.replace('*', '').toLowerCase()}`
+                                          }
+                                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                                        />
+                                      )}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div className="mt-4 text-sm text-slate-600">
+                          <strong>Note:</strong> Fields marked with * are mandatory. Make sure to fill all required information before saving.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  variant="outline"
+                  onClick={() => setShowUploadModal(true)}
+                  disabled={csvUploading}
+                  className="gap-2 border-2 border-slate-200 hover:border-purple-400 hover:bg-purple-50 rounded-xl font-bold transition-colors"
+                >
+                  <UploadCloud className="h-4 w-4" />
+                  {csvFile ? csvFile.name : "Select File"}
+                </Button>
+
+                {csvFile && (
+                  <Button
+                    onClick={handleFileUpload}
+                    disabled={csvUploading}
+                    className="gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-bold transition-colors"
+                  >
+                    {csvUploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Uploading... {Math.round(csvUploadProgress)}%
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4" />
+                        Upload File
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+              <Button
                 onClick={() => {
                   // Reset form state before switching to registration
                   setFormData({
@@ -2617,6 +4176,7 @@ export default function StudentManagementSystem() {
                             onEdit={handleEditStudent}
                             onDelete={handleDeleteStudent}
                             onSendPasswordReset={handleSendPasswordReset}
+                            onSendCredentials={handleSendCredentials}
                             confirmDeleteId={confirmDeleteId}
                             loading={loading}
                             coursesMap={coursesMap}
@@ -2657,6 +4217,122 @@ export default function StudentManagementSystem() {
             )}
           </CardContent>
         </Card>
+
+        {/* File Upload Results */}
+        {csvUploadResults && (
+          <Card className="border-0 shadow-lg bg-white">
+            <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">
+              <CardTitle className="text-xl font-black gradient-text flex items-center gap-3">
+                <FileSpreadsheet className="h-5 w-5" />
+                File Upload Results
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="text-2xl font-bold text-green-600">{csvUploadResults.successful}</div>
+                  <div className="text-sm text-green-700">Successfully Registered</div>
+                </div>
+                <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
+                  <div className="text-2xl font-bold text-red-600">{csvUploadResults.failed}</div>
+                  <div className="text-sm text-red-700">Failed</div>
+                </div>
+                <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="text-2xl font-bold text-blue-600">{csvUploadResults.total}</div>
+                  <div className="text-sm text-blue-700">Total Processed</div>
+                </div>
+              </div>
+              
+              {/* Successfully Registered Records */}
+              {csvUploadResults.successfulRecords && csvUploadResults.successfulRecords.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-semibold text-green-700 mb-3 flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4" />
+                    Successfully Registered Students:
+                  </h4>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-h-64 overflow-y-auto">
+                    <div className="space-y-2">
+                      {csvUploadResults.successfulRecords.map((record, index) => (
+                        <div key={index} className="flex items-center justify-between bg-white border border-green-100 rounded-lg p-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-green-600" />
+                                <span className="font-medium text-green-800">{record.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Mail className="h-4 w-4 text-green-600" />
+                                <span className="text-sm text-green-700">{record.email}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <CreditCard className="h-4 w-4 text-green-600" />
+                                <span className="text-sm text-green-700">{record.id_number}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <BookOpen className="h-4 w-4 text-green-600" />
+                                <span className="text-sm text-green-700">{record.courses} courses</span>
+                              </div>
+                            </div>
+                          </div>
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Failed Registration Records */}
+              {csvUploadResults.failedRecords && csvUploadResults.failedRecords.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-semibold text-red-700 mb-3 flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4" />
+                    Failed Registrations:
+                  </h4>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-h-64 overflow-y-auto">
+                    <div className="space-y-2">
+                      {csvUploadResults.failedRecords.map((record, index) => (
+                        <div key={index} className="flex items-center justify-between bg-white border border-red-100 rounded-lg p-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-4 mb-2">
+                              <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-red-600" />
+                                <span className="font-medium text-red-800">{record.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Mail className="h-4 w-4 text-red-600" />
+                                <span className="text-sm text-red-700">{record.email}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <CreditCard className="h-4 w-4 text-red-600" />
+                                <span className="text-sm text-red-700">{record.id_number}</span>
+                              </div>
+                            </div>
+                            <div className="text-sm text-red-600 bg-red-100 rounded px-2 py-1">
+                              <strong>Error:</strong> {record.error}
+                            </div>
+                          </div>
+                          <X className="h-5 w-5 text-red-500" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="mt-6 flex justify-end">
+                <Button
+                  onClick={() => setCsvUploadResults(null)}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Close Results
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

@@ -1,29 +1,49 @@
 const nodemailer = require('nodemailer');
 const logger = require('../logger');
+const MicrosoftGraphService = require('../services/microsoftGraphService');
 
-// Email configuration
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_PORT) || 587,
-  secure: process.env.EMAIL_SECURE === 'true',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  // Add these options for better compatibility with various email providers
-  tls: {
-    rejectUnauthorized: false
-  }
-});
+// Determine email provider
+const emailProvider = process.env.EMAIL_PROVIDER || 'nodemailer';
 
-// Test connection on startup
-transporter.verify(function (error) {
-  if (error) {
-    logger.error('Email service configuration error:', error);
-  } else {
-    logger.info('Email server connection successful');
+// Initialize email services
+let transporter = null;
+let graphService = null;
+
+if (emailProvider === 'graph') {
+  try {
+    graphService = new MicrosoftGraphService();
+    logger.info('Microsoft Graph email service initialized');
+  } catch (error) {
+    logger.error('Microsoft Graph initialization failed:', error);
+    logger.info('Falling back to nodemailer');
   }
-});
+} 
+
+if (!graphService || emailProvider === 'nodemailer') {
+  // Email configuration for nodemailer
+  transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.EMAIL_PORT) || 587,
+    secure: process.env.EMAIL_SECURE === 'true',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+    // Add these options for better compatibility with various email providers
+    tls: {
+      rejectUnauthorized: false
+    }
+  });
+
+  // Test connection on startup
+  transporter.verify(function (error) {
+    if (error) {
+      logger.error('Email service configuration error:', error);
+    } else {
+      logger.info('Email server connection successful');
+    }
+  });
+}
 
 /**
  * Send an email
@@ -68,17 +88,25 @@ const sendEmail = async (options) => {
       return { success: true, info: { response: 'Lecturer emails disabled' } };
     }
 
-    const mailOptions = {
-      from: process.env.EMAIL_FROM || '"Maritime Training Center" <no-reply@maritimetraining.com>',
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-      text: options.text || stripHtml(options.html),
-    };
+    // Use Microsoft Graph if available, otherwise fallback to nodemailer
+    if (graphService) {
+      logger.info(`Sending email via Microsoft Graph to: ${options.to}`);
+      return await graphService.sendEmail(options);
+    } else if (transporter) {
+      const mailOptions = {
+        from: process.env.EMAIL_FROM || '"Maritime Training Center" <no-reply@maritimetraining.com>',
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+        text: options.text || stripHtml(options.html),
+      };
 
-    const info = await transporter.sendMail(mailOptions);
-    logger.info(`Email sent to ${options.to}: ${info.response}`);
-    return { success: true, info };
+      const info = await transporter.sendMail(mailOptions);
+      logger.info(`Email sent via nodemailer to ${options.to}: ${info.response}`);
+      return { success: true, info };
+    } else {
+      throw new Error('No email service available');
+    }
   } catch (error) {
     logger.error('Email sending failed:', error);
     // Don't throw the error - return failure status instead
@@ -104,7 +132,27 @@ async function sendBasicEmail(to, subject, content, userType = 'general') {
   });
 }
 
+// Test Microsoft Graph connection
+async function testGraphConnection() {
+  if (!graphService) {
+    return { success: false, error: 'Microsoft Graph service not initialized' };
+  }
+  return await graphService.testConnection();
+}
+
+// Send test email
+async function sendTestEmail(toEmail, testMessage) {
+  if (!graphService) {
+    return { success: false, error: 'Microsoft Graph service not initialized' };
+  }
+  return await graphService.sendTestEmail(toEmail, testMessage);
+}
+
 module.exports = {
   sendEmail,
-  sendBasicEmail
+  sendBasicEmail,
+  testGraphConnection,
+  sendTestEmail,
+  graphService,
+  emailProvider
 };

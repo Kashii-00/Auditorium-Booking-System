@@ -48,6 +48,7 @@ const studentPaymentRoutes = require('./routes/studentPaymentRoutes');
 // Import the batch routes
 const batchRoutes = require('./routes/batchRoutes');
 const emailRoutes = require("./routes/email");
+const testEmailRoutes = require("./routes/testEmailRoutes");
 const cron = require("node-cron");
 const processPendingEmails = require("./utils/emailProcessor");
 
@@ -153,6 +154,7 @@ app.use("/api/lecturer-attendance", LecturerAttendance);
 app.use("/api/lecturer-payments", LecturerPayments);
 
 app.use("/api/email", emailRoutes);
+app.use("/api/test-email", testEmailRoutes);
 
 // Backup management routes
 app.use('/api/backup', require('./routes/backup'));
