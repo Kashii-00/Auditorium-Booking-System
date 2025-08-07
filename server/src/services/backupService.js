@@ -4,6 +4,7 @@ const path = require('path');
 const { exec } = require('child_process');
 const util = require('util');
 const cron = require('node-cron');
+const zlib = require('zlib');
 const logger = require('../logger');
 require('dotenv').config();
 
@@ -26,6 +27,32 @@ class DatabaseBackupService {
       }
       logger.info('✅ Backup directory created');
     }
+  }
+
+  /**
+   * Cross-platform file compression using Node.js zlib
+   */
+  async compressFile(filePath) {
+    return new Promise((resolve, reject) => {
+      const inputPath = filePath;
+      const outputPath = `${filePath}.gz`;
+      
+      const input = fs.createReadStream(inputPath);
+      const output = fs.createWriteStream(outputPath);
+      const gzip = zlib.createGzip();
+      
+      input.pipe(gzip).pipe(output);
+      
+      output.on('finish', () => {
+        // Delete the original uncompressed file
+        fs.unlinkSync(inputPath);
+        resolve(outputPath);
+      });
+      
+      output.on('error', reject);
+      input.on('error', reject);
+      gzip.on('error', reject);
+    });
   }
 
   /**
@@ -118,24 +145,8 @@ class DatabaseBackupService {
         }
       }
 
-      // Compress the backup asynchronously
-      await new Promise((resolve, reject) => {
-        const gzipProcess = exec(`gzip "${backupPath}"`, (error) => {
-          if (error) reject(error);
-          else resolve();
-        });
-        
-        // Allow other operations during compression
-        const interval = setInterval(() => {
-          setImmediate(() => {});
-        }, 50);
-        
-        gzipProcess.on('exit', () => {
-          clearInterval(interval);
-        });
-      });
-
-      const compressedPath = `${backupPath}.gz`;
+      // Compress the backup using Node.js zlib (cross-platform)
+      const compressedPath = await this.compressFile(backupPath);
       const compressedStats = fs.statSync(compressedPath);
 
       logger.info(`✅ Database backup created: ${backupFileName}.gz (${(compressedStats.size / 1024 / 1024).toFixed(2)}MB)`);
@@ -296,9 +307,9 @@ class DatabaseBackupService {
       }
 
       fs.writeFileSync(backupPath, backupSQL);
-      await execAsync(`gzip "${backupPath}"`);
+      const compressedPath = await this.compressFile(backupPath);
 
-      const compressedStats = fs.statSync(`${backupPath}.gz`);
+      const compressedStats = fs.statSync(compressedPath);
 
       // Update last backup time
       await this.updateLastBackupTime();
