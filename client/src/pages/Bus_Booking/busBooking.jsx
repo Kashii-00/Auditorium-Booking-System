@@ -609,7 +609,7 @@ const BusCalendarFull = ({ user = { id: 1, name: "Demo User" } }) => {
                       <p className="text-sm text-slate-600 mb-4">{upcomingBookings.length} upcoming booking(s).</p>
 
                       {upcomingBookings.length > 0 ? (
-                        <div className="space-y-3 flex-1 overflow-y-auto pr-1">
+                        <div className="space-y-3 max-h-64 overflow-y-auto pr-1 flex-1">
                           {upcomingBookings.map((booking) => (
                             <div
                               key={booking.id}

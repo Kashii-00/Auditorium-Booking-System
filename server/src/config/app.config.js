@@ -19,13 +19,7 @@ const config = {
   corsOrigins: [
     'http://localhost:3000',
     'https://mpmaerp.slpa.lk'
-  ],
-  
-  // Email Configuration
-  email: {
-    from: process.env.EMAIL_FROM || 'noreply@slpa.lk',
-    supportEmail: process.env.SUPPORT_EMAIL || 'support@slpa.lk'
-  }
+  ]
 };
 
 module.exports = config;

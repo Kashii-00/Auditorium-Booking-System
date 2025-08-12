@@ -24,7 +24,10 @@ module.exports = function setupGracefulShutdown(server, db) {
           if (err) {
             logger.error('Error closing database connection:', err);
           } else {
-            logger.info('Database connection closed');
+            logger.info('Database connection closed 💡');
+            logger.info('');
+            logger.info('Turning it off and on again *always* works… right? 😂');
+            logger.info('');
           }
           
           clearTimeout(forceExit);

@@ -39,7 +39,6 @@ const StudentPayments = require("./routes/PayMain/StudentPayments");
 const LecturerAttendance = require("./routes/PayMain/lecturer_attendance");
 const LecturerPayments = require("./routes/PayMain/lecturerPayments");
 
-const { requestMonitor } = require("./utils/monitorServer");
 
 // Import routes
 const { studentAuthRouter } = require('./routes/studentAuthRoutes');
@@ -48,7 +47,7 @@ const studentPaymentRoutes = require('./routes/studentPaymentRoutes');
 // Import the batch routes
 const batchRoutes = require('./routes/batchRoutes');
 const emailRoutes = require("./routes/email");
-const testEmailRoutes = require("./routes/testEmailRoutes");
+
 const cron = require("node-cron");
 const processPendingEmails = require("./utils/emailProcessor");
 
@@ -61,13 +60,6 @@ const app = express();
 // Enable debug mode for development
 const DEBUG = process.env.NODE_ENV !== 'development';
 
-// Debug middleware to log requests
-if (DEBUG) {
-  app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    next();
-  });
-}
 
 // CORS configuration to support credentials
 const allowedOrigins = [
@@ -98,7 +90,8 @@ cron.schedule("*/5 * * * *", () => {
 
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(cookieParser()); // Add cookie-parser middleware before routes
+app.use(cookieParser()); 
+
 
 // Clear logs every 5 minutes to prevent terminal lag (for testing)
 setInterval(() => {
@@ -154,7 +147,6 @@ app.use("/api/lecturer-attendance", LecturerAttendance);
 app.use("/api/lecturer-payments", LecturerPayments);
 
 app.use("/api/email", emailRoutes);
-app.use("/api/test-email", testEmailRoutes);
 
 // Backup management routes
 app.use('/api/backup', require('./routes/backup'));
@@ -182,6 +174,7 @@ app.get('/api/stats', (req, res) => {
   res.json(getStats());
 });
 
+
 // Route not found handler
 app.use((req, res, next) => {
   res.status(404).json({
@@ -199,14 +192,14 @@ app.use((err, req, res, next) => {
   });
 });
 
+
 const port = process.env.PORT || 5003;
 const server = app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.info(`Server running on port ${port}`);
   
   // Initialize backup service scheduling
   try {
     backupService.init();
-    console.log('🔄 Database backup service initialized');
   } catch (error) {
     console.error('❌ Failed to initialize backup service:', error);
   }

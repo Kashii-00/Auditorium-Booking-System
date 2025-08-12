@@ -50,39 +50,19 @@ const PERFORMANCE_CSS = `
   }
 
   .card-transition {
-    transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+    transition: transform 120ms ease-out;
   }
 
   .booking-card {
-    transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+    transition: transform 120ms ease-out;
   }
 
   .booking-card:hover {
     transform: translateY(-1px);
   }
 
-  .gradient-text {
-    background: linear-gradient(135deg, #1e293b, #3b82f6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .form-step {
-    transition: all 200ms ease-out;
-  }
-
   .table-row {
-    transition: background-color 150ms ease-out;
+    transition: background-color 120ms ease-out;
   }
 
   .table-row:hover {
@@ -90,12 +70,12 @@ const PERFORMANCE_CSS = `
   }
 
   .highlight-pulse {
-    animation: highlightPulse 2s ease-in-out;
+    animation: highlightPulse 1.5s ease-in-out;
   }
 
   @keyframes highlightPulse {
-    0% { background-color: rgba(59, 130, 246, 0.2); }
-    50% { background-color: rgba(59, 130, 246, 0.4); }
+    0% { background-color: rgba(59, 130, 246, 0.15); }
+    50% { background-color: rgba(59, 130, 246, 0.3); }
     100% { background-color: rgba(59, 130, 246, 0.1); }
   }
 
@@ -106,24 +86,24 @@ const PERFORMANCE_CSS = `
 
   /* Reduce paint complexity */
   .backdrop-blur-xl {
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(4px);
   }
 
   .shadow-2xl {
-    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
   }
 `
 
 // Memoized components for better performance
 const SuccessPopup = memo(({ message }) => (
-  <div className="fixed top-6 right-6 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-600 text-white px-8 py-4 rounded-2xl shadow-2xl z-50 animate-in slide-in-from-top-4 duration-500 border border-white/20 backdrop-blur-xl">
-    <div className="flex items-center gap-4">
-      <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
-        <div className="w-3 h-3 bg-white rounded-full"></div>
+  <div className="fixed top-6 right-6 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 border border-white/20">
+    <div className="flex items-center gap-3">
+      <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+        <div className="w-2 h-2 bg-white rounded-full"></div>
       </div>
       <div>
-        <p className="font-black text-lg">{message}</p>
-        <p className="text-emerald-100 text-sm">Your action has been completed successfully</p>
+        <p className="font-bold text-base">{message}</p>
+        <p className="text-emerald-100 text-sm">Action completed successfully</p>
       </div>
     </div>
   </div>
@@ -136,46 +116,39 @@ const StatCard = memo(({ title, value, icon: Icon, color = "blue", progress = 75
   const colorConfig = useMemo(
     () => ({
       blue: {
-        gradient: "from-blue-500 via-indigo-600 to-purple-700",
         ring: "stroke-blue-500",
-        bg: "bg-gradient-to-br from-blue-50 to-indigo-50",
-        iconBg: "bg-gradient-to-br from-blue-500 to-indigo-600",
+        bg: "bg-blue-50",
+        iconBg: "bg-blue-500",
       },
       green: {
-        gradient: "from-emerald-500 via-green-600 to-teal-700",
         ring: "stroke-emerald-500",
-        bg: "bg-gradient-to-br from-emerald-50 to-green-50",
-        iconBg: "bg-gradient-to-br from-emerald-500 to-green-600",
+        bg: "bg-emerald-50",
+        iconBg: "bg-emerald-500",
       },
       purple: {
-        gradient: "from-purple-500 via-violet-600 to-indigo-700",
         ring: "stroke-purple-500",
-        bg: "bg-gradient-to-br from-purple-50 to-violet-50",
-        iconBg: "bg-gradient-to-br from-purple-500 to-violet-600",
+        bg: "bg-purple-50",
+        iconBg: "bg-purple-500",
       },
       orange: {
-        gradient: "from-orange-500 via-amber-600 to-yellow-700",
         ring: "stroke-orange-500",
-        bg: "bg-gradient-to-br from-orange-50 to-amber-50",
-        iconBg: "bg-gradient-to-br from-orange-500 to-amber-600",
+        bg: "bg-orange-50",
+        iconBg: "bg-orange-500",
       },
       yellow: {
-        gradient: "from-yellow-400 via-amber-500 to-orange-600",
         ring: "stroke-yellow-500",
-        bg: "bg-gradient-to-br from-yellow-50 to-amber-50",
-        iconBg: "bg-gradient-to-br from-yellow-500 to-amber-600",
+        bg: "bg-yellow-50",
+        iconBg: "bg-yellow-500",
       },
       red: {
-        gradient: "from-red-500 via-rose-600 to-pink-700",
         ring: "stroke-red-500",
-        bg: "bg-gradient-to-br from-red-50 to-rose-50",
-        iconBg: "bg-gradient-to-br from-red-500 to-rose-600",
+        bg: "bg-red-50",
+        iconBg: "bg-red-500",
       },
       gray: {
-        gradient: "from-slate-300 to-gray-400",
         ring: "stroke-slate-300",
-        bg: "bg-gradient-to-br from-slate-50 to-gray-50",
-        iconBg: "bg-gradient-to-br from-slate-400 to-gray-500",
+        bg: "bg-slate-50",
+        iconBg: "bg-slate-400",
       },
     }),
     [],
@@ -189,7 +162,7 @@ const StatCard = memo(({ title, value, icon: Icon, color = "blue", progress = 75
   return (
     <div className="flex flex-col items-center group">
       <div className="relative pt-2">
-        <div className={`w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 xl:w-18 xl:h-18 2xl:w-20 2xl:h-20 rounded-full ${config.bg} shadow-md group-hover:shadow-lg transition-all duration-300 flex items-center justify-center relative overflow-hidden`}>
+        <div className={`w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 xl:w-18 xl:h-18 2xl:w-20 2xl:h-20 rounded-full ${config.bg} shadow-md hover:shadow-lg transition-shadow duration-200 flex items-center justify-center relative overflow-hidden`}>
           <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
             <circle
               cx="50"
@@ -217,7 +190,7 @@ const StatCard = memo(({ title, value, icon: Icon, color = "blue", progress = 75
           </svg>
           
           <div className="relative z-10">
-            <Icon className="h-3 w-3 md:h-4 md:w-4 lg:h-5 lg:w-5 xl:h-5 xl:w-5 2xl:h-6 2xl:w-6 text-slate-700 group-hover:scale-110 transition-transform duration-300" />
+            <Icon className="h-3 w-3 md:h-4 md:w-4 lg:h-5 lg:w-5 xl:h-5 xl:w-5 2xl:h-6 2xl:w-6 text-slate-700 group-hover:scale-105 transition-transform duration-200" />
           </div>
         </div>
 
@@ -273,7 +246,7 @@ const BookingRow = memo(({ booking, onApprove, onDeny, onDelete, selectedBooking
         <div className="flex items-center gap-3">
           <Avatar className="w-12 h-12 border-2 border-blue-200">
             <AvatarImage src={`/placeholder.svg?height=48&width=48&query=passenger`} />
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white font-bold">
+            <AvatarFallback className="bg-blue-500 text-white font-bold">
               {booking.forWho
                 ?.split(" ")
                 .map((n) => n[0])
@@ -331,12 +304,12 @@ const BookingRow = memo(({ booking, onApprove, onDeny, onDelete, selectedBooking
           variant="outline"
           className={`font-bold px-3 py-1 ${
             booking.status === "APPROVED"
-              ? "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border-emerald-300"
+              ? "bg-emerald-100 text-emerald-800 border-emerald-300"
               : booking.status === "PENDING"
-              ? "bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border-yellow-300"
+              ? "bg-yellow-100 text-yellow-800 border-yellow-300"
               : booking.status === "DENIED"
-              ? "bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border-red-300"
-              : "bg-gradient-to-r from-slate-100 to-gray-100 text-slate-800 border-slate-300"
+              ? "bg-red-100 text-red-800 border-red-300"
+              : "bg-slate-100 text-slate-800 border-slate-300"
           }`}
         >
           <Activity className="h-3 w-3 mr-1" />
@@ -360,7 +333,7 @@ const BookingRow = memo(({ booking, onApprove, onDeny, onDelete, selectedBooking
                 size="sm"
                 variant="outline"
                 onClick={handleDeny}
-                className="flex items-center gap-1 hover:bg-yellow-50 hover:border-yellow-300 border transition-colors"
+                className="flex items-center gap-1 hover:bg-yellow-50 hover:border-yellow-300 border transition-colors duration-150"
                 title="Deny Booking"
               >
                 <X className="w-4 h-4" />
@@ -1188,7 +1161,7 @@ export default function BusBookingFull() {
 
   return (
     <div
-      className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative"
+      className="min-h-screen w-full bg-slate-50 relative"
       data-page="bus-bookings"
     >
       {/* Initial loading screen */}

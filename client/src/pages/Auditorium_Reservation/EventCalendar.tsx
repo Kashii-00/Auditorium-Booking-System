@@ -405,39 +405,32 @@ function EventCalendarFullInner({
   // Return the main calendar UI
   return (
     <div
-      className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative sidebar-transition calendar-container"
+      className="min-h-screen w-full bg-slate-50 relative sidebar-transition calendar-container"
       data-page="calendar"
     >
-      {/* Simplified Background Pattern */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-indigo-50/30 to-purple-50/30"></div>
-      </div>
 
       <div className="relative z-10 h-screen flex flex-col">
-        {/* Enhanced Header */}
-        <div className="flex-shrink-0 bg-white/95 backdrop-blur-xl border-b border-white/40 px-4 sm:px-6 py-4 sm:py-6 shadow-xl">
+        {/* Optimized Header */}
+        <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-4 sm:py-6 shadow-sm">
           <div className="max-w-full mx-auto">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
-              {/* Enhanced Title Section */}
+              {/* Simplified Title Section */}
               <div className="flex items-center gap-4 sm:gap-6">
-                <div className="relative">
-                  <div className="p-3 sm:p-4 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700 rounded-2xl shadow-2xl">
-                    <Calendar className="h-7 w-7 sm:h-9 sm:w-9 text-white" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
+                <div className="p-3 sm:p-4 bg-blue-600 rounded-xl shadow-lg">
+                  <Calendar className="h-7 w-7 sm:h-9 sm:w-9 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl xl:text-3xl font-black bg-gradient-to-r from-slate-800 via-blue-700 to-indigo-700 bg-clip-text text-transparent">
+                  <h1 className="text-2xl xl:text-3xl font-black text-slate-800">
                     Event Calendar
                   </h1>
                   <p className="text-slate-600 font-semibold mt-1 flex items-center gap-1">
-                                  <Target className="h-3 w-3 flex-shrink-0" />
-                                  MPMA Auditorium management system
-                                </p>
+                    <Target className="h-3 w-3 flex-shrink-0" />
+                    MPMA Auditorium management system
+                  </p>
                 </div>
               </div>
 
-              {/* Enhanced Search and Actions */}
+              {/* Simplified Search and Actions */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full lg:w-auto">
                 <div className="relative flex-1 lg:w-72">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
@@ -445,24 +438,23 @@ function EventCalendarFullInner({
                     placeholder="Search events..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-12 h-12 sm:h-14 text-base border-2 border-slate-200 focus:border-blue-500 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg focus:shadow-xl transition-all duration-300"
+                    className="pl-12 h-12 sm:h-14 text-base border border-slate-300 focus:border-blue-500 rounded-lg bg-white shadow-sm focus:shadow-md transition-shadow duration-200"
                   />
                 </div>
                 <div className="flex gap-3">
                   <Button
                     variant="outline"
                     onClick={handleOpenCalendar}
-                    className="flex items-center gap-3 h-12 sm:h-14 px-4 sm:px-6 border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 rounded-2xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl text-base bg-white/90 backdrop-blur-sm"
+                    className="flex items-center gap-2 h-12 sm:h-14 px-4 sm:px-6 border border-blue-300 hover:bg-blue-50 rounded-lg font-semibold transition-colors duration-200 text-base"
                   >
                     <Calendar className="h-5 w-5" />
                     <span className="hidden sm:inline">Calendar</span>
                   </Button>
                   <Button
                     onClick={handleOpenBookingForm}
-                    className="flex items-center gap-3 h-12 sm:h-14 px-4 sm:px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-800 rounded-2xl shadow-xl font-bold transition-all duration-300 transform hover:scale-105 text-base"
+                    className="flex items-center gap-2 h-12 sm:h-14 px-4 sm:px-6 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors duration-200 text-base"
                   >
                     <Plus className="h-5 w-5" />
-                    <Sparkles className="h-4 w-4" />
                     <span className="hidden sm:inline">New Event</span>
                   </Button>
                 </div>
@@ -471,49 +463,49 @@ function EventCalendarFullInner({
           </div>
         </div>
 
-        {/* Enhanced Events List */}
+        {/* Optimized Events List */}
         <div className="flex-1 overflow-hidden px-4 sm:px-6 py-4 sm:py-6">
           <div className="h-full">
-            <Card className="h-full shadow-2xl border-0 bg-white/95 backdrop-blur-xl">
-              <CardHeader className="pb-4 sm:pb-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">
+            <Card className="h-full shadow-lg border bg-white">
+              <CardHeader className="pb-4 sm:pb-6 border-b border-slate-200 bg-slate-50">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                   <div className="flex items-center gap-6">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-4 h-4 rounded-full shadow-lg ${activeTab === "upcoming" ? "bg-gradient-to-r from-green-400 to-emerald-500 animate-pulse" : "bg-gradient-to-r from-slate-400 to-gray-500"}`}
+                        className={`w-4 h-4 rounded-full ${activeTab === "upcoming" ? "bg-green-500" : "bg-slate-400"}`}
                       ></div>
-                      <h2 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
+                      <h2 className="text-2xl sm:text-3xl font-black text-slate-800">
                         {activeTab === "upcoming" ? "Upcoming Events" : "Past Events"}
                       </h2>
                     </div>
                   </div>
 
-                  <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-2 shadow-xl border border-white/50">
+                  <div className="bg-white rounded-lg p-2 shadow-md border">
                     <button
                       onClick={() => setActiveTab("upcoming")}
-                      className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-base font-bold transition-all duration-300 ${
+                      className={`px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base font-semibold transition-colors duration-200 ${
                         activeTab === "upcoming"
-                          ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 text-white shadow-lg transform scale-105"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50"
+                          ? "bg-blue-600 text-white"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                       }`}
                     >
                       <TrendingUp className="h-4 w-4 inline mr-2" />
                       Upcoming
-                      <span className="ml-3 px-3 py-1 text-sm rounded-full bg-white/30 font-black">
+                      <span className="ml-3 px-2 py-1 text-sm rounded-full bg-white/30 font-bold">
                         {filteredUpcomingEvents.length}
                       </span>
                     </button>
                     <button
                       onClick={() => setActiveTab("past")}
-                      className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-base font-bold transition-all duration-300 ${
+                      className={`px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base font-semibold transition-colors duration-200 ${
                         activeTab === "past"
-                          ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 text-white shadow-lg transform scale-105"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50"
+                          ? "bg-blue-600 text-white"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                       }`}
                     >
                       <Activity className="h-4 w-4 inline mr-2" />
                       Past
-                      <span className="ml-3 px-3 py-1 text-sm rounded-full bg-white/30 font-black">
+                      <span className="ml-3 px-2 py-1 text-sm rounded-full bg-white/30 font-bold">
                         {filteredPastEvents.length}
                       </span>
                     </button>
@@ -521,7 +513,7 @@ function EventCalendarFullInner({
 
                   <Badge
                     variant="outline"
-                    className="text-base px-4 py-2 bg-white/90 border-2 border-blue-200 font-bold shadow-lg"
+                    className="text-base px-4 py-2 bg-white border border-blue-200 font-semibold shadow-sm"
                   >
                     <Star className="h-4 w-4 mr-2 text-yellow-500" />
                     {(activeTab === "upcoming" ? filteredUpcomingEvents : filteredPastEvents).length} events

@@ -1,52 +1,19 @@
-const nodemailer = require('nodemailer');
 const logger = require('../logger');
 const MicrosoftGraphService = require('../services/microsoftGraphService');
 
-// Determine email provider
-const emailProvider = process.env.EMAIL_PROVIDER || 'nodemailer';
-
-// Initialize email services
-let transporter = null;
+// Initialize Microsoft Graph Service
 let graphService = null;
 
-if (emailProvider === 'graph') {
-  try {
-    graphService = new MicrosoftGraphService();
-    logger.info('Microsoft Graph email service initialized');
-  } catch (error) {
-    logger.error('Microsoft Graph initialization failed:', error);
-    logger.info('Falling back to nodemailer');
-  }
-} 
-
-if (!graphService || emailProvider === 'nodemailer') {
-  // Email configuration for nodemailer
-  transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT) || 587,
-    secure: process.env.EMAIL_SECURE === 'true',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    // Add these options for better compatibility with various email providers
-    tls: {
-      rejectUnauthorized: false
-    }
-  });
-
-  // Test connection on startup
-  transporter.verify(function (error) {
-    if (error) {
-      logger.error('Email service configuration error:', error);
-    } else {
-      logger.info('Email server connection successful');
-    }
-  });
+try {
+  graphService = new MicrosoftGraphService();
+  logger.info('Microsoft Graph email service initialized 📧');
+} catch (error) {
+  logger.error('Microsoft Graph initialization failed:', error);
+  throw new Error('Microsoft Graph service is required but failed to initialize');
 }
 
 /**
- * Send an email
+ * Send an email using Microsoft Graph
  * @param {Object} options - Email options
  * @param {string} options.to - Recipient email
  * @param {string} options.subject - Email subject
@@ -88,25 +55,14 @@ const sendEmail = async (options) => {
       return { success: true, info: { response: 'Lecturer emails disabled' } };
     }
 
-    // Use Microsoft Graph if available, otherwise fallback to nodemailer
-    if (graphService) {
-      logger.info(`Sending email via Microsoft Graph to: ${options.to}`);
-      return await graphService.sendEmail(options);
-    } else if (transporter) {
-      const mailOptions = {
-        from: process.env.EMAIL_FROM || '"Maritime Training Center" <no-reply@maritimetraining.com>',
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-        text: options.text || stripHtml(options.html),
-      };
-
-      const info = await transporter.sendMail(mailOptions);
-      logger.info(`Email sent via nodemailer to ${options.to}: ${info.response}`);
-      return { success: true, info };
-    } else {
-      throw new Error('No email service available');
+    // Use Microsoft Graph service
+    if (!graphService) {
+      throw new Error('Microsoft Graph service not available');
     }
+
+    logger.info(`Sending email via Microsoft Graph to: ${options.to}`);
+    return await graphService.sendEmail(options);
+
   } catch (error) {
     logger.error('Email sending failed:', error);
     // Don't throw the error - return failure status instead
@@ -154,5 +110,5 @@ module.exports = {
   testGraphConnection,
   sendTestEmail,
   graphService,
-  emailProvider
+  emailProvider: 'graph'
 };

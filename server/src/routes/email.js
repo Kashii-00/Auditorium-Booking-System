@@ -1,28 +1,6 @@
-// const express = require("express");
-// const sendBasicEmail = require("../utils/mailer");
-// const router = express.Router();
-
-// router.post("/send", async (req, res) => {
-//   const { to, subject, message } = req.body;
-
-//   if (!to || !subject || !message) {
-//     return res.status(400).json({ error: "All fields are required." });
-//   }
-
-//   try {
-//     await sendBasicEmail(to, subject, message);
-//     res.json({ success: true, message: "Email sent successfully." });
-//   } catch (error) {
-//     console.error("Email send error:", error);
-//     res.status(500).json({ error: "Failed to send email." });
-//   }
-// });
-
-// module.exports = router;
-
 const express = require("express");
 const db = require("../db");
-const sendBasicEmail = require("../utils/mailer");
+const { sendBasicEmail } = require("../utils/emailService");
 const router = express.Router();
 
 router.post("/send", async (req, res) => {
@@ -37,7 +15,11 @@ router.post("/send", async (req, res) => {
   }
 
   try {
-    await sendBasicEmail(to, subject, message);
+    const result = await sendBasicEmail(to, subject, message, 'general');
+
+    if (!result.success) {
+      throw new Error(result.error || 'Email sending failed');
+    }
 
     // Log success
     const insertQuery = `

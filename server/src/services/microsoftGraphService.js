@@ -1,7 +1,9 @@
 const { Client } = require('@microsoft/microsoft-graph-client');
 const { ConfidentialClientApplication } = require('@azure/msal-node');
-require('isomorphic-fetch');
+
 const logger = require('../logger');
+
+
 
 class MicrosoftGraphService {
   constructor() {

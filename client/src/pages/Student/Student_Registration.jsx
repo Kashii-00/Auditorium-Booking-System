@@ -52,6 +52,7 @@ import {
   Send,
   FileSpreadsheet,
   UploadCloud,
+  MoreHorizontal,
 
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -64,8 +65,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
+
+
 import { authRequest } from "../../services/authService"
 import { getApiUrl } from '../../utils/apiUrl'
 import { cn } from "@/lib/utils"
@@ -219,7 +220,9 @@ const CourseTooltip = memo(({ courseIds, coursesMap }) => {
 CourseTooltip.displayName = "CourseTooltip"
 
 // Optimized Student Row Component
-const StudentRow = memo(({ student, onView, onEdit, onDelete, onSendPasswordReset, onSendCredentials, confirmDeleteId, loading, coursesMap }) => {
+const StudentRow = memo(({ student, onView, onEdit, onDelete, onSendPasswordReset, onSendCredentials, confirmDeleteId, loading, coursesMap, sidebarCollapsed }) => {
+  const [isActionsOpen, setIsActionsOpen] = useState(false)
+  
   const handleView = useCallback(() => onView(student.id), [onView, student.id])
   const handleEdit = useCallback(() => onEdit(student.id), [onEdit, student.id])
   const handleDelete = useCallback(() => onDelete(student.id), [onDelete, student.id])
@@ -227,11 +230,18 @@ const StudentRow = memo(({ student, onView, onEdit, onDelete, onSendPasswordRese
   const handleSendPasswordReset = useCallback(() => onSendPasswordReset(student), [onSendPasswordReset, student])
   const handleSendCredentials = useCallback(() => onSendCredentials(student), [onSendCredentials, student])
 
+  // Helper function to truncate long names
+  const truncateName = (name, maxLength = 25) => {
+    if (!name) return ""
+    if (name.length <= maxLength) return name
+    return name.substring(0, maxLength) + "..."
+  }
+
   return (
     <tr className="table-row border-b border-slate-200">
-      <td className="p-4">
-        <div className="flex items-center gap-3">
-          <Avatar className="w-12 h-12 border-2 border-blue-200">
+      <td className="p-4" style={{ minWidth: '180px', maxWidth: '250px' }}>
+        <div className="flex items-center gap-3 min-w-0">
+          <Avatar className="w-12 h-12 border-2 border-blue-200 flex-shrink-0">
             <AvatarImage src={`/placeholder.svg?height=48&width=48&query=student`} />
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white font-bold">
               {student.full_name
@@ -240,8 +250,13 @@ const StudentRow = memo(({ student, onView, onEdit, onDelete, onSendPasswordRese
                 .join("") || "U"}
             </AvatarFallback>
           </Avatar>
-          <div>
-            <div className="font-bold text-slate-900">{student.full_name}</div>
+          <div className="min-w-0 flex-1">
+            <div 
+              className="font-bold text-slate-900 overflow-hidden" 
+              title={student.full_name}
+            >
+              <span className="truncate block">{student.full_name}</span>
+            </div>
             <div className="text-sm text-slate-500 font-semibold">
               <span className="text-slate-400">
                 ID: {student.id}
@@ -259,9 +274,11 @@ const StudentRow = memo(({ student, onView, onEdit, onDelete, onSendPasswordRese
           <div className="text-slate-600 font-medium">{student.id_number}</div>
         </div>
       </td>
-      <td className="p-4">
-        <div className="text-sm font-semibold text-slate-700">{student.nationality}</div>
-      </td>
+      {sidebarCollapsed && (
+        <td className="p-4">
+          <div className="text-sm font-semibold text-slate-700">{student.nationality}</div>
+        </td>
+      )}
       <td className="p-4">
         <CourseTooltip courseIds={student.enrolled_courses} coursesMap={coursesMap} />
       </td>
@@ -280,59 +297,94 @@ const StudentRow = memo(({ student, onView, onEdit, onDelete, onSendPasswordRese
         </Badge>
       </td>
       <td className="p-4">
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleView}
-            className="flex items-center gap-1 hover:bg-blue-50 hover:border-blue-300 border transition-colors"
-            title="View Student"
-          >
-            <Eye className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleEdit}
-            className="flex items-center gap-1 hover:bg-emerald-50 hover:border-emerald-300 border transition-colors"
-            title="Edit Student"
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleSendCredentials}
-            className="flex items-center gap-1 hover:bg-indigo-50 hover:border-indigo-300 border transition-colors"
-            title="Send Login Credentials"
-          >
-            <Key className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleSendPasswordReset}
-            className="flex items-center gap-1 hover:bg-orange-50 hover:border-orange-300 border transition-colors"
-            title="Send Password Reset Email"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-          {confirmDeleteId === student.id ? (
-            <div className="flex gap-1">
+        {confirmDeleteId === student.id ? (
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={loading}
+              className="hover:bg-red-700"
+            >
+              {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : "Confirm"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleCancelDelete} className="hover:bg-gray-50 border">
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <div className="relative">
               <Button
                 size="sm"
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={loading}
-                className="hover:bg-red-700"
+                variant="outline"
+                onClick={() => setIsActionsOpen(!isActionsOpen)}
+                className="flex items-center gap-2"
               >
-                {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : "Confirm"}
+                <MoreHorizontal className="w-4 h-4" />
+               
               </Button>
-              <Button size="sm" variant="outline" onClick={handleCancelDelete} className="hover:bg-gray-50 border">
-                Cancel
-              </Button>
+              
+              {isActionsOpen && (
+                <>
+                  {/* Backdrop to close dropdown */}
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setIsActionsOpen(false)}
+                  />
+                  
+                  {/* Dropdown menu */}
+                                     <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-[9999] py-1">
+                    <button
+                      onClick={() => {
+                        handleView()
+                        setIsActionsOpen(false)
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-blue-50 text-left"
+                    >
+                      <Eye className="w-4 h-4 text-blue-600" />
+                      View Details
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        handleEdit()
+                        setIsActionsOpen(false)
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-emerald-50 text-left"
+                    >
+                      <Edit className="w-4 h-4 text-emerald-600" />
+                      Edit Student
+                    </button>
+                    
+                    <hr className="my-1 border-slate-200" />
+                    
+                    <button
+                      onClick={() => {
+                        handleSendCredentials()
+                        setIsActionsOpen(false)
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-indigo-50 text-left"
+                    >
+                      <Key className="w-4 h-4 text-indigo-600" />
+                      Send Credentials
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        handleSendPasswordReset()
+                        setIsActionsOpen(false)
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-orange-50 text-left"
+                    >
+                      <Send className="w-4 h-4 text-orange-600" />
+                      Password Reset
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
-          ) : (
+            
             <Button
               size="sm"
               variant="outline"
@@ -342,8 +394,8 @@ const StudentRow = memo(({ student, onView, onEdit, onDelete, onSendPasswordRese
             >
               <Trash2 className="w-4 h-4" />
             </Button>
-          )}
-        </div>
+          </div>
+        )}
       </td>
     </tr>
   )
@@ -352,7 +404,7 @@ const StudentRow = memo(({ student, onView, onEdit, onDelete, onSendPasswordRese
 StudentRow.displayName = "StudentRow"
 
 // Add table header component to improve code organization
-const TableHeader = memo(({ onSort, sortField, sortDirection }) => {
+const TableHeader = memo(({ onSort, sortField, sortDirection, sidebarCollapsed }) => {
   const getSortIcon = useCallback(
     (field) => {
       if (sortField !== field) return <ArrowUpDown className="w-4 h-4 text-gray-400" />
@@ -371,6 +423,7 @@ const TableHeader = memo(({ onSort, sortField, sortDirection }) => {
         <th
           className="text-left p-4 cursor-pointer hover:bg-blue-100 transition-colors rounded-tl-xl"
           onClick={() => onSort("full_name")}
+          style={{ minWidth: '180px', maxWidth: '250px' }}
         >
           <div className="flex items-center gap-2 font-black text-slate-700">
             Name
@@ -387,7 +440,9 @@ const TableHeader = memo(({ onSort, sortField, sortDirection }) => {
           </div>
         </th>
         <th className="text-left p-4 font-black text-slate-700">Identification</th>
-        <th className="text-left p-4 font-black text-slate-700">Nationality</th>
+        {sidebarCollapsed && (
+          <th className="text-left p-4 font-black text-slate-700">Nationality</th>
+        )}
         <th className="text-left p-4 font-black text-slate-700">Courses</th>
         <th
           className="text-left p-4 cursor-pointer hover:bg-blue-100 transition-colors"
@@ -609,6 +664,7 @@ export default function StudentManagementSystem() {
   const [isValidating, setIsValidating] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [editableData, setEditableData] = useState([])
+  const [isDragging, setIsDragging] = useState(false)
 
   // Courses mapping for tooltips
   const [coursesMap, setCoursesMap] = useState({})
@@ -647,6 +703,7 @@ export default function StudentManagementSystem() {
     emergency_contact_number: "",
     is_swimmer: false,
     is_slpa_employee: false,
+    is_outside_student: false,
     designation: "",
     division: "",
     service_no: "",
@@ -805,12 +862,12 @@ export default function StudentManagementSystem() {
       {
         title: "Personal Information",
         icon: User,
-        fields: ["full_name", "identification_type", "id_number", "nationality", "date_of_birth", "country"],
+        fields: ["full_name", "identification_type", "id_number", "nationality", "date_of_birth"],
       },
       {
         title: "Contact Information",
         icon: Phone,
-        fields: ["email", "address", "emergency_contact_name", "emergency_contact_number"],
+        fields: ["email", "address", "country", "emergency_contact_name", "emergency_contact_number"],
       },
       {
         title: "Courses",
@@ -820,7 +877,7 @@ export default function StudentManagementSystem() {
       {
         title: "Additional",
         icon: FileText,
-        fields: ["is_swimmer", "is_slpa_employee", "company"],
+        fields: ["is_swimmer", "is_outside_student", "is_slpa_employee", "company"],
       },
       {
         title: "Documents",
@@ -833,6 +890,9 @@ export default function StudentManagementSystem() {
 
   // Conditional fields when SLPA employee is selected - now includes department, sea_service, cdc_number
   const slpaFields = ["designation", "division", "service_no", "section_unit", "department", "sea_service", "cdc_number"]
+  
+  // Conditional fields when Outside student is selected (optional fields)
+  const outsideStudentFields = ["department", "sea_service", "cdc_number"]
 
   // Reset form to default values
   const resetForm = useCallback(() => {
@@ -854,6 +914,7 @@ export default function StudentManagementSystem() {
       emergency_contact_number: "",
       is_swimmer: false,
       is_slpa_employee: false,
+      is_outside_student: false,
       designation: "",
       division: "",
       service_no: "",
@@ -904,6 +965,7 @@ export default function StudentManagementSystem() {
           emergency_contact_number: student.emergency_contact_number || "",
           is_swimmer: Boolean(student.is_swimmer),
           is_slpa_employee: Boolean(student.is_slpa_employee),
+          is_outside_student: Boolean(student.is_outside_student),
           designation: student.designation || "",
           division: student.division || "",
           service_no: student.service_no || "",
@@ -1023,11 +1085,50 @@ export default function StudentManagementSystem() {
       }
     } catch (error) {
       console.error("Error sending login credentials:", error)
-      setErrorMessage(`Failed to send login credentials to ${student.email}. Please try again.`)
+      
+      // Check for different ways the error might be structured
+      const errorData = error.response?.data || error.data || {}
+      
+      const hasCredentials = errorData.hasCredentials || 
+                           errorData.error === "Credentials already exist" || 
+                           (error.response?.status === 400 && (
+                             errorData.error?.includes("already") ||
+                             errorData.error?.includes("Credentials") ||
+                             errorData.error?.includes("exist")
+                           ))
+      
+      if (hasCredentials) {
+        // Show warning notification popup (like success notifications)
+        setNotificationMessage("Login credentials already Sent! Use Password Reset instead.")
+        setShowSuccessNotification(true)
+        
+        setTimeout(() => {
+          setShowSuccessNotification(false)
+        }, 6000) // Longer timeout for warning message
+      } else if (errorData.error === "Student does not have a valid email address") {
+        // Show notification for missing email
+        setNotificationMessage("⚠️ Cannot send credentials - Student has no email address!")
+        setShowSuccessNotification(true)
+        
+        setTimeout(() => {
+          setShowSuccessNotification(false)
+        }, 5000)
+      } else if (errorData.error === "Student email address is not valid") {
+        // Show notification for invalid email
+        setNotificationMessage("Cannot send credentials - Student email address is invalid!")
+        setShowSuccessNotification(true)
+        
+        setTimeout(() => {
+          setShowSuccessNotification(false)
+        }, 5000)
+      } else {
+        // Regular error message
+        setErrorMessage(`Failed to send login credentials to ${student.email}. Please try again.`)
+      }
       
       setTimeout(() => {
         setErrorMessage("")
-      }, 5000)
+      }, 8000) // Longer timeout for special message
     } finally {
       setLoading(false)
     }
@@ -1081,6 +1182,8 @@ export default function StudentManagementSystem() {
       if (step === 3 && formData.is_slpa_employee) {
         fieldsToValidate.push(...slpaFields)
       }
+      
+      // Note: Outside student fields are optional so we don't add them to fieldsToValidate
 
       // Add driving details fields if Equipment courses are selected
       if (step === 3 && hasEquipmentCourses) {
@@ -1096,14 +1199,7 @@ export default function StudentManagementSystem() {
         }
 
         // Enhanced validation for specific fields
-        if (field === "email") {
-          if (!formData.email || formData.email.trim() === "") {
-            newErrors.email = "Email is required"
-          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = "Please enter a valid email address"
-          }
-          return
-        }
+
 
         if (field === "id_number") {
           if (!formData.id_number || formData.id_number.trim() === "") {
@@ -1138,9 +1234,8 @@ export default function StudentManagementSystem() {
         }
 
         if (field === "emergency_contact_number") {
-          if (!formData.emergency_contact_number || formData.emergency_contact_number.trim() === "") {
-            newErrors.emergency_contact_number = "Emergency contact number is required"
-          } else if (!/^[0-9+\-\s()]{10,15}$/.test(formData.emergency_contact_number.trim())) {
+          // Make emergency contact number optional
+          if (formData.emergency_contact_number && formData.emergency_contact_number.trim() !== "" && !/^[0-9+\-\s()]{10,15}$/.test(formData.emergency_contact_number.trim())) {
             newErrors.emergency_contact_number = "Please enter a valid phone number (10-15 digits)"
           }
           return
@@ -1184,16 +1279,12 @@ export default function StudentManagementSystem() {
         // General required field validation
         if (!formData[field] || (typeof formData[field] === "string" && formData[field].trim() === "")) {
           // Skip certain optional fields
-          const optionalFields = ["company"]
+          const optionalFields = ["company", "email", "emergency_contact_name", "emergency_contact_number", "department", "sea_service", "cdc_number", "country"]
           
           // Skip checkbox fields since false is a valid value
-          const checkboxFields = ["is_swimmer", "is_slpa_employee"]
+          const checkboxFields = ["is_swimmer", "is_slpa_employee", "is_outside_student"]
           
-          // Skip SLPA-specific fields when SLPA employee is not checked
-          const slpaSpecificFields = ["department", "sea_service", "cdc_number"]
-          const shouldSkipSlpaField = slpaSpecificFields.includes(field) && !formData.is_slpa_employee
-          
-          if (!optionalFields.includes(field) && !checkboxFields.includes(field) && !shouldSkipSlpaField) {
+          if (!optionalFields.includes(field) && !checkboxFields.includes(field)) {
             newErrors[field] = `${field.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())} is required`
           }
         }
@@ -1275,12 +1366,18 @@ export default function StudentManagementSystem() {
       try {
         const formDataObj = new FormData()
 
-        Object.entries(formData).forEach(([key, value]) => {
+        for (const [key, value] of Object.entries(formData)) {
+          // Handle empty email fields - send null instead of empty string to avoid unique constraint issues
+          if (key === "email" && (!value || value.trim() === "")) {
+            formDataObj.append(key, "null")
+            continue
+          }
+          
           if (key === "driving_details") {
             formDataObj.append(key, JSON.stringify(value))
           } else if (key === "selected_courses") {
             formDataObj.append("course_ids", JSON.stringify(value))
-          } else if (key === "is_swimmer" || key === "is_slpa_employee") {
+          } else if (key === "is_swimmer" || key === "is_slpa_employee" || key === "is_outside_student") {
             formDataObj.append(key, value ? "true" : "false")
           } else if (value instanceof File) {
             if (key === "nic_document") {
@@ -1295,7 +1392,7 @@ export default function StudentManagementSystem() {
           } else if (typeof value !== "undefined" && value !== null) {
             formDataObj.append(key, value)
           }
-        })
+        }
 
         if (formData.selected_courses.length > 0) {
           formDataObj.append("primary_course_id", formData.selected_courses[0])
@@ -1654,7 +1751,7 @@ export default function StudentManagementSystem() {
     const fieldMapping = {
       // Standard format
       "Full Name *": "full_name",
-      "Email Address *": "email", 
+      "Email Address": "email", 
       "ID Type *": "identification_type",
       "ID Number *": "id_number",
       "Nationality": "nationality",
@@ -1665,6 +1762,7 @@ export default function StudentManagementSystem() {
       "Emergency Contact Phone": "emergency_contact_number",
       "Can Swim": "is_swimmer",
       "SLPA Employee": "is_slpa_employee",
+      "Outside Student": "is_outside_student",
       "Company (if employed)": "company",
       "Designation": "designation",
       "Division": "division",
@@ -1681,7 +1779,6 @@ export default function StudentManagementSystem() {
       // Alternative formats (in case your template uses different names)
       "Full Name": "full_name",
       "Email": "email",
-      "Email Address": "email",
       "ID Type": "identification_type",
       "ID Number": "id_number",
       "Identification Type": "identification_type",
@@ -1690,6 +1787,7 @@ export default function StudentManagementSystem() {
       "Can Swim?": "is_swimmer",
       "Swimming": "is_swimmer",
       "SLPA Employee?": "is_slpa_employee",
+      "Outside Student?": "is_outside_student",
       "Company": "company",
       "Service No": "service_no",
       "Section": "section_unit",
@@ -1911,8 +2009,8 @@ export default function StudentManagementSystem() {
         }
       })
 
-      // Email validation
-      if (student.email) {
+      // Email validation (optional)
+      if (student.email && student.email.trim()) {
         // Check for extra spaces
         if (hasExtraSpaces(student.email)) {
           rowWarnings.push('Email has extra spaces')
@@ -2284,7 +2382,7 @@ export default function StudentManagementSystem() {
     
     const columnChecks = {
       full_name: 'Full Name*',
-      email: 'Email Address*',
+      email: 'Email Address',
       identification_type: 'ID Type*',
       id_number: 'ID Number*',
       nationality: 'Nationality',
@@ -2353,6 +2451,7 @@ export default function StudentManagementSystem() {
             emergency_contact_number: student.emergency_contact_number || "",
             is_swimmer: student.is_swimmer?.toLowerCase() === 'yes',
             is_slpa_employee: student.is_slpa_employee?.toLowerCase() === 'yes',
+        is_outside_student: student.is_outside_student?.toLowerCase() === 'yes',
             designation: student.designation || "",
             division: student.division || "",
             service_no: student.service_no || "",
@@ -2390,9 +2489,7 @@ export default function StudentManagementSystem() {
           if (!formattedStudent.full_name) {
             throw new Error("Full name is required")
           }
-          if (!formattedStudent.email) {
-            throw new Error("Email is required")
-          }
+
           if (!formattedStudent.id_number) {
             throw new Error("ID number is required")
           }
@@ -2426,17 +2523,23 @@ export default function StudentManagementSystem() {
           
           // Convert selected_courses to course_ids for backend compatibility
           const formDataObj = new FormData()
-          Object.entries(studentData).forEach(([key, value]) => {
+          for (const [key, value] of Object.entries(studentData)) {
+            // Handle empty email fields - send null instead of empty string to avoid unique constraint issues
+            if (key === "email" && (!value || value.trim() === "")) {
+              formDataObj.append(key, "null")
+              continue
+            }
+            
             if (key === "driving_details") {
               formDataObj.append(key, JSON.stringify(value))
             } else if (key === "selected_courses") {
               formDataObj.append("course_ids", JSON.stringify(value))
-            } else if (key === "is_swimmer" || key === "is_slpa_employee") {
+            } else if (key === "is_swimmer" || key === "is_slpa_employee" || key === "is_outside_student") {
               formDataObj.append(key, value ? "true" : "false")
             } else if (typeof value !== "undefined" && value !== null) {
               formDataObj.append(key, value)
             }
-          })
+          }
           
           // Add primary course if available
           if (studentData.selected_courses.length > 0) {
@@ -2532,7 +2635,7 @@ export default function StudentManagementSystem() {
               <div key={field} className="space-y-2">
                 <Label htmlFor="email" className="flex items-center gap-2 text-sm font-bold text-slate-700">
                   <Mail className="w-4 h-4 text-blue-600" />
-                  Email Address *
+                  Email Address
                 </Label>
                 <Input
                   type="email"
@@ -2815,7 +2918,7 @@ export default function StudentManagementSystem() {
                   className="flex items-center gap-2 text-sm font-bold text-slate-700"
                 >
                   <User className="w-4 h-4 text-blue-600" />
-                  Emergency Contact Name *
+                  Emergency Contact Name
                 </Label>
                 <Input
                   type="text"
@@ -2844,7 +2947,7 @@ export default function StudentManagementSystem() {
                   className="flex items-center gap-2 text-sm font-bold text-slate-700"
                 >
                   <Phone className="w-4 h-4 text-blue-600" />
-                  Emergency Contact Number *
+                  Emergency Contact Number
                 </Label>
                 <Input
                   type="text"
@@ -2885,6 +2988,33 @@ export default function StudentManagementSystem() {
             )
           }
 
+          if (field === "is_outside_student") {
+            return (
+              <div
+                key={field}
+                className="flex items-center space-x-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200 shadow-lg"
+              >
+                <Checkbox
+                  id="is_outside_student"
+                  checked={formData.is_outside_student}
+                  onCheckedChange={(checked) => {
+                    setFormData({ 
+                      ...formData, 
+                      is_outside_student: checked,
+                      // If outside student is checked, uncheck SLPA employee
+                      is_slpa_employee: checked ? false : formData.is_slpa_employee
+                    })
+                  }}
+                  className="border-2 border-green-400"
+                />
+                <Label htmlFor="is_outside_student" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Globe className="w-4 h-4 text-green-600" />
+                  Outside Student
+                </Label>
+              </div>
+            )
+          }
+
           if (field === "is_slpa_employee") {
             return (
               <div
@@ -2894,7 +3024,14 @@ export default function StudentManagementSystem() {
                 <Checkbox
                   id="is_slpa_employee"
                   checked={formData.is_slpa_employee}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_slpa_employee: checked })}
+                  onCheckedChange={(checked) => {
+                    setFormData({ 
+                      ...formData, 
+                      is_slpa_employee: checked,
+                      // If SLPA employee is checked, uncheck outside student
+                      is_outside_student: checked ? false : formData.is_outside_student
+                    })
+                  }}
                   className="border-2 border-purple-400"
                 />
                 <Label htmlFor="is_slpa_employee" className="flex items-center gap-2 text-sm font-bold text-slate-700">
@@ -2950,13 +3087,18 @@ export default function StudentManagementSystem() {
                             className="flex items-center gap-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-blue-300 font-semibold px-3 py-1 shadow-lg"
                           >
                             {course.courseName}
-                            <X
-                              className="w-3 h-3 cursor-pointer hover:text-red-500 transition-colors"
+                            <button
+                              type="button"
                               onClick={(e) => {
+                                e.preventDefault()
                                 e.stopPropagation()
                                 removeCourse(courseId)
                               }}
-                            />
+                              className="ml-1 text-blue-600 hover:text-red-500 transition-colors focus:outline-none"
+                              aria-label={`Remove ${course.courseName}`}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
                           </Badge>
                         ) : null
                       })
@@ -2973,7 +3115,7 @@ export default function StudentManagementSystem() {
 
                   {showCourseOptions && !coursesLoading && (
                     <div
-                      className="absolute z-10 w-full mt-1 bg-white/95 backdrop-blur-xl border-2 border-slate-200 rounded-xl shadow-2xl max-h-60 overflow-auto"
+                      className="absolute z-50 w-full mt-1 bg-white/95 backdrop-blur-xl border-2 border-slate-200 rounded-xl shadow-2xl max-h-60 overflow-auto"
                       ref={courseOptionsRef}
                     >
                       <div className="p-3 border-b border-slate-200">
@@ -3213,7 +3355,7 @@ export default function StudentManagementSystem() {
               <div className="space-y-2">
                 <Label htmlFor="department" className="flex items-center gap-2 text-sm font-bold text-slate-700">
                   <Building className="w-4 h-4 text-blue-600" />
-                  Department/Rank *
+                  Department/Rank
                 </Label>
                 <Input
                   type="text"
@@ -3233,7 +3375,7 @@ export default function StudentManagementSystem() {
               <div className="space-y-2">
                 <Label htmlFor="sea_service" className="flex items-center gap-2 text-sm font-bold text-slate-700">
                   <Ship className="w-4 h-4 text-blue-600" />
-                  Sea Services (Year/Month) *
+                  Sea Services (Year/Month)
                 </Label>
                 <Input
                   type="text"
@@ -3253,7 +3395,7 @@ export default function StudentManagementSystem() {
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="cdc_number" className="flex items-center gap-2 text-sm font-bold text-slate-700">
                   <CreditCard className="w-4 h-4 text-blue-600" />
-                  CDC Number *
+                  CDC Number
                 </Label>
                 <Input
                   type="text"
@@ -3264,6 +3406,78 @@ export default function StudentManagementSystem() {
                   placeholder="Enter CDC number"
                   className={cn(
                     "border-2 focus:border-blue-500 focus:ring-blue-500 shadow-lg",
+                    errors.cdc_number ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.cdc_number && <div className="text-sm text-red-500 font-semibold">{errors.cdc_number}</div>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Display Outside Student details when checkbox is checked */}
+        {currentStep === 3 && formData.is_outside_student && (
+          <div className="p-6 border-2 rounded-2xl bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 border-green-300 space-y-4 shadow-xl">
+            <h3 className="text-lg font-black text-green-900 flex items-center gap-2">
+              <Globe className="w-5 h-5" />
+              Outside Student Details
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="department" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Building className="w-4 h-4 text-green-600" />
+                  Department/Rank
+                </Label>
+                <Input
+                  type="text"
+                  id="department"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleChange}
+                  placeholder="Enter department or rank"
+                  className={cn(
+                    "border-2 focus:border-green-500 focus:ring-green-500 shadow-lg",
+                    errors.department ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.department && <div className="text-sm text-red-500 font-semibold">{errors.department}</div>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="sea_service" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <Ship className="w-4 h-4 text-green-600" />
+                  Sea Services (Year/Month)
+                </Label>
+                <Input
+                  type="text"
+                  id="sea_service"
+                  name="sea_service"
+                  value={formData.sea_service}
+                  onChange={handleChange}
+                  placeholder="e.g., 5 years 3 months"
+                  className={cn(
+                    "border-2 focus:border-green-500 focus:ring-green-500 shadow-lg",
+                    errors.sea_service ? "border-red-500" : "border-slate-200",
+                  )}
+                />
+                {errors.sea_service && <div className="text-sm text-red-500 font-semibold">{errors.sea_service}</div>}
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="cdc_number" className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                  <CreditCard className="w-4 h-4 text-green-600" />
+                  CDC Number
+                </Label>
+                <Input
+                  type="text"
+                  id="cdc_number"
+                  name="cdc_number"
+                  value={formData.cdc_number}
+                  onChange={handleChange}
+                  placeholder="Enter CDC number"
+                  className={cn(
+                    "border-2 focus:border-green-500 focus:ring-green-500 shadow-lg",
                     errors.cdc_number ? "border-red-500" : "border-slate-200",
                   )}
                 />
@@ -3358,37 +3572,32 @@ export default function StudentManagementSystem() {
               <div className="p-3 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 rounded-2xl flex-shrink-0">
                 <Users className="h-8 w-8 text-white" />
               </div>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-4xl font-black gradient-text whitespace-nowrap">Student Management Dashboard</h1>
-                <p className="text-slate-600 font-semibold mt-1 flex items-center gap-1">
-                  <Target className="h-3 w-3 flex-shrink-0" />
-                  Comprehensive maritime training student management system
-                </p>
-              </div>
+                              <div className="flex-1 min-w-0">
+                  <h1 className="text-4xl font-black gradient-text overflow-hidden">
+                    <span className="block truncate">Student Management Dashboard</span>
+                  </h1>
+                  <p className="text-slate-600 font-semibold mt-1 flex items-center gap-1 overflow-hidden">
+                    <Target className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">Comprehensive maritime training student management system</span>
+                  </p>
+                </div>
             </div>
             <div className="flex items-center gap-3 flex-shrink-0">
               <Button
                 variant="outline"
-                onClick={exportStudentsAsCSV}
-                className="gap-2 border-2 border-slate-200 hover:border-emerald-400 hover:bg-emerald-50 rounded-xl font-bold transition-colors"
-              >
-                <Download className="h-4 w-4" />
-                Export CSV
-              </Button>
-              <Button
-                variant="outline"
                 onClick={downloadExcelTemplate}
-                className="gap-2 border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl font-bold transition-colors"
+                className="gap-1 sm:gap-2 border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl font-bold transition-colors text-xs sm:text-sm"
               >
-                <FileSpreadsheet className="h-4 w-4" />
-                Download Excel Template
+                <FileSpreadsheet className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Download Excel Template</span>
+                <span className="sm:hidden">Template</span>
               </Button>
               <div className="flex items-center gap-2">
                 {showUploadModal && (
                   <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className={`bg-white rounded-2xl shadow-2xl border border-slate-200 ${fileValidation ? 'w-[96vw] max-w-none' : 'w-full max-w-3xl'} max-h-[95vh] overflow-hidden`}>
                       {/* Header */}
-                      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 text-white">
+                      <div className="bg-primary p-6 text-primary-foreground">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
@@ -3396,14 +3605,14 @@ export default function StudentManagementSystem() {
                             </div>
                             <div>
                               <h2 className="text-xl font-bold">Upload Student Data</h2>
-                              <p className="text-blue-100 text-sm">CSV/Excel file validation & import</p>
+                              <p className="text-primary-foreground/80 text-sm">CSV/Excel file validation & import</p>
                             </div>
                           </div>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => setShowUploadModal(false)}
-                            className="h-8 w-8 p-0 text-white hover:bg-white/20 rounded-full"
+                            className="h-8 w-8 p-0 text-primary-foreground hover:bg-white/20 rounded-full"
                           >
                             <X className="h-5 w-5" />
                           </Button>
@@ -3414,7 +3623,7 @@ export default function StudentManagementSystem() {
                       <div className={`${fileValidation ? 'p-6' : 'p-8'} space-y-6 max-h-[80vh] overflow-y-auto`}>
                         {!selectedFile && (
                           <div className="text-center space-y-4">
-                            <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                            <div className="p-4 bg-secondary rounded-xl border border-secondary">
                               <p className="text-slate-700 font-medium">
                                 📊 Select a CSV or Excel file with student registration data
                               </p>
@@ -3428,11 +3637,35 @@ export default function StudentManagementSystem() {
                         {/* File Selection */}
                         <div className="space-y-4">
                           {!selectedFile && <Label htmlFor="modal-file" className="text-base font-semibold text-slate-700">Choose Your File</Label>}
-                          <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
-                            selectedFile 
-                              ? 'border-green-300 bg-green-50' 
-                              : 'border-slate-300 hover:border-indigo-400 hover:bg-indigo-50'
-                          }`}>
+                          <div
+                            onDragEnter={(e) => {
+                              e.preventDefault();
+                              setIsDragging(true)
+                            }}
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              setIsDragging(true)
+                            }}
+                            onDragLeave={() => setIsDragging(false)}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              setIsDragging(false)
+                              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                handleModalFileSelect({ target: { files: e.dataTransfer.files } })
+                              }
+                            }}
+                            className={`relative border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-200 ${
+                              selectedFile
+                                ? 'border-green-300 bg-green-50'
+                                : isDragging
+                                  ? 'border-primary bg-accent'
+                                  : 'border-slate-300 hover:border-primary hover:bg-accent'
+                            }`}
+                          >
+                            {/* decorative accent */}
+                            {!selectedFile && (
+                              <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.08),transparent_60%)]" />
+                            )}
                             <input
                               id="modal-file"
                               type="file"
@@ -3462,17 +3695,17 @@ export default function StudentManagementSystem() {
                                 </Button>
                               </div>
                             ) : (
-                              <div className="space-y-4">
+                              <div className="space-y-4 relative">
                                 <div className="flex items-center justify-center">
-                                  <div className="p-3 bg-indigo-100 rounded-full">
-                                    <FileSpreadsheet className="h-8 w-8 text-indigo-600" />
+                                  <div className="p-3 bg-accent rounded-full">
+                                    <FileSpreadsheet className="h-8 w-8 text-accent-foreground" />
                                   </div>
                                 </div>
                                 <div>
                                   <Button
                                     variant="outline"
                                     onClick={() => document.getElementById('modal-file')?.click()}
-                                    className="gap-2 text-lg px-6 py-3 border-2 border-indigo-300 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-400 font-semibold"
+                                    className="gap-2 text-lg px-6 py-3 border-2 border-primary text-primary hover:bg-accent hover:border-primary font-semibold rounded-xl shadow-sm"
                                   >
                                     <Upload className="h-5 w-5" />
                                     Select File to Upload
@@ -3480,6 +3713,7 @@ export default function StudentManagementSystem() {
                                   <p className="text-sm text-slate-500 mt-3">
                                     📁 Supports CSV, Excel (.xlsx, .xls) files up to 5MB
                                   </p>
+                                  <p className="text-xs text-slate-400">or drag & drop here</p>
                                 </div>
                               </div>
                             )}
@@ -3488,46 +3722,46 @@ export default function StudentManagementSystem() {
 
                         {/* File Validation Status */}
                         {isValidating && (
-                          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl">
-                            <div className="p-2 bg-blue-100 rounded-full">
-                              <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                          <div className="flex items-center gap-3 p-4 bg-secondary border border-secondary rounded-xl">
+                            <div className="p-2 bg-accent rounded-full">
+                              <Loader2 className="h-5 w-5 animate-spin text-primary" />
                             </div>
                             <div>
-                              <p className="font-semibold text-blue-800">Validating file content...</p>
-                              <p className="text-sm text-blue-600">Checking for errors, duplicates, and data quality</p>
+                              <p className="font-semibold text-foreground">Validating file content...</p>
+                              <p className="text-sm text-muted-foreground">Checking for errors, duplicates, and data quality</p>
                             </div>
                           </div>
                         )}
 
                         {fileValidation && (
-                          <div className="space-y-4">
+                      <div className="space-y-6">
                             {/* File Info */}
-                            {fileValidation.info.fileName && (
-                              <div className="bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 rounded-xl p-5">
+                        {fileValidation.info.fileName && (
+                          <div className="bg-white/90 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 shadow-sm">
                                 <div className="flex items-center gap-2 mb-4">
                                   <FileSpreadsheet className="h-5 w-5 text-slate-600" />
                                   <h4 className="font-bold text-slate-800">File Analysis</h4>
                                 </div>
-                                <div className="grid grid-cols-3 gap-4">
-                                  <div className="bg-white p-3 rounded-lg border border-slate-200">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
                                     <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Filename</p>
                                     <p className="font-semibold text-slate-800 text-sm truncate" title={fileValidation.info.fileName}>
                                       {fileValidation.info.fileName}
                                     </p>
                                   </div>
-                                  <div className="bg-white p-3 rounded-lg border border-slate-200">
+                              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
                                     <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Size & Type</p>
                                     <p className="font-semibold text-slate-800 text-sm">
                                       {fileValidation.info.fileSize} • {fileValidation.info.fileType}
                                     </p>
                                   </div>
-                                  <div className="bg-white p-3 rounded-lg border border-slate-200">
+                              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
                                     <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Total Records</p>
                                     <p className="font-semibold text-slate-800 text-lg">{fileValidation.info.rowCount}</p>
                                   </div>
                                   {fileValidation.info.validRows !== undefined && (
                                     <>
-                                      <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                                  <div className="bg-green-50 p-3 rounded-lg border border-green-200">
                                         <p className="text-xs text-green-600 uppercase tracking-wide mb-1">Valid Records</p>
                                         <p className="font-bold text-green-700 text-lg">{fileValidation.info.validRows}</p>
                                       </div>
@@ -3621,14 +3855,17 @@ export default function StudentManagementSystem() {
                             )}
 
                             {/* Data Preview - Full Width Table */}
-                            {filePreview && filePreview.length > 0 && (
-                              <div className="space-y-4">
-                                <h4 className="font-semibold text-slate-700 text-lg">Data Preview (First 3 rows)</h4>
-                                <div className="w-full overflow-x-auto border border-slate-200 rounded-lg">
-                                  <table className="w-full text-sm border-collapse" style={{ minWidth: '1400px' }}>
-                                    <thead className="bg-slate-100">
+                        {filePreview && filePreview.length > 0 && (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-semibold text-slate-700 text-lg">Data Preview (First 3 rows)</h4>
+                              <div className="text-xs text-slate-500">Auto-detected columns • Scroll to view more</div>
+                            </div>
+                            <div className="w-full overflow-x-auto border border-slate-200 rounded-xl shadow-sm">
+                              <table className="w-full text-sm border-collapse" style={{ minWidth: '1200px' }}>
+                                <thead className="bg-gradient-to-r from-slate-50 to-slate-100">
                                       <tr>
-                                        <th className="px-4 py-3 text-left border-r" style={{ minWidth: '150px' }}>Full Name</th>
+                                    <th className="px-4 py-3 text-left border-r" style={{ minWidth: '160px' }}>Full Name</th>
                                         <th className="px-4 py-3 text-left border-r" style={{ minWidth: '220px' }}>Email</th>
                                         <th className="px-4 py-3 text-left border-r" style={{ minWidth: '80px' }}>ID Type</th>
                                         <th className="px-4 py-3 text-left border-r" style={{ minWidth: '130px' }}>ID Number</th>
@@ -3639,7 +3876,7 @@ export default function StudentManagementSystem() {
                                     </thead>
                                     <tbody>
                                       {filePreview.map((student, index) => (
-                                        <tr key={index} className="border-t border-slate-200 hover:bg-slate-50">
+                                    <tr key={index} className="border-t border-slate-200 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50">
                                           <td className="px-4 py-3 border-r" title={student.full_name}>{student.full_name || '-'}</td>
                                           <td className="px-4 py-3 border-r" title={student.email}>{student.email || '-'}</td>
                                           <td className="px-4 py-3 border-r text-center">{student.identification_type || '-'}</td>
@@ -3662,6 +3899,7 @@ export default function StudentManagementSystem() {
                           <Button
                             variant="outline"
                             onClick={() => setShowUploadModal(false)}
+                            className="rounded-xl"
                           >
                             Cancel
                           </Button>
@@ -3670,7 +3908,7 @@ export default function StudentManagementSystem() {
                               variant="outline"
                               onClick={handleEditData}
                               disabled={!selectedFile}
-                              className="gap-2 px-6 py-2 border-2 border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400 font-semibold rounded-xl transition-all"
+                              className="gap-2 px-6 py-2 border-2 border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400 font-semibold rounded-xl shadow-sm"
                             >
                               <FileSpreadsheet className="h-4 w-4" />
                               Edit Data
@@ -3678,7 +3916,7 @@ export default function StudentManagementSystem() {
                             <Button
                               onClick={handleConfirmUpload}
                               disabled={!fileValidation?.isValid || !selectedFile}
-                              className="gap-2 px-6 py-2 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg transition-all transform hover:scale-105"
+                              className="gap-2 px-6 py-2 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg"
                             >
                               <CheckCircle className="h-4 w-4" />
                               Confirm Upload
@@ -3693,7 +3931,7 @@ export default function StudentManagementSystem() {
                 {/* Edit Data Modal */}
                 {editMode && (
                   <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2">
-                    <div className="bg-white rounded-2xl shadow-2xl w-[99vw] max-w-none max-h-[97vh] overflow-hidden border border-slate-200">
+                      <div className="bg-card text-card-foreground rounded-2xl shadow-2xl w-[99vw] max-w-none max-h-[97vh] overflow-hidden border border-border">
                       {/* Enhanced Header */}
                       <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-6 text-white">
                         <div className="flex items-center justify-between">
@@ -3740,14 +3978,14 @@ export default function StudentManagementSystem() {
                       {/* Content Area */}
                       <div className="p-6 max-h-[80vh] overflow-y-auto">
                         {/* Instructions */}
-                        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+                        <div className="mb-6 p-4 bg-secondary border border-secondary rounded-xl">
                           <div className="flex items-center gap-2 mb-2">
-                            <div className="p-1 bg-blue-100 rounded-full">
-                              <FileSpreadsheet className="h-4 w-4 text-blue-600" />
+                            <div className="p-1 bg-accent rounded-full">
+                              <FileSpreadsheet className="h-4 w-4 text-accent-foreground" />
                             </div>
-                            <p className="font-semibold text-blue-900">Editing Instructions</p>
+                            <p className="font-semibold text-foreground">Editing Instructions</p>
                           </div>
-                          <p className="text-sm text-blue-700">
+                          <p className="text-sm text-muted-foreground">
                             ✏️ Edit fields directly in the table below • Fields marked with * are mandatory • 
                             📞 Phone numbers should follow Sri Lankan format (775645645, 0775645645, +94775645645) • 
                             Click "Save & Validate" when done
@@ -3863,7 +4101,7 @@ export default function StudentManagementSystem() {
                                           <option value="">Select Type</option>
                                           <option value="NIC">🆔 NIC</option>
                                           <option value="Passport">🛂 Passport</option>
-                                          <option value="Computer">💻 Computer</option>
+                                          <option value="C_NO">💻 Computer</option>
                                         </select>
                                       ) : column.field === 'is_swimmer' ? (
                                         <select
@@ -4000,10 +4238,11 @@ export default function StudentManagementSystem() {
                   setCurrentView("registration")
                   navigate("/student-registration", { replace: true })
                 }}
-                className="gap-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white rounded-xl font-bold transition-colors"
+                className="gap-1 sm:gap-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white rounded-xl font-bold transition-colors text-xs sm:text-sm px-3 sm:px-4 py-2"
               >
-                <Plus className="h-4 w-4" />
-                Add Student
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Add Student</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </div>
           </div>
@@ -4012,7 +4251,7 @@ export default function StudentManagementSystem() {
 
 
         {/* Students Table */}
-        <Card className="border-0 shadow-lg bg-white">
+        <Card className="border-0 shadow-lg bg-white relative">
           <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <CardTitle className="text-2xl font-black gradient-text flex items-center gap-3">
@@ -4116,7 +4355,7 @@ export default function StudentManagementSystem() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-visible">
             {/* Add record selector before the table */}
             <div className="flex justify-between items-center mb-4">
               <RecordsPerPageSelector
@@ -4129,13 +4368,25 @@ export default function StudentManagementSystem() {
               />
 
               {students.length > 0 && (
-                <Badge
-                  variant="outline"
-                  className="bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border-blue-200 px-3 py-1 font-semibold"
-                >
-                  <BookOpen className="w-3 h-3 mr-1" />
-                  {getFilteredAndSortedStudents.length} students found
-                </Badge>
+                <div className="flex items-center gap-3">
+                  <Badge
+                    variant="outline"
+                    className="bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border-blue-200 px-3 py-1 font-semibold"
+                  >
+                    <BookOpen className="w-3 h-3 mr-1" />
+                    {getFilteredAndSortedStudents.length} students found
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={exportStudentsAsCSV}
+                    className="gap-1 sm:gap-2 border-2 border-slate-200 hover:border-emerald-400 hover:bg-emerald-50 rounded-xl font-bold transition-colors text-xs sm:text-sm mr-5"
+                  >
+                    <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Export CSV</span>
+                    <span className="sm:hidden">CSV</span>
+                  </Button>
+                </div>
               )}
             </div>
             {studentsLoading ? (
@@ -4163,9 +4414,9 @@ export default function StudentManagementSystem() {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto" ref={tableRef}>
+                <div className="overflow-x-auto overflow-y-visible" ref={tableRef}>
                   <table className="w-full border-collapse">
-                    <TableHeader onSort={handleSort} sortField={sortField} sortDirection={sortDirection} />
+                    <TableHeader onSort={handleSort} sortField={sortField} sortDirection={sortDirection} sidebarCollapsed={sidebarCollapsed} />
                     <tbody>
                       {currentStudents.length > 0 ? (
                         currentStudents.map((student) => (
@@ -4180,11 +4431,12 @@ export default function StudentManagementSystem() {
                             confirmDeleteId={confirmDeleteId}
                             loading={loading}
                             coursesMap={coursesMap}
+                            sidebarCollapsed={sidebarCollapsed}
                           />
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={7} className="p-16 text-center">
+                          <td colSpan={sidebarCollapsed ? 7 : 6} className="p-16 text-center">
                             <div className="p-6 bg-gradient-to-br from-slate-100 via-gray-100 to-zinc-100 rounded-3xl inline-block mb-6">
                               <Users className="mx-auto h-16 w-16 text-slate-400" />
                             </div>
@@ -4469,18 +4721,25 @@ export default function StudentManagementSystem() {
                     {/* Conditional section indicators */}
                     {currentStep === 3 && (
                       <div className="flex items-center gap-2 text-sm">
+
                         {formData.is_slpa_employee && (
-                          <Badge className="bg-purple-100 text-purple-700 border-purple-300">
-                            <Building className="w-3 h-3 mr-1" />
-                            SLPA Employee
-                          </Badge>
+                          <div className="bg-purple-100 text-purple-700 border border-purple-300 rounded-full p-1.5">
+                            <Building className="w-3 h-3" />
+                          </div>
                         )}
+                        
+                        {formData.is_outside_student && (
+                          <div className="bg-green-100 text-green-700 border border-green-300 rounded-full p-1.5">
+                            <Globe className="w-3 h-3" />
+                          </div>
+                        )}
+
                         {hasEquipmentCourses && (
-                          <Badge className="bg-orange-100 text-orange-700 border-orange-300">
-                            <Ship className="w-3 h-3 mr-1" />
-                            Equipment Course
-                          </Badge>
+                          <div className="bg-orange-100 text-orange-700 border border-orange-300 rounded-full p-1.5">
+                            <Ship className="w-3 h-3" />
+                          </div>
                         )}
+
                       </div>
                     )}
                   </h2>
@@ -4592,6 +4851,7 @@ export default function StudentManagementSystem() {
       emergency_contact_number: "",
       is_swimmer: false,
       is_slpa_employee: false,
+      is_outside_student: false,
       designation: "",
       division: "",
       service_no: "",
@@ -4644,6 +4904,7 @@ export default function StudentManagementSystem() {
           emergency_contact_number: student.emergency_contact_number || "",
           is_swimmer: Boolean(student.is_swimmer),
           is_slpa_employee: Boolean(student.is_slpa_employee),
+          is_outside_student: Boolean(student.is_outside_student),
           designation: student.designation || "",
           division: student.division || "",
           service_no: student.service_no || "",

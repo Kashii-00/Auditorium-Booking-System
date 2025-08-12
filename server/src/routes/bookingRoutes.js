@@ -8,7 +8,7 @@ const db = require('../db');
 router.post('/', auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] POST /api/bookings`);
-  console.log('Auditorium Reservation POST body:', req.body);
+  console.log('Auditorium Reservation POST body 📆 :', req.body);
 
   const user_name = req.user.name;
   const { user_id, description, booking_date, booking_time, bookingendtime, no_of_people, status } = req.body;
@@ -29,7 +29,7 @@ router.post('/', auth.authMiddleware, (req, res) => {
 
 router.get('/', auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
-  console.log(`[${now}] GET /api/bookings`);
+  //console.log(`[${now}] GET /api/bookings`);
   const sql = `SELECT b.*, u.name, u.email, u.phone 
                FROM bookings b
                JOIN users u ON b.user_id = u.id`;
