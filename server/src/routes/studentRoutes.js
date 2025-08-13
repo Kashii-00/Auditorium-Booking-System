@@ -10,7 +10,7 @@ const logger = require('../logger');
 const moment = require('moment');
 const bcrypt = require('bcryptjs');
 const { sendEmail } = require('../utils/emailService');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 const studentIdGenerator = require('../services/studentIdGenerator');
 
 // Ensure uploads directory exists

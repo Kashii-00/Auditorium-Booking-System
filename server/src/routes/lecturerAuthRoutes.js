@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const logger = require('../logger');
 const { sendEmail } = require('../utils/emailService');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 
 /**
  * Generate JWT tokens for lecturer authentication
