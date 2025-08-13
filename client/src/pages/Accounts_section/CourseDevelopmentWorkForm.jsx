@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useMemo } from "react";
 import CreatableSelect from "react-select/creatable";
-import { authRequest } from "../../services/authService"
+import Select from "react-select";
 import { getApiUrl } from '../../utils/apiUrl';
+import { authRequest } from "../../services/authService";
 import "./styles/styles.css";
 
 const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager", "admin"];
 const CATEGORY = "Course Development Work";
 
-// Normalize user roles like backend
+// Normalize user ro  les like backend
 const normalizeRoles = (rawRole) => {
   if (!rawRole) return [];
   if (Array.isArray(rawRole)) return rawRole;
@@ -71,12 +72,6 @@ const CourseDevelopmentWorkForm = ({
 }) => {
   const DRAFT_KEY = "draftCourseDevelopmentWorkForm";
 
-  // const [formData, setFormData] = useState({
-  //   payments_main_details_id: "",
-  //   no_of_panel_meetings: 0,
-  //   expenses: [],
-  //   participants: [],
-  // });
   const [formData, setFormData] = useState(() => {
     const saved = localStorage.getItem(DRAFT_KEY);
     return saved
@@ -272,13 +267,6 @@ const CourseDevelopmentWorkForm = ({
 
     updateParticipant(index, updatedItem);
   };
-
-  // // --- GENERAL FORM FIELD ---
-  // const handleChange = (e) => {
-  //   const { name, value } = e.target;
-  //   // For numeric inputs, store as string to allow empty input but convert before submit
-  //   setFormData((prev) => ({ ...prev, [name]: value }));
-  // };
 
   const addExpense = () => {
     setFormData((prev) => ({
@@ -772,15 +760,24 @@ const CourseDevelopmentWorkForm = ({
                   </label>
                 </div>
                 <div className="form-step" style={{ flex: 1 }}>
-                  <input
-                    type="text"
-                    value={p.smes}
-                    onChange={(e) =>
-                      handleParticipantChange(idx, "smes", e.target.value)
+                  <Select
+                    styles={customSelectStyles}
+                    options={[
+                      { value: "Yes", label: "Yes" },
+                      { value: "No", label: "No" },
+                    ]}
+                    value={p.smes ? { value: p.smes, label: p.smes } : null}
+                    onChange={(selected) =>
+                      handleParticipantChange(
+                        idx,
+                        "smes",
+                        selected?.value || ""
+                      )
                     }
-                    placeholder=" "
                     onFocus={() => onFocus(`part_smes_${idx}`)}
                     onBlur={() => onBlur(`part_smes_${idx}`)}
+                    placeholder=" "
+                    isClearable
                   />
                   <label
                     className={
@@ -790,6 +787,7 @@ const CourseDevelopmentWorkForm = ({
                     SMEs
                   </label>
                 </div>
+
                 <div className="form-step" style={{ flex: 1 }}>
                   <input
                     type="number"

@@ -104,7 +104,7 @@ router.post("/", auth.authMiddleware, (req, res) => {
 // GET all aid requests with their items
 router.get("/", auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
-  //console.log(`[${now}] GET /api/aidrequests`);
+  console.log(`[${now}] GET /api/aidrequests`);
 
   const sql = `
   SELECT ar.*, ai.item_no, ai.description, ai.quantity, ai.remark, ai.md_approval_required_or_not, ai.md_approval_obtained, ai.md_approval_details, ai.CTM_approval_obtained, ai.CTM_Details

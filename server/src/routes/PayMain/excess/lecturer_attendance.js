@@ -1,7 +1,7 @@
 // routes/lecturer_attendance.js
 const express = require("express");
-const db = require("../../db");
-const auth = require("../../auth");
+const db = require("../../../db");
+const auth = require("../../../auth");
 const Joi = require("joi");
 
 const router = express.Router();

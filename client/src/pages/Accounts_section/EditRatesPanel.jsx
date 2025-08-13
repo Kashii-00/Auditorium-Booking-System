@@ -5,11 +5,11 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { authRequest } from "../../services/authService"
-import { getApiUrl } from '../../utils/apiUrl';
+import { authRequest } from "../../services/authService";
 import "./styles/styles.css";
 import { useLocation } from "react-router-dom";
 import Select from "react-select"; // make sure this is imported
+import { getApiUrl } from '../../utils/apiUrl';
 
 const rateTypeOptions = [
   { value: "Quantity", label: "Per Unit Rate" },
@@ -297,7 +297,7 @@ const EditRatesPanel = () => {
       return;
     }
     try {
-              await authRequest("patch", getApiUrl("/rates"), {
+      await authRequest("patch", getApiUrl("/rates"), {
         items: [
           {
             item_description: rate.item_description,
@@ -319,7 +319,7 @@ const EditRatesPanel = () => {
     try {
       await authRequest(
         "delete",
-        getApiUrl(`/rates/by-item?itemDescription=${encodeURIComponent(
+          getApiUrl(`/rates/by-item?itemDescription=${encodeURIComponent(
           rate.item_description
         )}&category=${encodeURIComponent(rate.category)}`)
       );
@@ -337,7 +337,7 @@ const EditRatesPanel = () => {
       return;
     }
     try {
-              await authRequest("post", getApiUrl("/rates"), {
+      await authRequest("post", getApiUrl("/rates"), {
         items: [newRate],
       });
       setSuccessMessage(`Rate added successfully!`);

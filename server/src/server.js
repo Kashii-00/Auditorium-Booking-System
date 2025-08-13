@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const db = require('./db');
+const logger = require('./logger');
 const setupGracefulShutdown = require('./utils/gracefulShutdown');
 
 const authRoutes = require('./routes/authRoutes');
@@ -12,40 +13,35 @@ const busBooking = require('./routes/busroute');
 const CourseRegistrationRoute = require('./routes/CourseRegistrationRoute');
 const PayCourseRoute = require('./routes/PayCourseRoute');
 const lecturerRegistrationRoutes = require('./routes/lecturerRegistration');
-const studentRoutes = require('./routes/studentRoutes'); // Make sure this is imported
-const studentIdRoutes = require('./routes/studentIdRoutes');
 const aidRequestRoutes = require("./routes/aidRequests");
 const aidHandoverRoutes = require("./routes/aidHandover");
 const classroomCalendarRoutes = require("./routes/classroomCalendarRoutes");
 
-//payment
-const ratesRoutes = require("./routes/PayMain/rates");
+const ratesRoutes = require("./routes/rates");
 const paymentsRouter = require("./routes/PayMain/coursePaymentsMaindetails");
-const paymentCourseMaterials = require("./routes/PayMain/courseMaterials");
-const paymentCourseTrainingTeachingAids = require("./routes/PayMain/courseTrainingTAid");
-const paymentCourseTrainingEnvironments = require("./routes/PayMain/courseTrainingEnvironments");
-const paymentCourseOverheads = require("./routes/PayMain/courseOverheads");
-const paymentCDWParticipants = require("./routes/PayMain/panelMeetingParticipants");
-const paymentCDWExpenses = require("./routes/PayMain/CDWExpenses");
-const paymentCDW = require("./routes/PayMain/courseDevWork");
+const studentRoutes = require('./routes/studentRoutes'); 
+const studentIdRoutes = require('./routes/studentIdRoutes');
 const paymentCDWFull = require("./routes/PayMain/CDWFull");
-const paymentCDHRItems = require("./routes/PayMain/CourseDeliveryItems");
-const paymentCDC = require("./routes/PayMain/CourseDCost");
 const paymentCDCFull = require("./routes/PayMain/CDCFull");
 const paymentCOHFull = require("./routes/PayMain/COHFull");
 const paymentFinalReport = require("./routes/PayMain/course_cost_summary");
 const paymentsSFDisplay = require("./routes/PayMain/FullPaymentsGet");
-const StudentPayments = require("./routes/PayMain/StudentPayments");
-const LecturerAttendance = require("./routes/PayMain/lecturer_attendance");
-const LecturerPayments = require("./routes/PayMain/lecturerPayments");
+const costSummaryFlags = require("./routes/PayMain/cost_summary_flags");
+const specialCasePayments = require("./routes/PayMain/special_case_payments");
+const payhereRoutes = require("./routes/Payhere/payhere");
+const courseRevenueSummary = require("./routes/PayMain/courseRevenueSummary");
 
+// Import routes from PayMain/excess directory
+const LecturerAttendance = require("./routes/PayMain/excess/lecturer_attendance");
+const LecturerPayments = require("./routes/PayMain/excess/lecturerPayments");
 
-// Import routes
+const StudentPayments = require("./routes/PayMain/excess/StudentPayments");
 const { studentAuthRouter } = require('./routes/studentAuthRoutes');
 const studentPaymentRoutes = require('./routes/studentPaymentRoutes');
 
 // Import the batch routes
 const batchRoutes = require('./routes/batchRoutes');
+
 const emailRoutes = require("./routes/email");
 
 const cron = require("node-cron");
@@ -83,13 +79,14 @@ const corsOptions = {
 };
 
 // Every 5 minutes
-cron.schedule("*/5 * * * *", () => {
-  console.log("⏰ Checking for approved/denied requests needing emails...");
+cron.schedule("*/1 * * * *", () => {
+  logger.email("⏰ Checking for approved/denied requests needing emails...");
   processPendingEmails();
 });
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(express.urlencoded({extended:true}));
 app.use(cookieParser()); 
 
 
@@ -128,21 +125,15 @@ app.use("/api/classroom-calendar", classroomCalendarRoutes);
 //Payment 
 app.use("/api/rates", ratesRoutes);
 app.use("/api/payments", paymentsRouter);
-app.use("/api/course-materials", paymentCourseMaterials);
-app.use("/api/course-training-teaching-aids",paymentCourseTrainingTeachingAids);
-app.use("/api/course-training-teaching-envs",paymentCourseTrainingEnvironments);
-app.use("/api/course-overheads", paymentCourseOverheads);
-app.use("/api/panel-participants", paymentCDWParticipants);
-app.use("/api/cdw-expenses", paymentCDWExpenses);
-app.use("/api/cdw", paymentCDW);
 app.use("/api/course-development-work", paymentCDWFull);
-app.use("/api/course-delivery-items", paymentCDHRItems);
-app.use("/api/course-delivery-cost", paymentCDC);
 app.use("/api/course-delivery-cost-full", paymentCDCFull);
 app.use("/api/course-overheads-cost", paymentCOHFull);
 app.use("/api/payment-course-final-summary", paymentFinalReport);
 app.use("/api/payment-sf-display", paymentsSFDisplay);
-app.use("/api/student-payments", StudentPayments);
+app.use("/api/cost-summary-flags", costSummaryFlags);
+app.use("/api/special-case-payments", specialCasePayments);
+app.use("/api/payhere", payhereRoutes);
+app.use("/api/course-revenue-summary", courseRevenueSummary);
 app.use("/api/lecturer-attendance", LecturerAttendance);
 app.use("/api/lecturer-payments", LecturerPayments);
 
@@ -153,7 +144,9 @@ app.use('/api/backup', require('./routes/backup'));
 
 // Student authentication routes
 app.use('/api/student-auth', studentAuthRouter);
-app.use('/api/student-payments', studentPaymentRoutes);
+app.use("/api/student_payments", StudentPayments);
+
+
 
 // Student batch routes
 const studentBatchRoutes = require('./routes/studentBatchRoutes');
@@ -195,7 +188,7 @@ app.use((err, req, res, next) => {
 
 const port = process.env.PORT || 5003;
 const server = app.listen(port, () => {
-  console.info(`Server running on port ${port}`);
+  logger.NESH(`Server running on port ${port}`);
   
   // Initialize backup service scheduling
   try {

@@ -4,18 +4,35 @@ const db = require("../../db");
 const auth = require("../../auth");
 const logger = require("../../logger");
 const Joi = require("joi");
-const { standardLimiter } = require("../../middleware/rateLimiter");
+const rateLimit = require("express-rate-limit");
+const { ipKeyGenerator } = require("express-rate-limit");
+const { resetApprovalFields } = require("../PayMain/util/resetDefaults");
 
 const router = express.Router();
 
 // Rate limiter
-// Using standardLimiter for IPv6-compatible rate limiting
-
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 15,
+  keyGenerator: (req) => req.user?.id || ipKeyGenerator(req),
+  handler: (req, res) => {
+    res
+      .status(429)
+      .json({ error: "Too many requests. Please try again later." });
+  },
+});
 
 router.use(auth.authMiddleware);
-router.use(standardLimiter);
+router.use(limiter);
 
-const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager", "admin"];
+const PRIVILEGED_ROLES = [
+  "SuperAdmin",
+  "finance_manager",
+  "CTM",
+  "DCTM01",
+  "DCTM02",
+  "sectional_head",
+];
 
 function normalizeRoles(rawRole) {
   if (!rawRole) return [];
@@ -35,17 +52,13 @@ function isPrivileged(user) {
   return roles.some((r) => PRIVILEGED_ROLES.includes(r));
 }
 
-const postSchema = Joi.object({
-  payment_main_details_id: Joi.number().integer().required(),
-});
-
 router.post("/", (req, res) => {
-  const postSchema = Joi.object({
+  const schema = Joi.object({
     payment_main_details_id: Joi.number().integer().required(),
     check_by: Joi.string().max(255).optional(),
   });
 
-  const { error, value } = postSchema.validate(req.body);
+  const { error, value } = schema.validate(req.body);
   if (error) return res.status(400).json({ error: error.details[0].message });
 
   const { payment_main_details_id, check_by } = value;
@@ -53,7 +66,7 @@ router.post("/", (req, res) => {
 
   // Step 1: Ownership check
   db.query(
-    `SELECT user_id FROM payments_main_details WHERE id = ?`,
+    `SELECT user_id, no_of_participants FROM payments_main_details WHERE id = ?`,
     [payment_main_details_id],
     (err, rows) => {
       if (err) return res.status(500).json({ error: "DB error" });
@@ -63,6 +76,12 @@ router.post("/", (req, res) => {
           .json({ error: "Invalid payment_main_details_id" });
 
       const ownerId = rows[0].user_id;
+      const participants = parseInt(rows[0].no_of_participants);
+
+      if (!participants || participants <= 0) {
+        return res.status(400).json({ error: "Participants must be > 0" });
+      }
+
       const userIsOwner = ownerId === user.id;
       const userIsPrivileged = isPrivileged(user);
 
@@ -73,13 +92,12 @@ router.post("/", (req, res) => {
         });
       }
 
-      // Step 2: Fetch cost totals and participants
+      // Step 2: Fetch costs
       const getCostsQuery = `
         SELECT
           (SELECT IFNULL(total_cost, 0) FROM course_development_work WHERE payments_main_details_id = ? ORDER BY created_at DESC LIMIT 1) AS dev_cost,
           (SELECT IFNULL(total_cost, 0) FROM course_delivery_costs WHERE payments_main_details_id = ? ORDER BY created_at DESC LIMIT 1) AS delivery_cost,
-          (SELECT IFNULL(total_cost, 0) FROM course_overheads_main WHERE payments_main_details_id = ? ORDER BY created_at DESC LIMIT 1) AS overhead_cost,
-          (SELECT no_of_participants FROM payments_main_details WHERE id = ?) AS participants
+          (SELECT IFNULL(total_cost, 0) FROM course_overheads_main WHERE payments_main_details_id = ? ORDER BY created_at DESC LIMIT 1) AS overhead_cost
       `;
 
       db.query(
@@ -88,46 +106,19 @@ router.post("/", (req, res) => {
           payment_main_details_id,
           payment_main_details_id,
           payment_main_details_id,
-          payment_main_details_id,
         ],
         (err, results) => {
           if (err)
-            return res
-              .status(500)
-              .json({ error: "DB Error in fetching costs" });
+            return res.status(500).json({ error: "DB error fetching costs" });
 
           const row = results[0];
-
           const devCost = parseFloat(row.dev_cost) || 0;
           const deliveryCost = parseFloat(row.delivery_cost) || 0;
           const overheadCost = parseFloat(row.overhead_cost) || 0;
-          const no_of_participants = parseInt(row.participants);
-
-          if ([devCost, deliveryCost, overheadCost].some((x) => isNaN(x))) {
-            return res.status(400).json({
-              error:
-                "One or more of the cost components (development, delivery, overhead) are missing or invalid.",
-            });
-          }
 
           const total_cost_expense = devCost + deliveryCost + overheadCost;
-
           if (total_cost_expense <= 0) {
-            return res.status(400).json({
-              error:
-                "At least one of the development, delivery, or overhead costs must be greater than zero.",
-            });
-          }
-
-          if (
-            no_of_participants === null ||
-            isNaN(no_of_participants) ||
-            no_of_participants <= 0
-          ) {
-            return res.status(400).json({
-              error:
-                "Number of participants must be provided and greater than zero to calculate cost per head.",
-            });
+            return res.status(400).json({ error: "Costs must be > 0" });
           }
 
           // Step 3: Fetch rates
@@ -136,7 +127,12 @@ router.post("/", (req, res) => {
               SELECT item_description, rate
               FROM rates
               WHERE category = 'Course Cost Final Report'
-              AND item_description IN ('Profit Margin Percentage', 'NBT', 'Provision For Inflation Percentage')
+              AND item_description IN (
+                'Profit Margin Percentage',
+                'NBT',
+                'Provision For Inflation Percentage',
+                'VAT'
+              )
             `,
             (err, rates) => {
               if (err)
@@ -150,50 +146,50 @@ router.post("/", (req, res) => {
                 "Profit Margin Percentage",
                 "Provision For Inflation Percentage",
                 "NBT",
+                "VAT",
               ];
-
-              const missingRates = requiredRates.filter(
-                (key) =>
-                  !(key in rateMap) ||
-                  rateMap[key] === null ||
-                  isNaN(rateMap[key])
+              const missing = requiredRates.filter(
+                (r) =>
+                  !(r in rateMap) || rateMap[r] === null || isNaN(rateMap[r])
               );
 
-              if (missingRates.length > 0) {
+              if (missing.length > 0) {
                 return res.status(400).json({
-                  error: `Missing or invalid rate(s): ${missingRates.join(
-                    ", "
-                  )}`,
+                  error: `Missing or invalid rate(s): ${missing.join(", ")}`,
                 });
               }
 
-              const profitPercent = rateMap["Profit Margin Percentage"];
+              // Step 4: Do calculations
               const inflationPercent =
                 rateMap["Provision For Inflation Percentage"];
-              const nbtAmount = rateMap["NBT"];
+              const nbtPercent = rateMap["NBT"];
+              const profitPercent = rateMap["Profit Margin Percentage"];
+              const vatPercent = rateMap["VAT"];
 
-              // Step 4: Calculations
               const inflationAmount =
                 (inflationPercent / 100) * total_cost_expense;
+              const nbtAmount =
+                ((total_cost_expense + inflationAmount) * nbtPercent) / 100;
               const profitAmount =
-                (profitPercent / 100) *
-                (total_cost_expense + inflationAmount + nbtAmount);
-
-              const total_course_cost =
+                ((total_cost_expense + inflationAmount + nbtAmount) *
+                  profitPercent) /
+                100;
+              const subtotal =
                 total_cost_expense + inflationAmount + nbtAmount + profitAmount;
+              const vatAmount = (subtotal * vatPercent) / 100;
+              const total_course_cost = subtotal + vatAmount;
 
-              const course_fee_per_head =
-                total_course_cost / no_of_participants;
-
+              const course_fee_per_head = total_course_cost / participants;
               const roundedCourseFeePerHead =
                 Math.ceil(course_fee_per_head / 50) * 50;
-              const roundedCourseTotal =
-                roundedCourseFeePerHead * no_of_participants;
+              const roundedCourseTotal = roundedCourseFeePerHead * participants;
 
               const finalValues = [
                 total_cost_expense,
                 inflationAmount,
+                nbtAmount,
                 profitAmount,
+                vatAmount,
                 total_course_cost,
                 course_fee_per_head,
                 roundedCourseFeePerHead,
@@ -204,7 +200,9 @@ router.post("/", (req, res) => {
                 console.error("Derived NaN values:", {
                   total_cost_expense,
                   inflationAmount,
+                  nbtAmount,
                   profitAmount,
+                  vatAmount,
                   total_course_cost,
                   course_fee_per_head,
                   roundedCourseFeePerHead,
@@ -217,97 +215,143 @@ router.post("/", (req, res) => {
                 });
               }
 
-              // Step 5: Insert final record
-              const insertQuery = `
-                INSERT INTO course_cost_summary (
-                  payment_main_details_id,
-                  profit_margin_percentage,
-                  profit_margin,
-                  provision_inflation_percentage,
-                  total_cost_expense,
-                  NBT,
-                  total_course_cost,
-                  no_of_participants,
-                  course_fee_per_head,
-                  Rounded_CFPH,
-                  Rounded_CT,
-                  prepared_by,
-                  prepared_by_id,
-                  check_by,
-                  updated_by_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-              `;
-
+              // Step 5: Delete existing summaries, then insert new cost summary
               db.query(
-                insertQuery,
-                [
-                  payment_main_details_id,
-                  profitPercent,
-                  profitAmount,
-                  inflationPercent,
-                  total_cost_expense,
-                  nbtAmount,
-                  total_course_cost,
-                  no_of_participants,
-                  course_fee_per_head,
-                  roundedCourseFeePerHead,
-                  roundedCourseTotal,
-                  user.name || null,
-                  user.id,
-                  check_by || null,
-                  user.id,
-                ],
-                (err, result) => {
-                  if (err) {
-                    console.error("Insert error:", err);
-                    return res.status(500).json({ error: "Insert failed" });
+                `DELETE FROM course_revenue_summary WHERE payments_main_details_id = ?`,
+                [payment_main_details_id],
+                (revDelErr) => {
+                  if (revDelErr) {
+                    return res.status(500).json({
+                      error: "Failed to delete existing revenue summary",
+                    });
                   }
 
-                  // return res.status(201).json({
-                  //   message: "Inserted successfully",
-                  //   id: result.insertId,
-                  // });
-
-                  // Step 6: Insert into course_revenue_summary
-                  const crsInsertQuery = `
-                  INSERT INTO course_revenue_summary (
-                    payments_main_details_id,
-                    course_id,
-                    batch_id,
-                    no_of_participants,
-                    paid_no_of_participants,
-                    total_course_revenue,
-                    revenue_received_total,
-                    all_fees_collected_status
-                  ) SELECT ?, course_id, batch_id, no_of_participants, 0, ?, 0.00, FALSE
-                    FROM payments_main_details
-                    WHERE id = ?
-                `;
-
                   db.query(
-                    crsInsertQuery,
-                    [
-                      payment_main_details_id,
-                      roundedCourseTotal,
-                      payment_main_details_id,
-                    ],
-                    (crsErr) => {
-                      if (crsErr) {
-                        console.error(
-                          "Insert into course_revenue_summary failed:",
-                          crsErr
-                        );
+                    `DELETE FROM course_cost_summary WHERE payment_main_details_id = ?`,
+                    [payment_main_details_id],
+                    (costDelErr) => {
+                      if (costDelErr) {
                         return res.status(500).json({
                           error:
-                            "Summary created but revenue record insert failed",
-                          course_summary_id: result.insertId,
+                            "Failed to delete existing course cost summary",
                         });
                       }
 
-                      return res.status(201).json({
-                        message: "Inserted successfully",
-                        id: result.insertId,
-                      });
+                      const insertQuery = `
+                        INSERT INTO course_cost_summary (
+                          payment_main_details_id,
+                          profit_margin_percentage,
+                          profit_margin,
+                          provision_inflation_percentage,
+                          inflation_amount,
+                          total_cost_expense,
+                          NBT,
+                          NBT_percentage,
+                          VAT,
+                          VAT_percentage,
+                          total_course_cost,
+                          no_of_participants,
+                          course_fee_per_head,
+                          Rounded_CFPH,
+                          Rounded_CT,
+                          prepared_by,
+                          prepared_by_id,
+                          check_by,
+                          updated_by_id
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                      `;
+
+                      // db.query(
+                      //   insertQuery,
+                      //   [
+                      //     payment_main_details_id,
+                      //     profitPercent,
+                      //     profitAmount,
+                      //     inflationPercent,
+                      //     inflationAmount,
+                      //     total_cost_expense,
+                      //     nbtAmount,
+                      //     nbtPercent,
+                      //     vatAmount,
+                      //     vatPercent,
+                      //     total_course_cost,
+                      //     participants,
+                      //     course_fee_per_head,
+                      //     roundedCourseFeePerHead,
+                      //     roundedCourseTotal,
+                      //     user.name || null,
+                      //     user.id,
+                      //     check_by || null,
+                      //     user.id,
+                      //   ],
+                      //   (err, result) => {
+                      //     if (err)
+                      //       return res
+                      //         .status(500)
+                      //         .json({ error: "Insert failed" });
+
+                      //     return res.status(201).json({
+                      //       message:
+                      //         "Course cost summary created (previous records deleted)",
+                      //       id: result.insertId,
+                      //     });
+                      //   }
+                      // );
+                      db.query(
+                        insertQuery,
+                        [
+                          payment_main_details_id,
+                          profitPercent,
+                          profitAmount,
+                          inflationPercent,
+                          inflationAmount,
+                          total_cost_expense,
+                          nbtAmount,
+                          nbtPercent,
+                          vatAmount,
+                          vatPercent,
+                          total_course_cost,
+                          participants,
+                          course_fee_per_head,
+                          roundedCourseFeePerHead,
+                          roundedCourseTotal,
+                          user.name || null,
+                          user.id,
+                          check_by || null,
+                          user.id,
+                        ],
+                        (err, result) => {
+                          if (err)
+                            return res
+                              .status(500)
+                              .json({ error: "Insert failed" });
+
+                          // Call resetApprovalFields here
+                          resetApprovalFields(
+                            payment_main_details_id,
+                            user.id,
+                            (resetErr) => {
+                              if (resetErr) {
+                                console.error(
+                                  "Failed to reset approval fields:",
+                                  resetErr
+                                );
+                                return res.status(500).json({
+                                  error:
+                                    "Insert succeeded but failed to reset approval fields",
+                                });
+                              }
+
+                              // Send success response only after resetApprovalFields completes
+                              res.status(201).json({
+                                message:
+                                  "Course cost summary created (previous records deleted)",
+                                id: result.insertId,
+                              });
+                            }
+                          );
+                        }
+                      );
                     }
                   );
                 }
@@ -349,7 +393,7 @@ router.get("/:payment_main_details_id", (req, res) => {
   });
 });
 
-// PATCH endpoint
+// PATCH endpoint - Refresh cost summary
 router.patch("/:id/refresh", (req, res) => {
   const { id } = req.params;
   const { payment_main_details_id, check_by } = req.body;
@@ -362,8 +406,9 @@ router.patch("/:id/refresh", (req, res) => {
     });
   }
 
+  // Step 1: Ensure summary exists & ownership check
   const getSummaryQuery = `
-    SELECT ccs.payment_main_details_id, pmd.user_id, ccs.prepared_by, ccs.prepared_by_id
+    SELECT ccs.payment_main_details_id, pmd.user_id
     FROM course_cost_summary ccs
     JOIN payments_main_details pmd ON ccs.payment_main_details_id = pmd.id
     WHERE ccs.id = ?
@@ -383,6 +428,7 @@ router.patch("/:id/refresh", (req, res) => {
       });
     }
 
+    // Step 2: Get latest costs
     const getCostsQuery = `
       SELECT
         (SELECT IFNULL(total_cost, 0) FROM course_development_work WHERE payments_main_details_id = ? ORDER BY created_at DESC LIMIT 1) AS dev_cost,
@@ -404,11 +450,11 @@ router.patch("/:id/refresh", (req, res) => {
           return res.status(500).json({ error: "Cost data fetch failed" });
 
         const row = results[0];
-        const devCost = parseFloat(row.dev_cost);
-        const deliveryCost = parseFloat(row.delivery_cost);
-        const overheadCost = parseFloat(row.overhead_cost);
+        const devCost = parseFloat(row.dev_cost) || 0;
+        const deliveryCost = parseFloat(row.delivery_cost) || 0;
+        const overheadCost = parseFloat(row.overhead_cost) || 0;
         const total_cost_expense = devCost + deliveryCost + overheadCost;
-        const no_of_participants = row.participants;
+        const participants = parseInt(row.participants);
 
         if (total_cost_expense <= 0) {
           return res.status(400).json({
@@ -416,18 +462,24 @@ router.patch("/:id/refresh", (req, res) => {
           });
         }
 
-        if (!no_of_participants || no_of_participants <= 0) {
+        if (!participants || participants <= 0) {
           return res.status(400).json({
             error: "Valid number of participants is required.",
           });
         }
 
+        // Step 3: Fetch rates including VAT
         db.query(
           `
             SELECT item_description, rate
             FROM rates
             WHERE category = 'Course Cost Final Report'
-            AND item_description IN ('Profit Margin Percentage', 'NBT', 'Provision For Inflation Percentage')
+            AND item_description IN (
+              'Profit Margin Percentage',
+              'NBT',
+              'Provision For Inflation Percentage',
+              'VAT'
+            )
           `,
           (err, rates) => {
             if (err)
@@ -442,43 +494,73 @@ router.patch("/:id/refresh", (req, res) => {
               "Profit Margin Percentage",
               "Provision For Inflation Percentage",
               "NBT",
+              "VAT",
             ];
-            const missingRates = requiredRates.filter((key) =>
-              isNaN(rateMap[key])
+            const missingRates = requiredRates.filter(
+              (key) => !(key in rateMap) || isNaN(rateMap[key])
             );
+
             if (missingRates.length > 0) {
               return res.status(400).json({
                 error: `Missing or invalid rate(s): ${missingRates.join(", ")}`,
               });
             }
 
-            const profitPercent = rateMap["Profit Margin Percentage"];
+            // Step 4: Perform calculations
             const inflationPercent =
               rateMap["Provision For Inflation Percentage"];
-            const nbtAmount = rateMap["NBT"];
+            const nbtPercent = rateMap["NBT"];
+            const profitPercent = rateMap["Profit Margin Percentage"];
+            const vatPercent = rateMap["VAT"];
 
             const inflationAmount =
               (inflationPercent / 100) * total_cost_expense;
+            const nbtAmount =
+              ((total_cost_expense + inflationAmount) * nbtPercent) / 100;
             const profitAmount =
-              (profitPercent / 100) *
-              (total_cost_expense + inflationAmount + nbtAmount);
-            const total_course_cost =
+              ((total_cost_expense + inflationAmount + nbtAmount) *
+                profitPercent) /
+              100;
+            const subtotal =
               total_cost_expense + inflationAmount + nbtAmount + profitAmount;
-            const course_fee_per_head = total_course_cost / no_of_participants;
+            const vatAmount = (subtotal * vatPercent) / 100;
+            const total_course_cost = subtotal + vatAmount;
 
-            // ✅ Rounded values
+            const course_fee_per_head = total_course_cost / participants;
             const roundedCourseFeePerHead =
               Math.ceil(course_fee_per_head / 50) * 50;
-            const roundedCourseTotal =
-              roundedCourseFeePerHead * no_of_participants;
+            const roundedCourseTotal = roundedCourseFeePerHead * participants;
 
+            // ✅ Sanity check
+            const finalValues = [
+              total_cost_expense,
+              inflationAmount,
+              nbtAmount,
+              profitAmount,
+              vatAmount,
+              total_course_cost,
+              course_fee_per_head,
+              roundedCourseFeePerHead,
+              roundedCourseTotal,
+            ];
+
+            if (finalValues.some((val) => isNaN(val))) {
+              return res.status(400).json({
+                error: "Calculation error: Invalid values detected.",
+              });
+            }
+            // Step 5: Update course_cost_summary
             const updateQuery = `
               UPDATE course_cost_summary SET
                 profit_margin_percentage = ?,
                 profit_margin = ?,
                 provision_inflation_percentage = ?,
+                inflation_amount = ?,          -- ✅ NEW FIELD
                 total_cost_expense = ?,
                 NBT = ?,
+                NBT_percentage = ?,
+                VAT = ?,
+                VAT_percentage = ?,
                 total_course_cost = ?,
                 no_of_participants = ?,
                 course_fee_per_head = ?,
@@ -495,10 +577,14 @@ router.patch("/:id/refresh", (req, res) => {
                 profitPercent,
                 profitAmount,
                 inflationPercent,
+                inflationAmount, // ✅ NEW VALUE
                 total_cost_expense,
                 nbtAmount,
+                nbtPercent,
+                vatAmount,
+                vatPercent,
                 total_course_cost,
-                no_of_participants,
+                participants,
                 course_fee_per_head,
                 roundedCourseFeePerHead,
                 roundedCourseTotal,
@@ -511,7 +597,6 @@ router.patch("/:id/refresh", (req, res) => {
                   console.error("Update error:", err);
                   return res.status(500).json({ error: "Update failed" });
                 }
-                // res.json({ message: "Summary refreshed successfully." });
 
                 // Step 6: Update course_revenue_summary
                 const updateCRSQuery = `
@@ -553,13 +638,13 @@ router.patch("/:id/refresh", (req, res) => {
   });
 });
 
-//// DELETE endpoint
 // router.delete("/:id", (req, res) => {
 //   const { id } = req.params;
 
 //   db.query(
 //     `
-//     SELECT pmd.user_id FROM course_cost_summary ccs
+//     SELECT ccs.payment_main_details_id, pmd.user_id
+//     FROM course_cost_summary ccs
 //     JOIN payments_main_details pmd ON ccs.payment_main_details_id = pmd.id
 //     WHERE ccs.id = ?
 //   `,
@@ -569,6 +654,7 @@ router.patch("/:id/refresh", (req, res) => {
 //       if (rows.length === 0)
 //         return res.status(404).json({ error: "Not found" });
 
+//       const { payment_main_details_id } = rows[0];
 //       const isOwner = req.user.id === rows[0].user_id;
 //       const privileged = isPrivileged(req.user);
 
@@ -578,9 +664,26 @@ router.patch("/:id/refresh", (req, res) => {
 //           .json({ error: "Forbidden: Not allowed to delete." });
 //       }
 
+//       // Step 1: Delete from course_cost_summary
 //       db.query(`DELETE FROM course_cost_summary WHERE id = ?`, [id], (err2) => {
 //         if (err2) return res.status(500).json({ error: "Delete failed" });
-//         res.json({ message: "Deleted" });
+
+//         // Step 2: Delete from course_revenue_summary
+//         db.query(
+//           `DELETE FROM course_revenue_summary WHERE payments_main_details_id = ?`,
+//           [payment_main_details_id],
+//           (err3) => {
+//             if (err3) {
+//               console.error("Revenue summary deletion failed:", err3);
+//               return res.status(500).json({
+//                 error:
+//                   "Cost summary deleted, but revenue summary deletion failed.",
+//               });
+//             }
+
+//             res.json({ message: "Deleted both cost and revenue summary." });
+//           }
+//         );
 //       });
 //     }
 //   );
@@ -630,7 +733,26 @@ router.delete("/:id", (req, res) => {
               });
             }
 
-            res.json({ message: "Deleted both cost and revenue summary." });
+            // Step 3: Call resetApprovalFields after successful deletes
+            resetApprovalFields(
+              payment_main_details_id,
+              req.user.id,
+              (resetErr) => {
+                if (resetErr) {
+                  console.error("Failed to reset approval fields:", resetErr);
+                  // Optionally, send success response anyway or error, here I send error
+                  return res.status(500).json({
+                    error:
+                      "Deleted summaries but failed to reset approval fields.",
+                  });
+                }
+
+                // All done successfully
+                res.json({
+                  message: "Deleted cost and revenue summary, reset approvals.",
+                });
+              }
+            );
           }
         );
       });

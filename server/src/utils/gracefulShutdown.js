@@ -16,7 +16,7 @@ module.exports = function setupGracefulShutdown(server, db) {
     }, 30000); // 30 seconds timeout
     
     server.close(() => {
-      logger.info('HTTP server closed');
+      logger.info('Server closed');
       
       // Close database connections
       if (db && typeof db.end === 'function') {

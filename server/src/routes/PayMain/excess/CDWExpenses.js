@@ -1,17 +1,26 @@
 const express = require("express");
-const db = require("../../db");
-const auth = require("../../auth");
-const logger = require("../../logger");
+const db = require("../../../db");
+const auth = require("../../../auth");
+const logger = require("../../../logger");
 const Joi = require("joi");
-const { standardLimiter } = require("../../middleware/rateLimiter");
+const rateLimit = require("express-rate-limit");
 
 const router = express.Router();
 
 // Rate limiter
-// Using standardLimiter for IPv6-compatible rate limiting
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 15,
+  keyGenerator: (req) => req.user?.id || req.ip,
+  handler: (req, res) => {
+    res
+      .status(429)
+      .json({ error: "Too many requests. Please try again later." });
+  },
+});
 
 router.use(auth.authMiddleware);
-router.use(standardLimiter);
+router.use(limiter);
 
 const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager", "admin"];
 const CATEGORY = "Course Development Work";
@@ -181,33 +190,6 @@ router.post("/", (req, res) => {
     }
   );
 });
-
-// // GET
-// router.get("/", (req, res) => {
-//   const user = req.user;
-//   const privileged = isPrivileged(user);
-
-//   let query = `
-//     SELECT e.*
-//     FROM course_development_work_expenses e
-//     JOIN course_development_work w ON e.course_development_work_id = w.id
-//     JOIN payments_main_details pmd ON w.payments_main_details_id = pmd.id
-//   `;
-//   const params = [];
-
-//   if (!privileged) {
-//     query += ` WHERE pmd.user_id = ?`;
-//     params.push(user.id);
-//   }
-
-//   db.query(query, params, (err, rows) => {
-//     if (err) {
-//       logger.error("GET /course-development-work-expenses error:", err);
-//       return res.status(500).json({ error: "Internal server error" });
-//     }
-//     res.json(rows);
-//   });
-// });
 
 router.get("/", (req, res) => {
   const user = req.user;

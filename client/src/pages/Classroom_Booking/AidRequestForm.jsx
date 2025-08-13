@@ -1519,7 +1519,7 @@ const AidRequestForm = () => {
         id="aidh2"
       >
         <div className="page-header">
-          <h1>Create Classroom/Aid Request</h1>
+          <h1>Create Classroom/Aid Request</h1> 
         </div>
 
         <div className="progressbar-container">

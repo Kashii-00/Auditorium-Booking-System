@@ -3,17 +3,34 @@ const db = require("../../db");
 const auth = require("../../auth");
 const logger = require("../../logger");
 const Joi = require("joi");
-const { standardLimiter } = require("../../middleware/rateLimiter");
+const rateLimit = require("express-rate-limit");
+const { ipKeyGenerator } = require("express-rate-limit");
+const { resetApprovalFields } = require("../PayMain/util/resetDefaults");
 
 const router = express.Router();
 
-// Using standardLimiter for IPv6-compatible rate limiting
-
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 15,
+  keyGenerator: (req) => req.user?.id || ipKeyGenerator(req),
+  handler: (req, res) => {
+    res
+      .status(429)
+      .json({ error: "Too many requests. Please try again later." });
+  },
+});
 
 router.use(auth.authMiddleware);
-router.use(standardLimiter);
+router.use(limiter);
 
-const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager", "admin"];
+const PRIVILEGED_ROLES = [
+  "SuperAdmin",
+  "finance_manager",
+  "CTM",
+  "DCTM01",
+  "DCTM02",
+  "sectional_head",
+];
 
 function normalizeRoles(rawRole) {
   if (!rawRole) return [];
@@ -86,11 +103,19 @@ router.post("/full", (req, res) => {
         return res
           .status(400)
           .json({ error: "Invalid payments_main_details_id." });
-      if (rows[0].user_id !== user.id) {
-        return res
-          .status(403)
-          .json({ error: "Only the owner can create this record." });
+
+      const ownerUserId = rows[0].user_id;
+      const isOwner = ownerUserId === user.id;
+      const isPrivilegedUser = isPrivileged(user);
+
+      if (!isOwner && !isPrivilegedUser) {
+        return res.status(403).json({
+          error: "Only the owner or a privileged user can create this record.",
+        });
       }
+
+      // 👇 This is what we will insert into course_overheads_main.user_id
+      const finalUserId = ownerUserId;
 
       db.getConnection((connErr, connection) => {
         if (connErr) return res.status(500).json({ error: "Connection error" });
@@ -101,104 +126,159 @@ router.post("/full", (req, res) => {
               res.status(500).json({ error: "Transaction error" })
             );
 
+          // DELETE existing records for this payments_main_details_id (cascade will delete children)
           connection.query(
-            `INSERT INTO course_overheads_main (payments_main_details_id, total_cost) VALUES (?, 0)`,
+            `DELETE FROM course_overheads_main WHERE payments_main_details_id = ?`,
             [payments_main_details_id],
-            (insertErr, result) => {
-              if (insertErr)
+            (deleteErr) => {
+              if (deleteErr) {
                 return connection.rollback(() => {
                   connection.release();
-                  res.status(500).json({ error: "Insert failed" });
+                  res.status(500).json({
+                    error: "Failed to delete existing overhead record.",
+                  });
                 });
+              }
 
-              const mainId = result.insertId;
-              const privileged = isPrivileged(user);
+              // Now insert new main record with total_cost = 0 initially
+              connection.query(
+                `INSERT INTO course_overheads_main (payments_main_details_id, total_cost, user_id) VALUES (?, 0, ?)`,
+                [payments_main_details_id, finalUserId],
 
-              const insertItems = (index, items, table, insertFn, next) => {
-                if (index >= items.length) return next();
-                insertFn(
-                  connection,
-                  user,
-                  privileged,
-                  mainId,
-                  items[index],
-                  (err) => {
-                    if (err)
-                      return connection.rollback(() => {
-                        connection.release();
-                        res.status(400).json({ error: err });
-                      });
-                    insertItems(index + 1, items, table, insertFn, next);
-                  }
-                );
-              };
+                (insertErr, result) => {
+                  if (insertErr)
+                    return connection.rollback(() => {
+                      connection.release();
+                      res.status(500).json({ error: "Insert failed" });
+                    });
 
-              const calculateAndUpdateTotal = () => {
-                const query = `SELECT
-                  IFNULL((SELECT SUM(cost) FROM training_teaching_aids WHERE course_overheads_main_id = ?), 0) +
-                  IFNULL((SELECT SUM(cost) FROM training_environments WHERE course_overheads_main_id = ?), 0) +
-                  IFNULL((SELECT SUM(cost) FROM overheads WHERE course_overheads_main_id = ?), 0) AS total_cost`;
+                  const mainId = result.insertId;
+                  const privileged = isPrivileged(user);
 
-                connection.query(
-                  query,
-                  [mainId, mainId, mainId],
-                  (err, rows) => {
-                    if (err)
-                      return connection.rollback(() => {
-                        connection.release();
-                        res
-                          .status(500)
-                          .json({ error: "Cost calculation failed" });
-                      });
+                  const insertItems = (index, items, table, insertFn, next) => {
+                    if (index >= items.length) return next();
+                    insertFn(
+                      connection,
+                      user,
+                      privileged,
+                      mainId,
+                      items[index],
+                      (err) => {
+                        if (err)
+                          return connection.rollback(() => {
+                            connection.release();
+                            res.status(400).json({ error: err });
+                          });
+                        insertItems(index + 1, items, table, insertFn, next);
+                      }
+                    );
+                  };
 
-                    const total = rows[0].total_cost;
+                  const calculateAndUpdateTotal = () => {
+                    const query = `SELECT
+                      IFNULL((SELECT SUM(cost) FROM training_teaching_aids WHERE course_overheads_main_id = ?), 0) +
+                      IFNULL((SELECT SUM(cost) FROM training_environments WHERE course_overheads_main_id = ?), 0) +
+                      IFNULL((SELECT SUM(cost) FROM overheads WHERE course_overheads_main_id = ?), 0) AS total_cost`;
+
                     connection.query(
-                      `UPDATE course_overheads_main SET total_cost = ? WHERE id = ?`,
-                      [total, mainId],
-                      (err2) => {
-                        if (err2)
+                      query,
+                      [mainId, mainId, mainId],
+                      (err, rows) => {
+                        if (err)
                           return connection.rollback(() => {
                             connection.release();
                             res
                               .status(500)
-                              .json({ error: "Total cost update failed" });
+                              .json({ error: "Cost calculation failed" });
                           });
 
-                        connection.commit((commitErr) => {
-                          if (commitErr)
-                            return connection.rollback(() => {
-                              connection.release();
-                              res.status(500).json({ error: "Commit failed" });
+                        const total = rows[0].total_cost;
+                        connection.query(
+                          `UPDATE course_overheads_main SET total_cost = ? WHERE id = ?`,
+                          [total, mainId],
+                          (err2) => {
+                            if (err2)
+                              return connection.rollback(() => {
+                                connection.release();
+                                res
+                                  .status(500)
+                                  .json({ error: "Total cost update failed" });
+                              });
+
+                            // connection.commit((commitErr) => {
+                            //   if (commitErr)
+                            //     return connection.rollback(() => {
+                            //       connection.release();
+                            //       res
+                            //         .status(500)
+                            //         .json({ error: "Commit failed" });
+                            //     });
+                            //   connection.release();
+                            //   res.status(201).json({
+                            //     message:
+                            //       "Course overheads created successfully.",
+                            //   });
+                            // });
+                            connection.commit((commitErr) => {
+                              if (commitErr)
+                                return connection.rollback(() => {
+                                  connection.release();
+                                  res
+                                    .status(500)
+                                    .json({ error: "Commit failed" });
+                                });
+
+                              connection.release(); // ✅ release the transaction connection
+
+                              // ✅ Run resetApprovalFields after successful commit
+                              resetApprovalFields(
+                                payments_main_details_id,
+                                req.user.id,
+                                (resetErr, result) => {
+                                  if (resetErr) {
+                                    logger.warn(
+                                      `Approval fields reset failed:`,
+                                      resetErr.message
+                                    );
+                                  } else {
+                                    logger.info(
+                                      `Approval fields reset successfully for PMD ID ${payments_main_details_id}`
+                                    );
+                                  }
+                                }
+                              );
+
+                              res.status(201).json({
+                                message:
+                                  "Course overheads created successfully.",
+                              });
                             });
-                          connection.release();
-                          res.status(201).json({
-                            message: "Course overheads created successfully.",
-                          });
-                        });
+                          }
+                        );
                       }
                     );
-                  }
-                );
-              };
+                  };
 
-              insertItems(
-                0,
-                teaching_aids,
-                "training_teaching_aids",
-                insertTeachingAid,
-                () => {
                   insertItems(
                     0,
-                    training_environments,
-                    "training_environments",
-                    insertTrainingEnv,
+                    teaching_aids,
+                    "training_teaching_aids",
+                    insertTeachingAid,
                     () => {
                       insertItems(
                         0,
-                        overheads,
-                        "overheads",
-                        insertOverhead,
-                        calculateAndUpdateTotal
+                        training_environments,
+                        "training_environments",
+                        insertTrainingEnv,
+                        () => {
+                          insertItems(
+                            0,
+                            overheads,
+                            "overheads",
+                            insertOverhead,
+                            calculateAndUpdateTotal
+                          );
+                        }
                       );
                     }
                   );
@@ -501,12 +581,50 @@ router.get("/full", (req, res) => {
   });
 });
 
+// router.delete("/full/:id", (req, res) => {
+//   const id = req.params.id;
+//   const user = req.user;
+
+//   const query = `
+//     SELECT pmd.user_id FROM course_overheads_main coh
+//     JOIN payments_main_details pmd ON coh.payments_main_details_id = pmd.id
+//     WHERE coh.id = ?
+//   `;
+
+//   db.query(query, [id], (err, rows) => {
+//     if (err) return res.status(500).json({ error: "DB error" });
+//     if (rows.length === 0)
+//       return res.status(404).json({ error: "Record not found" });
+
+//     const ownerId = rows[0].user_id;
+//     const privileged = isPrivileged(user);
+
+//     if (!privileged && ownerId !== user.id) {
+//       return res
+//         .status(403)
+//         .json({ error: "Not authorized to delete this record." });
+//     }
+
+//     db.query(
+//       `DELETE FROM course_overheads_main WHERE id = ?`,
+//       [id],
+//       (delErr) => {
+//         if (delErr)
+//           return res.status(500).json({ error: "Failed to delete record" });
+
+//         logger.info(`Course overheads ID ${id} deleted by user ${user.id}`);
+//         res.json({ message: "Deleted successfully." });
+//       }
+//     );
+//   });
+// });
 router.delete("/full/:id", (req, res) => {
   const id = req.params.id;
   const user = req.user;
 
   const query = `
-    SELECT pmd.user_id FROM course_overheads_main coh
+    SELECT pmd.user_id, pmd.id AS payments_main_details_id
+    FROM course_overheads_main coh
     JOIN payments_main_details pmd ON coh.payments_main_details_id = pmd.id
     WHERE coh.id = ?
   `;
@@ -517,6 +635,7 @@ router.delete("/full/:id", (req, res) => {
       return res.status(404).json({ error: "Record not found" });
 
     const ownerId = rows[0].user_id;
+    const paymentsMainDetailsId = rows[0].payments_main_details_id;
     const privileged = isPrivileged(user);
 
     if (!privileged && ownerId !== user.id) {
@@ -531,6 +650,21 @@ router.delete("/full/:id", (req, res) => {
       (delErr) => {
         if (delErr)
           return res.status(500).json({ error: "Failed to delete record" });
+
+        // ✅ Run resetApprovalFields after successful delete
+        resetApprovalFields(
+          paymentsMainDetailsId,
+          user.id,
+          (resetErr, result) => {
+            if (resetErr) {
+              logger.warn(`Reset approval fields failed:`, resetErr.message);
+            } else {
+              logger.info(
+                `Approval fields reset successfully for PMD ID ${paymentsMainDetailsId}`
+              );
+            }
+          }
+        );
 
         logger.info(`Course overheads ID ${id} deleted by user ${user.id}`);
         res.json({ message: "Deleted successfully." });

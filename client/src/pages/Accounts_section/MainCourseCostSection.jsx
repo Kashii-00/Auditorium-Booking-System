@@ -57,13 +57,6 @@ const MainCourseCostSection = ({
     localStorage.setItem("draftMainCourseForm", JSON.stringify(formData));
   }, [formData]);
 
-  // useEffect(() => {
-  //   const savedDraft = localStorage.getItem("draftMainCourseForm");
-  //   if (savedDraft) {
-  //     setFormData(JSON.parse(savedDraft));
-  //   }
-  // }, [setFormData]);
-
   const handleChange = ({ target: { name, value } }) =>
     setFormData((p) => ({ ...p, [name]: value }));
 
@@ -118,8 +111,8 @@ const MainCourseCostSection = ({
       {!reviewMode ? (
         <>
           <form className="step-two-grid aid-request-form-type2">
-            {renderInputField("course_id", "Course ID", "number")}
-            {renderInputField("batch_id", "Batch ID", "number")}
+            {/* {renderInputField("course_id", "Course ID", "number")}
+            {renderInputField("batch_id", "Batch ID", "number")} */}
 
             <div className="form-step" key="course_name">
               <CreatableSelect
@@ -158,9 +151,9 @@ const MainCourseCostSection = ({
             {renderInputField("duration", "Duration")}
 
             {renderSelectField("customer_type", "Customer Type", [
-              "Government",
-              "Private",
-              "NGO",
+              "Internal",
+              "External",
+              "Mixed",
             ])}
 
             <div className="form-step" key="stream">
@@ -186,17 +179,6 @@ const MainCourseCostSection = ({
               />
               <label className={formData.stream ? "active2" : ""}>Stream</label>
             </div>
-
-            {renderSelectField("CTM_approved", "CTM Approved", [
-              "Pending",
-              "Approved",
-              "Rejected",
-            ])}
-            {renderInputField("CTM_details", "CTM Details")}
-            {renderInputField(
-              "special_justifications",
-              "Special Justifications"
-            )}
             {renderInputField("date", "Date", "date")}
           </form>
 

@@ -3,16 +3,33 @@ const db = require("../../db");
 const auth = require("../../auth");
 const logger = require("../../logger");
 const Joi = require("joi");
-const { standardLimiter } = require("../../middleware/rateLimiter");
+const rateLimit = require("express-rate-limit");
+const { ipKeyGenerator } = require("express-rate-limit");
+const { resetApprovalFields } = require("../PayMain/util/resetDefaults");
 
-// Using standardLimiter for IPv6-compatible rate limiting
-
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 15,
+  keyGenerator: (req) => req.user?.id || ipKeyGenerator(req),
+  handler: (req, res) => {
+    res
+      .status(429)
+      .json({ error: "Too many requests. Please try again later." });
+  },
+});
 
 const router = express.Router();
 router.use(auth.authMiddleware);
-router.use(standardLimiter);
+router.use(limiter);
 
-const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager", "admin"];
+const PRIVILEGED_ROLES = [
+  "SuperAdmin",
+  "finance_manager",
+  "CTM",
+  "DCTM01",
+  "DCTM02",
+  "sectional_head",
+];
 const CATEGORY = "Course Development Work";
 
 function normalizeRoles(rawRole) {
@@ -77,12 +94,18 @@ router.post("/full", (req, res) => {
           .status(400)
           .json({ error: "Invalid payments_main_details_id." });
 
-      if (rows[0].user_id !== user.id) {
+      const ownerUserId = rows[0].user_id;
+      const isOwner = ownerUserId === req.user.id;
+      const isPrivilegedUser = isPrivileged(req.user);
+
+      if (!isOwner && !isPrivilegedUser) {
         return res.status(403).json({
-          error:
-            "Forbidden: Only the actual owner can create course development work.",
+          error: "Only the owner or a privileged user can create this record.",
         });
       }
+
+      // ✅ Store the original owner user_id in course_overheads_main
+      const finalUserId = ownerUserId;
 
       db.getConnection((connErr, connection) => {
         if (connErr) return res.status(500).json({ error: "Connection error" });
@@ -93,263 +116,338 @@ router.post("/full", (req, res) => {
             return res.status(500).json({ error: "Transaction error" });
           }
 
+          // 🔥 NEW: Delete existing record if exists
           connection.query(
-            `INSERT INTO course_development_work (payments_main_details_id, no_of_panel_meetings) VALUES (?, ?)`,
-            [payments_main_details_id, no_of_panel_meetings],
-            (err2, result) => {
-              if (err2) {
+            `DELETE FROM course_development_work WHERE payments_main_details_id = ?`,
+            [payments_main_details_id],
+            (deleteErr) => {
+              if (deleteErr) {
                 return connection.rollback(() => {
                   connection.release();
                   res.status(500).json({
-                    error: "Failed to create course development work.",
+                    error: "Failed to delete existing course development work.",
                   });
                 });
               }
 
-              const courseDevWorkId = result.insertId;
-
-              function insertExpense(index) {
-                if (index >= expenses.length) return insertParticipant(0);
-
-                const { item_description, required_quantity, rate, amount } =
-                  expenses[index];
-
-                connection.query(
-                  `SELECT * FROM rates WHERE item_description = ? AND category = ?`,
-                  [item_description, CATEGORY],
-                  (rateErr, rateRows) => {
-                    if (rateErr) {
-                      return connection.rollback(() => {
-                        connection.release();
-                        res.status(500).json({ error: "Rates lookup failed." });
+              // 🔄 Insert new course development work
+              connection.query(
+                `INSERT INTO course_development_work (payments_main_details_id, no_of_panel_meetings, user_id) VALUES (?, ?, ?)`,
+                [payments_main_details_id, no_of_panel_meetings, finalUserId],
+                (err2, result) => {
+                  if (err2) {
+                    return connection.rollback(() => {
+                      connection.release();
+                      res.status(500).json({
+                        error: "Failed to create course development work.",
                       });
-                    }
+                    });
+                  }
 
-                    const rateEntry = rateRows[0];
-                    let resolvedRate = rate;
-                    let resolvedAmount = amount;
+                  const courseDevWorkId = result.insertId;
 
-                    if (rateEntry) {
-                      if (rateEntry.rate_type === "Full Payment") {
-                        if (typeof amount !== "number") {
-                          return connection.rollback(() => {
-                            connection.release();
-                            res.status(400).json({
-                              error: "Amount required for Full Payment items.",
-                            });
-                          });
-                        }
-                        resolvedRate = isPrivileged(user)
-                          ? resolvedRate ?? rateEntry.rate
-                          : rateEntry.rate;
-                      } else if (rateEntry.rate_type === "Quantity") {
-                        if (typeof required_quantity !== "number") {
-                          return connection.rollback(() => {
-                            connection.release();
-                            res.status(400).json({
-                              error: "Quantity required for this item.",
-                            });
-                          });
-                        }
-                        resolvedRate = isPrivileged(user)
-                          ? resolvedRate ?? rateEntry.rate
-                          : rateEntry.rate;
-                        resolvedAmount = resolvedRate * required_quantity;
-                      }
-                    } else {
-                      if (isPrivileged(user) && typeof amount === "number") {
-                        // accept as is
-                      } else if (
-                        typeof rate === "number" &&
-                        typeof required_quantity === "number"
-                      ) {
-                        resolvedAmount = rate * required_quantity;
-                      } else {
-                        return connection.rollback(() => {
-                          connection.release();
-                          res.status(400).json({
-                            error:
-                              "Rate not found. Provide amount or rate + quantity.",
-                          });
-                        });
-                      }
-                    }
+                  // continue with insertExpense and insertParticipant as before
+                  insertExpense(0);
+
+                  function insertExpense(index) {
+                    if (index >= expenses.length) return insertParticipant(0);
+
+                    const {
+                      item_description,
+                      required_quantity,
+                      rate,
+                      amount,
+                    } = expenses[index];
 
                     connection.query(
-                      `INSERT INTO course_development_work_expenses (course_development_work_id, item_description, required_quantity, rate, amount) VALUES (?, ?, ?, ?, ?)`,
-                      [
-                        courseDevWorkId,
-                        item_description,
-                        required_quantity || 0,
-                        resolvedRate || 0,
-                        resolvedAmount,
-                      ],
-                      (err3) => {
-                        if (err3) {
+                      `SELECT * FROM rates WHERE item_description = ? AND category = ?`,
+                      [item_description, CATEGORY],
+                      (rateErr, rateRows) => {
+                        if (rateErr) {
                           return connection.rollback(() => {
                             connection.release();
                             res
                               .status(500)
-                              .json({ error: "Failed to insert expense." });
+                              .json({ error: "Rates lookup failed." });
                           });
                         }
-                        insertExpense(index + 1);
-                      }
-                    );
-                  }
-                );
-              }
 
-              function insertParticipant(index) {
-                if (index >= participants.length) {
-                  // After all participants are added, calculate total cost
-                  const costQuery = `
-                    SELECT 
-                      (SELECT IFNULL(SUM(amount), 0) FROM course_development_work_expenses WHERE course_development_work_id = ?) +
-                      (SELECT IFNULL(SUM(amount), 0) FROM panel_meeting_participants WHERE course_development_work_id = ?)
-                      AS total_cost
-                  `;
+                        const rateEntry = rateRows[0];
+                        let resolvedRate = rate;
+                        let resolvedAmount = amount;
 
-                  connection.query(
-                    costQuery,
-                    [courseDevWorkId, courseDevWorkId],
-                    (costErr, costRows) => {
-                      if (costErr) {
-                        return connection.rollback(() => {
-                          connection.release();
-                          res
-                            .status(500)
-                            .json({ error: "Failed to calculate total cost." });
-                        });
-                      }
-
-                      const totalCost = costRows[0].total_cost;
-
-                      connection.query(
-                        `UPDATE course_development_work SET total_cost = ? WHERE id = ?`,
-                        [totalCost, courseDevWorkId],
-                        (updateErr) => {
-                          if (updateErr) {
+                        if (rateEntry) {
+                          if (rateEntry.rate_type === "Full Payment") {
+                            if (typeof amount !== "number") {
+                              return connection.rollback(() => {
+                                connection.release();
+                                res.status(400).json({
+                                  error:
+                                    "Amount required for Full Payment items.",
+                                });
+                              });
+                            }
+                            resolvedRate = isPrivileged(user)
+                              ? resolvedRate ?? rateEntry.rate
+                              : rateEntry.rate;
+                          } else if (rateEntry.rate_type === "Quantity") {
+                            if (typeof required_quantity !== "number") {
+                              return connection.rollback(() => {
+                                connection.release();
+                                res.status(400).json({
+                                  error: "Quantity required for this item.",
+                                });
+                              });
+                            }
+                            resolvedRate = isPrivileged(user)
+                              ? resolvedRate ?? rateEntry.rate
+                              : rateEntry.rate;
+                            resolvedAmount = resolvedRate * required_quantity;
+                          }
+                        } else {
+                          if (
+                            isPrivileged(user) &&
+                            typeof amount === "number"
+                          ) {
+                            // accept as is
+                          } else if (
+                            typeof rate === "number" &&
+                            typeof required_quantity === "number"
+                          ) {
+                            resolvedAmount = rate * required_quantity;
+                          } else {
                             return connection.rollback(() => {
                               connection.release();
-                              res.status(500).json({
-                                error: "Failed to update total cost.",
+                              res.status(400).json({
+                                error:
+                                  "Rate not found. Provide amount or rate + quantity.",
                               });
                             });
                           }
+                        }
 
-                          connection.commit((commitErr) => {
-                            if (commitErr) {
+                        connection.query(
+                          `INSERT INTO course_development_work_expenses (course_development_work_id, item_description, required_quantity, rate, amount) VALUES (?, ?, ?, ?, ?)`,
+                          [
+                            courseDevWorkId,
+                            item_description,
+                            required_quantity || 0,
+                            resolvedRate || 0,
+                            resolvedAmount,
+                          ],
+                          (err3) => {
+                            if (err3) {
                               return connection.rollback(() => {
                                 connection.release();
                                 res
                                   .status(500)
-                                  .json({ error: "Commit failed" });
+                                  .json({ error: "Failed to insert expense." });
                               });
                             }
+                            insertExpense(index + 1);
+                          }
+                        );
+                      }
+                    );
+                  }
 
-                            connection.release();
-                            logger.info(
-                              `Course development work full record created by user ${user.id}`
-                            );
-                            res.status(201).json({
-                              message:
-                                "Course development work created successfully.",
+                  function insertParticipant(index) {
+                    if (index >= participants.length) {
+                      const costQuery = `
+                        SELECT 
+                          (SELECT IFNULL(SUM(amount), 0) FROM course_development_work_expenses WHERE course_development_work_id = ?) +
+                          (SELECT IFNULL(SUM(amount), 0) FROM panel_meeting_participants WHERE course_development_work_id = ?)
+                          AS total_cost
+                      `;
+
+                      connection.query(
+                        costQuery,
+                        [courseDevWorkId, courseDevWorkId],
+                        (costErr, costRows) => {
+                          if (costErr) {
+                            return connection.rollback(() => {
+                              connection.release();
+                              res.status(500).json({
+                                error: "Failed to calculate total cost.",
+                              });
                             });
-                          });
+                          }
+
+                          const totalCost = costRows[0].total_cost;
+
+                          connection.query(
+                            `UPDATE course_development_work SET total_cost = ? WHERE id = ?`,
+                            [totalCost, courseDevWorkId],
+                            (updateErr) => {
+                              if (updateErr) {
+                                return connection.rollback(() => {
+                                  connection.release();
+                                  res.status(500).json({
+                                    error: "Failed to update total cost.",
+                                  });
+                                });
+                              }
+
+                              // connection.commit((commitErr) => {
+                              //   if (commitErr) {
+                              //     return connection.rollback(() => {
+                              //       connection.release();
+                              //       res.status(500).json({
+                              //         error: "Commit failed",
+                              //       });
+                              //     });
+                              //   }
+
+                              //   connection.release();
+                              //   logger.info(
+                              //     `Course development work full record created by user ${user.id}`
+                              //   );
+                              //   res.status(201).json({
+                              //     message:
+                              //       "Course development work created successfully.",
+                              //   });
+                              // });
+                              connection.commit((commitErr) => {
+                                if (commitErr) {
+                                  return connection.rollback(() => {
+                                    connection.release();
+                                    return res
+                                      .status(500)
+                                      .json({ error: "Commit failed" });
+                                  });
+                                }
+
+                                connection.release();
+
+                                // After successful commit, reset approval fields
+                                resetApprovalFields(
+                                  payments_main_details_id,
+                                  user.id,
+                                  (resetErr) => {
+                                    if (resetErr) {
+                                      logger.error(
+                                        "Approval fields reset failed:",
+                                        resetErr.message
+                                      );
+                                      return res.status(201).json({
+                                        message:
+                                          "Course development work created, but failed to reset approval fields.",
+                                        warning: resetErr.message,
+                                      });
+                                    }
+
+                                    logger.info(
+                                      `Course development work full record created AND approval fields reset for payment ${payments_main_details_id}`
+                                    );
+                                    return res.status(201).json({
+                                      message:
+                                        "Course development work created and approval fields reset successfully.",
+                                    });
+                                  }
+                                );
+                              });
+                            }
+                          );
                         }
                       );
-                    }
-                  );
-
-                  return;
-                }
-
-                const { participant_type, nos, rate_per_hour, amount, smes } =
-                  participants[index];
-
-                connection.query(
-                  `SELECT * FROM rates WHERE item_description = ? AND category = ?`,
-                  [participant_type, CATEGORY],
-                  (rateErr, rateRows) => {
-                    if (rateErr) {
-                      return connection.rollback(() => {
-                        connection.release();
-                        res.status(500).json({ error: "Rates lookup failed." });
-                      });
+                      return;
                     }
 
-                    const rateEntry = rateRows[0];
-                    let finalRate = rate_per_hour;
-                    let finalAmount = amount;
-
-                    if (!rateEntry) {
-                      if (isPrivileged(user) && typeof amount === "number") {
-                        // Accept direct amount
-                      } else if (
-                        typeof nos === "number" &&
-                        typeof rate_per_hour === "number"
-                      ) {
-                        finalAmount = nos * rate_per_hour;
-                      } else {
-                        return connection.rollback(() => {
-                          connection.release();
-                          res.status(400).json({
-                            error:
-                              "No rate found and insufficient data to calculate participant cost.",
-                          });
-                        });
-                      }
-                    } else if (rateEntry.rate_type === "Hourly") {
-                      if (typeof nos !== "number") {
-                        return connection.rollback(() => {
-                          connection.release();
-                          res.status(400).json({
-                            error: "nos is required for Hourly rate.",
-                          });
-                        });
-                      }
-                      finalRate = isPrivileged(user)
-                        ? finalRate ?? rateEntry.rate
-                        : rateEntry.rate;
-                      finalAmount = nos * finalRate;
-                    } else {
-                      return connection.rollback(() => {
-                        connection.release();
-                        res.status(400).json({
-                          error:
-                            "Only 'Hourly' rate type supported for participants.",
-                        });
-                      });
-                    }
+                    const {
+                      participant_type,
+                      nos,
+                      rate_per_hour,
+                      amount,
+                      smes,
+                    } = participants[index];
 
                     connection.query(
-                      `INSERT INTO panel_meeting_participants (course_development_work_id, participant_type, nos, rate_per_hour, smes, amount) VALUES (?, ?, ?, ?, ?, ?)`,
-                      [
-                        courseDevWorkId,
-                        participant_type,
-                        nos || 0,
-                        finalRate || 0,
-                        smes || "",
-                        finalAmount,
-                      ],
-                      (err4) => {
-                        if (err4) {
+                      `SELECT * FROM rates WHERE item_description = ? AND category = ?`,
+                      [participant_type, CATEGORY],
+                      (rateErr, rateRows) => {
+                        if (rateErr) {
                           return connection.rollback(() => {
                             connection.release();
                             res
                               .status(500)
-                              .json({ error: "Failed to insert participant." });
+                              .json({ error: "Rates lookup failed." });
                           });
                         }
-                        insertParticipant(index + 1);
+
+                        const rateEntry = rateRows[0];
+                        let finalRate = rate_per_hour;
+                        let finalAmount = amount;
+
+                        if (!rateEntry) {
+                          if (
+                            isPrivileged(user) &&
+                            typeof amount === "number"
+                          ) {
+                            // Accept direct amount
+                          } else if (
+                            typeof nos === "number" &&
+                            typeof rate_per_hour === "number"
+                          ) {
+                            finalAmount = nos * rate_per_hour;
+                          } else {
+                            return connection.rollback(() => {
+                              connection.release();
+                              res.status(400).json({
+                                error:
+                                  "No rate found and insufficient data to calculate participant cost.",
+                              });
+                            });
+                          }
+                        } else if (rateEntry.rate_type === "Hourly") {
+                          if (typeof nos !== "number") {
+                            return connection.rollback(() => {
+                              connection.release();
+                              res.status(400).json({
+                                error: "nos is required for Hourly rate.",
+                              });
+                            });
+                          }
+                          finalRate = isPrivileged(user)
+                            ? finalRate ?? rateEntry.rate
+                            : rateEntry.rate;
+                          finalAmount = nos * finalRate;
+                        } else {
+                          return connection.rollback(() => {
+                            connection.release();
+                            res.status(400).json({
+                              error:
+                                "Only 'Hourly' rate type supported for participants.",
+                            });
+                          });
+                        }
+
+                        connection.query(
+                          `INSERT INTO panel_meeting_participants (course_development_work_id, participant_type, nos, rate_per_hour, smes, amount) VALUES (?, ?, ?, ?, ?, ?)`,
+                          [
+                            courseDevWorkId,
+                            participant_type,
+                            nos || 0,
+                            finalRate || 0,
+                            smes || "",
+                            finalAmount,
+                          ],
+                          (err4) => {
+                            if (err4) {
+                              return connection.rollback(() => {
+                                connection.release();
+                                res.status(500).json({
+                                  error: "Failed to insert participant.",
+                                });
+                              });
+                            }
+                            insertParticipant(index + 1);
+                          }
+                        );
                       }
                     );
                   }
-                );
-              }
-
-              insertExpense(0);
+                }
+              );
             }
           );
         });
@@ -413,14 +511,57 @@ router.get("/full", (req, res) => {
   });
 });
 
+// router.delete("/full/:id", (req, res) => {
+//   const id = req.params.id;
+//   const user = req.user;
+
+//   const query = `
+//     SELECT payments_main_details.user_id
+//     FROM course_development_work
+//     JOIN payments_main_details ON course_development_work.payments_main_details_id = payments_main_details.id
+//     WHERE course_development_work.id = ?
+//   `;
+
+//   db.query(query, [id], (err, rows) => {
+//     if (err) return res.status(500).json({ error: "DB error" });
+//     if (rows.length === 0)
+//       return res.status(404).json({ error: "Record not found" });
+
+//     const ownerId = rows[0].user_id;
+//     const isPriv = isPrivileged(user);
+
+//     if (!isPriv && ownerId !== user.id) {
+//       return res
+//         .status(403)
+//         .json({ error: "Not authorized to delete this record." });
+//     }
+
+//     db.query(
+//       `DELETE FROM course_development_work WHERE id = ?`,
+//       [id],
+//       (delErr, result) => {
+//         if (delErr) return res.status(500).json({ error: "Failed to delete" });
+
+//         logger.info(
+//           `Course development work ID ${id} deleted by user ${user.id}`
+//         );
+//         res.json({ message: "Deleted successfully." });
+//       }
+//     );
+//   });
+// });
+
 router.delete("/full/:id", (req, res) => {
   const id = req.params.id;
   const user = req.user;
 
   const query = `
-    SELECT payments_main_details.user_id
+    SELECT 
+      payments_main_details.id AS paymentId,
+      payments_main_details.user_id
     FROM course_development_work
-    JOIN payments_main_details ON course_development_work.payments_main_details_id = payments_main_details.id
+    JOIN payments_main_details 
+      ON course_development_work.payments_main_details_id = payments_main_details.id
     WHERE course_development_work.id = ?
   `;
 
@@ -430,6 +571,7 @@ router.delete("/full/:id", (req, res) => {
       return res.status(404).json({ error: "Record not found" });
 
     const ownerId = rows[0].user_id;
+    const paymentId = rows[0].paymentId;
     const isPriv = isPrivileged(user);
 
     if (!isPriv && ownerId !== user.id) {
@@ -447,7 +589,23 @@ router.delete("/full/:id", (req, res) => {
         logger.info(
           `Course development work ID ${id} deleted by user ${user.id}`
         );
-        res.json({ message: "Deleted successfully." });
+
+        // 🔁 Reset approval fields after successful delete
+        resetApprovalFields(paymentId, user.id, (resetErr) => {
+          if (resetErr) {
+            logger.error("Approval fields reset failed:", resetErr.message);
+            return res.json({
+              message:
+                "Deleted successfully, but failed to reset approval fields.",
+              warning: resetErr.message,
+            });
+          }
+
+          return res.json({
+            message:
+              "Deleted successfully and approval fields reset successfully.",
+          });
+        });
       }
     );
   });
