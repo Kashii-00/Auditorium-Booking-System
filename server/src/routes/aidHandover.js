@@ -224,7 +224,7 @@ router.patch("/", auth.authMiddleware, (req, res) => {
 // Get all aid handovers
 router.get("/", auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
-  console.log(`[${now}] GET /api/aidhandover`);
+  //console.log(`[${now}] GET /api/aidhandover`);
 
   const sql = `
     SELECT ah.*, ar.requesting_officer_name, ar.course_name

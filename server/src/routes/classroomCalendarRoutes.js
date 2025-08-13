@@ -134,7 +134,7 @@ router.post("/", auth.authMiddleware, (req, res) => {
 // GET all calendar entries
 router.get("/", auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
-  console.log(`[${now}] GET /api/classroom-calendar`);
+  //console.log(`[${now}] GET /api/classroom-calendar`);
 
   const sql = `SELECT * FROM classroom_booking_calendar`;
   db.query(sql, (err, results) => {
@@ -153,7 +153,7 @@ router.get("/", auth.authMiddleware, (req, res) => {
 
 router.get("/details", auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
-  console.log(`[${now}] GET /api/classroom-calendar/details`);
+  //console.log(`[${now}] GET /api/classroom-calendar/details`);
 
   const sql = `
     SELECT cbd.*, u.name as user_name, cbc.course_name as calendar_course
@@ -193,7 +193,7 @@ router.get("/details", auth.authMiddleware, (req, res) => {
 
 router.get("/details-with-request-info", auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
-  console.log(`[${now}] GET /api/classroom-calendar/details-with-request-info`);
+  //console.log(`[${now}] GET /api/classroom-calendar/details-with-request-info`);
 
   const sql = `
     SELECT 
@@ -239,7 +239,7 @@ router.get("/details-with-request-info", auth.authMiddleware, (req, res) => {
 
 router.get("/details-v2", auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
-  console.log(`[${now}] GET /api/classroom-calendar/details-v2`);
+  //console.log(`[${now}] GET /api/classroom-calendar/details-v2`);
 
   const sql = `
     SELECT 
@@ -294,7 +294,7 @@ router.get("/details-v2", auth.authMiddleware, (req, res) => {
 // GET aid_request IDs that are NOT in classroom_booking_calendar.request_id
 router.get("/unassigned-request-ids", auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
-  console.log(`[${now}] GET /api/classroom-calendar/unassigned-request-ids`);
+  //console.log(`[${now}] GET /api/classroom-calendar/unassigned-request-ids`);
 
   const sql = `
     SELECT ar.id

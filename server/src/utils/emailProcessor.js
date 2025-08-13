@@ -1,17 +1,8 @@
 //node -e "require('./src/utils/emailProcessor')()"
 
 const db = require("../db");
-const MicrosoftGraphService = require('../services/microsoftGraphService');
+const { sendEmail } = require('./emailService');
 const logger = require('../logger');
-
-// Initialize Microsoft Graph Service
-let graphService;
-try {
-  graphService = new MicrosoftGraphService();
-  logger.info('EmailProcessor: Microsoft Graph service initialized');
-} catch (error) {
-  logger.error('EmailProcessor: Failed to initialize Microsoft Graph service:', error);
-}
 
 // Step 1: Get all requests with status Approved/Denied AND no entry in aid_request_emails
 const fetchPendingEmailRequests = async () => {
@@ -101,11 +92,6 @@ const formatDate = (d) => (d ? new Date(d).toISOString().split("T")[0] : "N/A");
 
 const processPendingEmails = async () => {
   try {
-    if (!graphService) {
-      logger.error('❌ Microsoft Graph service not initialized for email processing');
-      return;
-    }
-
     const requests = await fetchPendingEmailRequests();
     logger.info(`📧 Processing ${requests.length} pending email requests`);
 
@@ -272,29 +258,43 @@ Admin Team
       `;
 
       try {
-        const result = await graphService.sendEmail({
+        const result = await sendEmail({
           to: req.requesting_officer_email,
           subject: subject,
           html: htmlContent,
-          text: textContent
+          text: textContent,
+          userType: 'general'
         });
 
-        // Log success
-        const successQuery = `
-          INSERT INTO aid_request_emails 
-          (request_id, email_type, email_address, subject, body, sent_status, error_message)
-          VALUES (?, ?, ?, ?, ?, 'success', NULL)
-        `;
-        db.query(successQuery, [
-          req.id,
-          email_type,
-          req.requesting_officer_email,
-          subject,
-          textContent, // Store plain text version in database
-        ]);
+        if (!result.success) {
+          throw new Error(result.error || 'Email sending failed');
+        }
 
-        logger.info(`✅ Email sent successfully via Microsoft Graph to ${req.requesting_officer_email} for request ${req.id}`);
-        console.log(`✅ Email sent to ${req.requesting_officer_email} for request ${req.id}`);
+        // Check if email was actually sent or just disabled
+        const wasActuallySent = result.info?.response !== 'Email disabled';
+        
+        if (wasActuallySent) {
+          // Log success only if email was actually sent
+          const successQuery = `
+            INSERT INTO aid_request_emails 
+            (request_id, email_type, email_address, subject, body, sent_status, error_message)
+            VALUES (?, ?, ?, ?, ?, 'success', NULL)
+          `;
+          db.query(successQuery, [
+            req.id,
+            email_type,
+            req.requesting_officer_email,
+            subject,
+            textContent, // Store plain text version in database
+          ]);
+
+          logger.info(`✅ Email sent successfully via Microsoft Graph to ${req.requesting_officer_email} for request ${req.id}`);
+          console.log(`✅ Email sent to ${req.requesting_officer_email} for request ${req.id}`);
+        } else {
+          // Log that email was disabled
+          logger.info(`📧 Email disabled - would have sent to ${req.requesting_officer_email} for request ${req.id}`);
+          console.log(`📧 Email disabled - would have sent to ${req.requesting_officer_email} for request ${req.id}`);
+        }
       } catch (error) {
         const failQuery = `
           INSERT INTO aid_request_emails 
