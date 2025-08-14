@@ -1,16 +1,35 @@
 const express = require("express");
 const db = require("../../db");
 const auth = require("../../auth");
-const { standardLimiter } = require("../../middleware/rateLimiter");
+const rateLimit = require("express-rate-limit");
+const { ipKeyGenerator } = require("express-rate-limit");
 
 const router = express.Router();
 
 // ✅ Middleware
 router.use(auth.authMiddleware);
-router.use(standardLimiter);
+router.use(
+  rateLimit({
+    windowMs: 60 * 1000,
+    max: 15,
+    keyGenerator: (req) => req.user?.id || ipKeyGenerator(req),
+    handler: (req, res) => {
+      res
+        .status(429)
+        .json({ error: "Too many requests. Please try again later." });
+    },
+  })
+);
 
 // ✅ Role Utils
-const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager", "admin"];
+const PRIVILEGED_ROLES = [
+  "SuperAdmin",
+  "finance_manager",
+  "CTM",
+  "DCTM01",
+  "DCTM02",
+  "sectional_head",
+];
 
 function normalizeRoles(rawRole) {
   if (!rawRole) return [];
@@ -191,9 +210,9 @@ router.get("/:paymentMainDetailsId", (req, res) => {
   function fetchOverheads() {
     db.query(
       `SELECT * FROM course_overheads_main
-       WHERE payments_main_details_id = ?
-       ORDER BY created_at DESC
-       LIMIT 1`,
+     WHERE payments_main_details_id = ?
+     ORDER BY created_at DESC
+     LIMIT 1`,
       [paymentMainDetailsId],
       (err5, ovhRows) => {
         if (err5)
@@ -241,8 +260,23 @@ router.get("/:paymentMainDetailsId", (req, res) => {
 
                       result.course_overheads_main.overheads = ovhItems;
 
-                      // ✅ Final response
-                      res.json(result);
+                      // ✅ Now fetch special case payments
+                      db.query(
+                        `SELECT * FROM special_case_payments WHERE payments_main_details_id = ?`,
+                        [paymentMainDetailsId],
+                        (err6d, specialRows) => {
+                          if (err6d) {
+                            return res.status(500).json({
+                              error: "DB error (Special Case Payments)",
+                            });
+                          }
+
+                          result.special_case_payments = specialRows;
+
+                          // ✅ Final response after all queries
+                          res.json(result);
+                        }
+                      );
                     }
                   );
                 }
@@ -250,7 +284,23 @@ router.get("/:paymentMainDetailsId", (req, res) => {
             }
           );
         } else {
-          res.json(result);
+          // No overhead found, but still fetch special case payments
+          db.query(
+            `SELECT * FROM special_case_payments WHERE payments_main_details_id = ?`,
+            [paymentMainDetailsId],
+            (err6d, specialRows) => {
+              if (err6d) {
+                return res
+                  .status(500)
+                  .json({ error: "DB error (Special Case Payments)" });
+              }
+
+              result.special_case_payments = specialRows;
+
+              // Send response even if overhead missing
+              res.json(result);
+            }
+          );
         }
       }
     );

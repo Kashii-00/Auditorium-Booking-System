@@ -1,17 +1,15 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import "./styles/CSS/Sidebar.css"
+
 import screenshot from "./styles/MPMA_MAIN.png"
-import calender from "../styles/calendar1.png"
-import Schedule from "../pages/Classroom_Booking/styles/Schedule.png"
-import admin2 from "../styles/Admin1.png"
 import miniLogo from "./styles/MPMA_MINI.png"
-import courseIcon from "../styles/Course.png"
-import trainingIcon from "../styles/training.png"
-import { FaChevronLeft, FaSignOutAlt, FaCalendarAlt } from "react-icons/fa"
-import { CircleDollarSign, Bus } from "lucide-react"
+
+import { FaChevronLeft, FaSignOutAlt} from "react-icons/fa"
+import { CircleDollarSign, Bus, CalendarDays,SquareChartGantt,ShieldUser,Album,School } from "lucide-react"
+
 
 const Sidebar = ({ user, onLogout }) => {
   // State variables
@@ -67,6 +65,7 @@ const Sidebar = ({ user, onLogout }) => {
   // Remove hoverTimeout as it's no longer needed
 
   const navigate = useNavigate()
+  const sidebarNavRef = useRef(null)
 
   const TIMEOUT_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 
@@ -114,6 +113,57 @@ const Sidebar = ({ user, onLogout }) => {
     document.addEventListener("click", handleClickOutside, true)
     return () => document.removeEventListener("click", handleClickOutside, true)
   }, [isCollapsed, isPinned])
+
+  // Scroll overflow detection for sidebar navigation
+  useEffect(() => {
+    const checkScrollOverflow = () => {
+      if (sidebarNavRef.current) {
+        const element = sidebarNavRef.current
+        const hasOverflow = element.scrollHeight > element.clientHeight
+        const isScrolledToBottom = element.scrollTop + element.clientHeight >= element.scrollHeight - 1
+        
+        // Add/remove overflow class
+        if (hasOverflow) {
+          element.classList.add('has-overflow')
+        } else {
+          element.classList.remove('has-overflow')
+        }
+        
+        // Add/remove scrolled-to-bottom class
+        if (isScrolledToBottom) {
+          element.classList.add('scrolled-to-bottom')
+        } else {
+          element.classList.remove('scrolled-to-bottom')
+        }
+      }
+    }
+
+    const handleScroll = () => {
+      checkScrollOverflow()
+    }
+
+    // Check initially
+    checkScrollOverflow()
+
+    // Add scroll listener
+    if (sidebarNavRef.current) {
+      sidebarNavRef.current.addEventListener('scroll', handleScroll)
+    }
+
+    // Check on window resize
+    window.addEventListener('resize', checkScrollOverflow)
+
+    // Check when content changes (sections open/close)
+    const timer = setInterval(checkScrollOverflow, 1000)
+
+    return () => {
+      if (sidebarNavRef.current) {
+        sidebarNavRef.current.removeEventListener('scroll', handleScroll)
+      }
+      window.removeEventListener('resize', checkScrollOverflow)
+      clearInterval(timer)
+    }
+  }, [openSection, isCollapsed, isHovered])
 
   // Listen for sidebar state changes from other components/pages
   useEffect(() => {
@@ -411,8 +461,9 @@ const Sidebar = ({ user, onLogout }) => {
     const sectionConfig = [
       {
         key: "audi",
-        title: "ᴀᴜᴅɪᴛᴏʀɪᴜᴍ ʀᴇꜱᴇʀᴠᴀᴛɪᴏɴ",
-        icon: calender,
+        title: "AUDITORIUM",
+        icon: CalendarDays,
+        iconType: "lucide",
         roles: ["calendar_access", "bookings_access"],
         subLinks: [
           {
@@ -429,7 +480,7 @@ const Sidebar = ({ user, onLogout }) => {
       },
       {
         key: "bus",
-        title: "ᴛʀᴀɴꜱᴘᴏʀᴛ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ",
+        title: "TRANSPORT",
         icon: Bus,
         iconType: "lucide",
         roles: ["bus_access", "busbookings_access"],
@@ -448,8 +499,9 @@ const Sidebar = ({ user, onLogout }) => {
       },
       {
         key: "crbooking",
-        title: "ᴄʟᴀꜱꜱʀᴏᴏᴍ ʀᴇꜱᴏᴜʀᴄᴇ ʜᴜʙ",
-        icon: trainingIcon,
+        title: "CLASSROOM",
+        icon: School,
+        iconType: "lucide",
         roles: ["cb_Admin_access", "cb_SU_access"],
         subLinks: [
           {
@@ -481,8 +533,9 @@ const Sidebar = ({ user, onLogout }) => {
       },
       {
         key: "Course",
-        title: "ᴄᴏᴜʀꜱᴇ ᴀʟʟᴏᴄᴀᴛɪᴏɴ ᴘᴀɴᴇʟ",
-        icon: courseIcon,
+        title: "COURSES",
+        icon: Album,
+        iconType: "lucide",
         roles: ["course_allocation_manager"],
         subLinks: [
           {
@@ -509,8 +562,9 @@ const Sidebar = ({ user, onLogout }) => {
       },
       {
         key: "planning",
-        title: "ᴀᴄᴀᴅᴇᴍɪᴄ ᴘʟᴀɴ",
-        icon: Schedule,
+        title: "ACADEMIC PLAN",
+        icon: SquareChartGantt,
+        iconType: "lucide",
         roles: ["SuperAdmin"],
         subLinks: [
           {
@@ -522,7 +576,7 @@ const Sidebar = ({ user, onLogout }) => {
       },
       {
         key: "finance",
-        title: "ꜰɪɴᴀɴᴄᴇ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ",
+        title: "FINANCE",
         icon: CircleDollarSign,
         iconType: "lucide",
         roles: ["finance_manager", "SU_finance_access"],
@@ -550,8 +604,9 @@ const Sidebar = ({ user, onLogout }) => {
     if (hasRole("SuperAdmin")) {
       sectionConfig.push({
         key: "users",
-        title: "ᴀᴅᴍɪɴɪꜱᴛʀᴀᴛɪᴏɴ",
-        icon: admin2,
+        title: "ADMIN",
+        icon: ShieldUser,
+        iconType: "lucide",
         roles: ["SuperAdmin"],
         subLinks: [
           {
@@ -690,7 +745,7 @@ const Sidebar = ({ user, onLogout }) => {
         </div>
       </div>
 
-            <nav className="sidebar-nav">{renderExpandableNavigation()}</nav>
+            <nav className="sidebar-nav" ref={sidebarNavRef}>{renderExpandableNavigation()}</nav>
 
       <button onClick={onLogout} className="logoutBtn">
         <FaSignOutAlt className="logout-icon" />

@@ -26,6 +26,7 @@ import AnnualPlan from "./pages/Course&Batch/AnnualPlan"
 import LecturerView from "./pages/Lecturer/LecturerView"
 import AnnualPlanPrintReport from "./pages/Course&Batch/annual-plan-print-report"
 import ErrorBoundary from "./ErrorBoundary" // Add this import
+import ServerConnectionError from "./components/ServerConnectionError"
 import ClassroomCalendar from "./pages/Classroom_Booking/ClassroomReservationCalendar"
 import ClassroomBooking from "./pages/Classroom_Booking/ClassroomBooking"
 import ClassroomBookingForm from "./pages/Classroom_Booking/ClassroomBookingForm"
@@ -247,13 +248,7 @@ function App() {
   }
 
   if (serverError) {
-    return (
-      <div className="error-screen">
-        <h2>Connection Error</h2>
-        <p>{serverError}</p>
-        <button onClick={() => window.location.reload()}>Retry</button>
-      </div>
-    )
+    return <ServerConnectionError onRetry={() => window.location.reload()} />
   }
 
   return (

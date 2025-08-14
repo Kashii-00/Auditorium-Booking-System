@@ -29,6 +29,8 @@ import {
   FileText,
   Save,
   Loader2,
+  Download,
+  Printer,
 } from "lucide-react"
 import { authRequest } from "../../services/authService"
 import { getApiUrl } from '../../utils/apiUrl'
@@ -927,6 +929,7 @@ function CourseDashboard({ courses: initialCourses, setCourses, onRegisterClick,
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const [viewingCourse, setViewingCourse] = useState(null)
   const [showViewDialog, setShowViewDialog] = useState(false)
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false)
   const { toast } = useToast()
 
   const recordsPerPageOptions = [5, 10, 25, 50]
@@ -1045,6 +1048,14 @@ function CourseDashboard({ courses: initialCourses, setCourses, onRegisterClick,
           </div>
         </div>
         <div className="flex gap-4 w-full lg:w-auto">
+          <Button
+            onClick={() => setShowDownloadDialog(true)}
+            variant="outline"
+            className="flex-1 lg:flex-none h-14 px-6 border-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-400 rounded-2xl shadow-xl font-bold transition-all duration-300 transform hover:scale-105"
+          >
+            <Download className="h-5 w-5 mr-2" />
+            Download List
+          </Button>
           <Button
             onClick={onRegisterClick}
             className="flex-1 lg:flex-none h-14 px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-800 rounded-2xl shadow-xl font-bold transition-all duration-300 transform hover:scale-105"
@@ -1279,6 +1290,13 @@ function CourseDashboard({ courses: initialCourses, setCourses, onRegisterClick,
           setViewingCourse(null)
         }}
         onEdit={onEditCourse}
+      />
+
+      {/* Course Download Dialog */}
+      <CourseDownloadDialog
+        courses={initialCourses}
+        isOpen={showDownloadDialog}
+        onClose={() => setShowDownloadDialog(false)}
       />
     </>
   )
@@ -1598,6 +1616,241 @@ const CourseDetailsDialog = memo(({ course, isOpen, onClose, onEdit }) => {
 
 CourseDetailsDialog.displayName = "CourseDetailsDialog"
 
+// Course Download/Print Dialog Component
+const CourseDownloadDialog = memo(({ courses, isOpen, onClose }) => {
+  const [sortedCourses, setSortedCourses] = useState([])
+
+  useEffect(() => {
+    if (courses && courses.length > 0) {
+      // Sort courses by ID (numeric sort)
+      const sorted = [...courses].sort((a, b) => {
+        const idA = parseInt(a.id) || 0
+        const idB = parseInt(b.id) || 0
+        return idA - idB
+      })
+      setSortedCourses(sorted)
+    }
+  }, [courses])
+
+  const handleDownloadCSV = () => {
+    const csvContent = [
+      ['ID', 'Course Name'], // Header row
+      ...sortedCourses.map(course => [
+        course.id,
+        `${course.courseName} (${course.courseId})`
+      ])
+    ].map(row => row.map(field => `"${field}"`).join(',')).join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `courses-${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank')
+    const currentDate = new Date().toLocaleDateString()
+    
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Course List - ${currentDate}</title>
+          <style>
+            @media print {
+              @page { margin: 1in; }
+              body { margin: 0; }
+            }
+            body {
+              font-family: Arial, sans-serif;
+              padding: 20px;
+              color: #333;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+              border-bottom: 2px solid #333;
+              padding-bottom: 10px;
+            }
+            .header h1 {
+              margin: 0;
+              color: #1e40af;
+              font-size: 24px;
+            }
+            .header p {
+              margin: 5px 0 0 0;
+              color: #666;
+              font-size: 14px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 20px;
+            }
+            th, td {
+              border: 1px solid #ddd;
+              padding: 12px;
+              text-align: left;
+            }
+            th {
+              background-color: #f8fafc;
+              font-weight: bold;
+              color: #1e40af;
+            }
+            tr:nth-child(even) {
+              background-color: #f9fafb;
+            }
+            .footer {
+              margin-top: 30px;
+              text-align: center;
+              font-size: 12px;
+              color: #666;
+              border-top: 1px solid #ddd;
+              padding-top: 10px;
+            }
+            .count {
+              margin: 10px 0;
+              font-weight: bold;
+              color: #1e40af;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Course List</h1>
+            <p>Generated on ${currentDate} | Maritime Training Institute</p>
+            <div class="count">Total Courses: ${sortedCourses.length}</div>
+          </div>
+          
+                      <table>
+              <thead>
+                <tr>
+                  <th style="width: 10%;">ID</th>
+                  <th style="width: 90%;">Course Name</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${sortedCourses.map(course => `
+                  <tr>
+                    <td>${course.id}</td>
+                    <td>${course.courseName} <span style="color: #1e40af; font-weight: bold; background-color: #e0f2fe; padding: 2px 6px; border-radius: 4px;">(${course.courseId})</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          
+          <div class="footer">
+            <p>This document contains confidential information. Handle according to institutional policies.</p>
+          </div>
+        </body>
+      </html>
+    `
+    
+    printWindow.document.write(printContent)
+    printWindow.document.close()
+    printWindow.focus()
+    setTimeout(() => {
+      printWindow.print()
+      printWindow.close()
+    }, 250)
+  }
+
+      return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-4xl max-h-[75vh] bg-white border-0 shadow-2xl rounded-2xl flex flex-col">
+          <DialogHeader className="text-center pb-4 border-b border-slate-200 flex-shrink-0">
+            <DialogTitle className="text-2xl font-black bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent flex items-center justify-center gap-3">
+              <Download className="h-6 w-6 text-blue-600" />
+              Course List Download
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6 flex-1 overflow-hidden flex flex-col p-6">
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center flex-shrink-0">
+              <Button
+                onClick={handleDownloadCSV}
+                className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold px-6 py-3 rounded-xl shadow-lg transition-all duration-300"
+              >
+                <Download className="h-5 w-5" />
+                Download CSV
+              </Button>
+              <Button
+                onClick={handlePrint}
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-6 py-3 rounded-xl shadow-lg transition-all duration-300"
+              >
+                <Printer className="h-5 w-5" />
+                Print List
+              </Button>
+            </div>
+
+            {/* Course Count */}
+            <div className="text-center flex-shrink-0">
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-2 font-bold text-lg">
+                <BookOpen className="h-4 w-4 mr-2" />
+                {sortedCourses.length} Courses Available
+              </Badge>
+            </div>
+
+            {/* Course Preview Table */}
+            <div className="flex-1 min-h-0 border border-slate-200 rounded-xl shadow-inner relative">
+              <div className="h-full max-h-80 overflow-y-scroll" style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#93c5fd #f1f5f9'
+              }}>
+                <table className="w-full border-collapse">
+                  <thead className="sticky top-0 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50 border-b-2 border-slate-200 z-10 shadow-sm">
+                    <tr>
+                      <th className="text-left p-4 font-black text-slate-700 border-r border-slate-200 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">ID</th>
+                      <th className="text-left p-4 font-black text-slate-700 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">Course Name</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedCourses.map((course, index) => (
+                      <tr key={course.id} className={`border-b border-slate-100 hover:bg-blue-50/30 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
+                        <td className="p-4 font-bold text-blue-600 border-r border-slate-100">{course.id}</td>
+                        <td className="p-4 text-slate-900">
+                          {course.courseName}{' '}
+                          <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm font-bold ml-2">
+                            ({course.courseId})
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {/* Scroll indicator */}
+              {sortedCourses.length > 8 && (
+                <div className="absolute bottom-2 right-2 opacity-70 text-xs text-slate-500 bg-white px-2 py-1 rounded shadow-lg pointer-events-none border border-slate-200">
+                  ↓ Scroll to see more courses
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="pt-4 border-t border-slate-200 flex-shrink-0">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="w-full sm:w-auto border-2 border-slate-200 hover:border-red-400 hover:bg-red-50 rounded-xl font-bold transition-all duration-300"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+})
+
+CourseDownloadDialog.displayName = "CourseDownloadDialog"
+
 // Main Course Management Component
 function CourseManagementSystem() {
   const [currentView, setCurrentView] = useState("dashboard")
@@ -1778,4 +2031,4 @@ function CourseManagementSystem() {
   )
 }
 
-export default CourseManagementSystem 
+export default CourseManagementSystem;

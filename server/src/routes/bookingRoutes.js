@@ -8,15 +8,58 @@ const db = require('../db');
 router.post('/', auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] POST /api/bookings`);
-  console.log('Auditorium Reservation POST body:', req.body);
+  console.log('Auditorium Reservation POST body 📆 :', req.body);
 
   const user_name = req.user.name;
-  const { user_id, description, booking_date, booking_time, bookingendtime, no_of_people, status } = req.body;
+  
+  // Handle field name mapping - support both old and new field names
+  const {
+    user_id, 
+    description, 
+    // New field names from client
+    bookingDate, 
+    startTime, 
+    endTime, 
+    attendees,
+    // Old field names (for backward compatibility)
+    booking_date, 
+    booking_time, 
+    bookingendtime, 
+    no_of_people,
+    status 
+  } = req.body;
+
+  // Map client field names to database field names
+  const mappedBookingDate = bookingDate || booking_date;
+  const mappedBookingTime = startTime || booking_time;
+  const mappedBookingEndTime = endTime || bookingendtime;
+  const mappedNoOfPeople = attendees || no_of_people;
+
+  // Debug logging for field mapping
+  console.log('Field mapping debug:', {
+    original: { bookingDate, startTime, endTime, attendees },
+    fallback: { booking_date, booking_time, bookingendtime, no_of_people },
+    mapped: { mappedBookingDate, mappedBookingTime, mappedBookingEndTime, mappedNoOfPeople }
+  });
+
+  // Validate required fields
+  if (!mappedBookingDate) {
+    return res.status(400).json({ error: 'booking date is required' });
+  }
+  if (!mappedBookingTime) {
+    return res.status(400).json({ error: 'start time is required' });
+  }
+  if (!mappedBookingEndTime) {
+    return res.status(400).json({ error: 'end time is required' });
+  }
+  if (!mappedNoOfPeople || mappedNoOfPeople < 1) {
+    return res.status(400).json({ error: 'number of attendees must be at least 1' });
+  }
 
   const sql = `INSERT INTO bookings (user_id, description, booking_date, booking_time, bookingendtime, no_of_people, status) 
                VALUES (?, ?, ?, ?, ?, ?, COALESCE(?, 'PENDING'))`;
 
-  db.query(sql, [user_id, description, booking_date, booking_time, bookingendtime, no_of_people, status], (err, result) => {
+  db.query(sql, [user_id, description, mappedBookingDate, mappedBookingTime, mappedBookingEndTime, mappedNoOfPeople, status], (err, result) => {
     if (err) {
       logger.error('Error inserting booking:', err);
       return res.status(500).json({ error: 'Database error' });
@@ -29,7 +72,7 @@ router.post('/', auth.authMiddleware, (req, res) => {
 
 router.get('/', auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
-  console.log(`[${now}] GET /api/bookings`);
+  //console.log(`[${now}] GET /api/bookings`);
   const sql = `SELECT b.*, u.name, u.email, u.phone 
                FROM bookings b
                JOIN users u ON b.user_id = u.id`;

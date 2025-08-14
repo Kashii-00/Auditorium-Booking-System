@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { authRequest } from "../../services/authService";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getApiUrl } from "../../utils/apiUrl";
 import "../Classroom_Booking/styles/ClassroomBooking.css";
 import { Copy } from "lucide-react";
+import { getApiUrl } from "../../utils/apiUrl";
 
 const PaymentsMainDetails = () => {
   const location = useLocation();
@@ -25,13 +25,6 @@ const PaymentsMainDetails = () => {
   const [showInfo, setShowInfo] = useState(false);
 
   const [filtersLoaded, setFiltersLoaded] = useState(false);
-
-  const [editingId, setEditingId] = useState(null);
-  const [editValues, setEditValues] = useState({
-    duration: "",
-    CTM_approved: "",
-    CTM_details: "",
-  });
 
   const handleResetFilters = () => {
     setSearchTerm("");
@@ -107,32 +100,12 @@ const PaymentsMainDetails = () => {
     localStorage.setItem("paymentsMainFilters", JSON.stringify(filtersToStore));
   }, [searchTerm, filterStatus, filterMonth, filtersLoaded]);
 
-  const handleEditChange = (field, value) => {
-    setEditValues((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSave = async (id) => {
-    try {
-      await authRequest("patch", getApiUrl(`/payments/${id}`), {
-        duration: editValues.duration,
-        CTM_approved: editValues.CTM_approved,
-        CTM_details: editValues.CTM_details,
-      });
-      setSuccessMessage(`Payment ${id} updated`);
-      setEditingId(null);
-      fetchPayments(); // Refresh list
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
-      console.error("Error updating payment:", error);
-    }
-  };
-
   const fetchPayments = async () => {
     setLoading(true);
     try {
       const response = await authRequest(
         "get",
-        getApiUrl("/payments")
+        getApiUrl("/api/payments")
       );
       setPayments(Array.isArray(response) ? response : []);
     } catch (error) {
@@ -144,7 +117,7 @@ const PaymentsMainDetails = () => {
 
   const handleDelete = async (id) => {
     try {
-      await authRequest("delete", getApiUrl(`/payments/${id}`));
+      await authRequest("delete", getApiUrl(`/api/payments/${id}`));
       setSuccessMessage(`Payment ${id} deleted`);
       fetchPayments();
       setTimeout(() => setSuccessMessage(""), 3000);
@@ -253,7 +226,7 @@ const PaymentsMainDetails = () => {
     <div className="success-popup">
       <svg
         className="icon"
-        xmlns="https://www.w3.org/2000/svg"
+        xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 20 20"
       >
         <path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z" />
@@ -316,7 +289,7 @@ const PaymentsMainDetails = () => {
         <div className="page-header">
           <svg
             className="icon"
-            xmlns="https://www.w3.org/2000/svg"
+            xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -369,7 +342,7 @@ const PaymentsMainDetails = () => {
               >
                 <svg
                   className="info-icon"
-                  xmlns="https://www.w3.org/2000/svg"
+                  xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -516,7 +489,6 @@ const PaymentsMainDetails = () => {
                     onDoubleClick={() => handleRowDoubleClick(p)}
                     className="border-t"
                   >
-                    {/* <td>{p.id}</td> */}
                     <td className="flex items-center gap-2 justify-center id-c">
                       <button
                         onClick={() => copyToClipboard(p.id)}
@@ -534,155 +506,31 @@ const PaymentsMainDetails = () => {
                     <td title={p.stream}>{getAcronym(p.stream)}</td>
                     <td>{p.customer_type}</td>
                     <td>{p.no_of_participants}</td>
-
-                    {/* Editable Duration */}
-                    <td>
-                      {editingId === p.id ? (
-                        <input
-                          type="text"
-                          value={editValues.duration}
-                          onChange={(e) =>
-                            handleEditChange("duration", e.target.value)
-                          }
-                          className="Ptable-input"
-                        />
-                      ) : (
-                        p.duration
-                      )}
-                    </td>
-
-                    {/* Editable CTM Status */}
-                    <td>
-                      {editingId === p.id ? (
-                        <select
-                          value={editValues.CTM_approved}
-                          onChange={(e) =>
-                            handleEditChange("CTM_approved", e.target.value)
-                          }
-                          className="Ptable-select no-dropdown-arrow"
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="Approved">Approved</option>
-                          <option value="Denied">Denied</option>
-                        </select>
-                      ) : (
-                        p.CTM_approved
-                      )}
-                    </td>
-
-                    {/* Editable CTM Details */}
-                    <td>
-                      {editingId === p.id ? (
-                        <input
-                          type="text"
-                          value={editValues.CTM_details}
-                          onChange={(e) =>
-                            handleEditChange("CTM_details", e.target.value)
-                          }
-                          className="Ptable-input"
-                        />
-                      ) : (
-                        p.CTM_details
-                      )}
-                    </td>
-
+                    <td>{p.duration}</td>
+                    <td>{p.CTM_approved}</td>
+                    <td>{p.CTM_details}</td>
                     <td>{formatDate(p.date)}</td>
-
-                    <td className="space-x-1">
-                      {editingId === p.id ? (
-                        <>
-                          <button
-                            onClick={() => handleSave(p.id)}
-                            className="PsaveBtn-2"
-                          >
-                            <svg
-                              className="icon-small mr-1"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                              viewBox="0 0 24 24"
-                              xmlns="https://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                            Save
-                          </button>
-                          <button
-                            onClick={() => setEditingId(null)}
-                            className="PcancelBtn-2"
-                          >
-                            <svg
-                              className="icon-small mr-1"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                              viewBox="0 0 24 24"
-                              xmlns="https://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => {
-                              setEditingId(p.id);
-                              setEditValues({
-                                duration: p.duration || "",
-                                CTM_approved: p.CTM_approved || "Pending",
-                                CTM_details: p.CTM_details || "",
-                              });
-                            }}
-                            className="editBtn-2"
-                          >
-                            <svg
-                              className="icon-small"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="https://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
-                              />
-                            </svg>
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(p.id)}
-                            className="deleteBtn-2"
-                          >
-                            <svg
-                              className="icon-small"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="https://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                            Delete
-                          </button>
-                        </>
-                      )}
+                    <td>
+                      <button
+                        onClick={() => handleDelete(p.id)}
+                        className="deleteBtn-2"
+                      >
+                        <svg
+                          className="icon-small"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))

@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const logger = require('../logger');
 const { sendEmail } = require('../utils/emailService');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 
 /**
  * Generate JWT tokens for student authentication
@@ -348,43 +348,44 @@ router.post('/forgot-password', async (req, res) => {
     try {
       await sendEmail({
         to: email,
-        subject: '🔐 Password Reset Request - MPMA Student Portal',
+        subject: 'Password Reset Request - Mahapola Ports & Maritime Academy',
         userType: 'student', // Add user type for email control
         html: `
-          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px;">
-            <div style="background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #2563eb; font-size: 28px; margin: 0; font-weight: 800;">🔐 Password Reset</h1>
-                <p style="color: #64748b; font-size: 16px; margin: 10px 0;">MPMA Student Portal</p>
-              </div>
-              
-              <div style="background: linear-gradient(135deg, #f1f5f9, #e2e8f0); border-radius: 15px; padding: 25px; margin: 25px 0;">
-                <h2 style="color: #1e293b; font-size: 20px; margin: 0 0 15px 0;">Hello ${student.full_name},</h2>
-                <p style="color: #475569; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
-                  We received a request to reset your password for your MPMA Student Portal account.
-                </p>
-                <p style="color: #dc2626; font-size: 14px; font-weight: 600; margin: 0;">
-                  ⚠️ This link will expire in 1 hour for security reasons.
-                </p>
-              </div>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; text-decoration: none; padding: 15px 30px; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transition: all 0.3s ease;">
-                  🔑 Reset My Password
-                </a>
-              </div>
-              
-              <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; border-radius: 8px; margin: 25px 0;">
-                <p style="color: #b91c1c; font-size: 14px; margin: 0; font-weight: 600;">
-                  🚨 Security Notice: If you didn't request this password reset, please ignore this email. Your account remains secure.
-                </p>
-              </div>
-              
-              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
-                <p style="color: #64748b; font-size: 12px; margin: 0;">
-                  © 2025 MPMA Student Portal. This is an automated message.
-                </p>
-              </div>
+          <div style="font-family: Arial, sans-serif; max-width: 100%; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0;">
+            <!-- Header -->
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h2 style="color: #1e40af; margin: 0; font-size: 20px;">Mahapola Ports & Maritime Academy</h2>
+            </div>
+
+            <p style="font-size: 16px; margin-bottom: 15px;">Dear <strong>${student.full_name}</strong>,</p>
+            <p style="font-size: 16px; margin-bottom: 15px;">We received a request to reset your password for your student portal account.</p>
+            
+            <!-- Reset Instructions -->
+            <div style="margin: 20px 0; padding: 15px; background-color: #f8fafc; border-left: 4px solid #1e40af;">
+              <h3 style="color: #1e40af; margin: 0 0 10px 0; font-size: 16px;">Password Reset Instructions</h3>
+              <p style="margin: 5px 0; font-size: 14px;">Click the button below to reset your password.</p>
+              <p style="margin: 5px 0; font-size: 14px; color: #dc2626;"><strong>Important:</strong> This link will expire in 1 hour for security reasons.</p>
+            </div>
+
+            <!-- Reset Button -->
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" style="display: inline-block; background-color: #1e40af; color: white; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                Reset My Password
+              </a>
+            </div>
+
+            <!-- Security Notice -->
+            <div style="margin: 20px 0; padding: 15px; background-color: #fef2f2; border-left: 4px solid #ef4444;">
+              <h3 style="color: #dc2626; margin: 0 0 10px 0; font-size: 16px;">Security Notice</h3>
+              <p style="margin: 5px 0; font-size: 14px;">If you didn't request this password reset, please ignore this email. Your account remains secure.</p>
+            </div>
+
+            <p style="font-size: 16px; margin: 20px 0;">If you have any questions or need assistance, please contact our support team.</p>
+            <p style="font-size: 16px; margin: 20px 0;">Thank you for using Mahapola Ports & Maritime Academy Student Portal!</p>
+            
+            <!-- Footer -->
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; text-align: center;">
+              <p style="color: #6b7280; margin: 0; font-size: 14px;">Best regards,<br><strong>Mahapola Ports & Maritime Academy Team</strong></p>
             </div>
           </div>
         `
@@ -535,7 +536,7 @@ router.get('/profile', studentAuthMiddleware, async (req, res) => {
     
     // Get batches the student is enrolled in with better sorting
     const batchesQuery = `
-      SELECT b.id, as batchName, c.courseName, 
+      SELECT b.id, CONCAT(c.courseId, ' - Batch ', b.batch_number) as batchName, c.courseName, 
              b.start_date as startDate, b.end_date as endDate, 
              b.status, sb.enrollment_date as enrollmentDate,
              CASE
@@ -605,7 +606,7 @@ router.get('/payments', studentAuthMiddleware, async (req, res) => {
     // Get payments for the student
     const paymentsQuery = `
       SELECT p.id, p.amount, p.payment_date, p.status, p.payment_method,
-             c.courseName,
+             c.courseName
       FROM payments p
       JOIN batches b ON p.batch_id = b.id
       JOIN courses c ON b.course_id = c.id

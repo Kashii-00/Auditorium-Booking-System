@@ -1,17 +1,17 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { authRequest } from "../../services/authService"
-import { getApiUrl } from '../../utils/apiUrl';
+import { authRequest } from "../../services/authService";
 import "./styles/styles2.css";
+import { getApiUrl } from '../../utils/apiUrl';
 import MainCourseCostSection from "./MainCourseCostSection";
 import CourseDevelopmentWorkForm from "./CourseDevelopmentWorkForm";
 import CourseDeliveryCostForm from "./CourseDeliveryCostForm";
 import CourseOverheadsForm from "./CourseOverheadsForm";
 import CourseCostSummaryForm from "./CourseCostSummaryForm";
+import SpecialCasePaymentsForm from "./SpecialCasePaymentsForm";
+import PayHerePaymentForm from "./PayHerePaymentForm";
 
 const defaultForm = {
-  course_id: "",
-  batch_id: "",
   course_name: "",
   no_of_participants: "",
   duration: "",
@@ -21,6 +21,19 @@ const defaultForm = {
   CTM_details: "",
   special_justifications: "",
   date: "",
+
+  accountant_approval_obtained: "Pending",
+  accountant_details: "",
+
+  sectional_approval_obtained: "Pending",
+  section_type: "",
+  sectional_details: "",
+
+  DCTM01_approval_obtained: "Pending",
+  DCTM01_details: "",
+
+  DCTM02_approval_obtained: "Pending",
+  DCTM02_details: "",
 };
 
 const CourseCostForm = () => {
@@ -28,7 +41,6 @@ const CourseCostForm = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => location.state?.sidebarState ?? false
   );
-  // const [formData, setFormData] = useState(defaultForm);
   const [formData, setFormData] = useState(() => {
     const saved = localStorage.getItem("draftMainCourseForm");
     return saved ? JSON.parse(saved) : defaultForm;
@@ -49,7 +61,9 @@ const CourseCostForm = () => {
     "Development Work",
     "Delivery Cost",
     "Overheads",
+    "Special Payment Request",
     "Cost Summary",
+    "Student Payment",
   ];
 
   const [storedCourseCostId, setStoredCourseCostId] = useState(
@@ -117,10 +131,6 @@ const CourseCostForm = () => {
   }, []);
 
   const validateForm = () => {
-    if (!formData.course_id || isNaN(+formData.course_id))
-      return "Valid Course ID required.";
-    if (!formData.batch_id || isNaN(+formData.batch_id))
-      return "Valid Batch ID required.";
     if (!formData.course_name) return "Course name is required.";
     return null;
   };
@@ -132,8 +142,6 @@ const CourseCostForm = () => {
     try {
       const payload = {
         ...formData,
-        course_id: +formData.course_id,
-        batch_id: +formData.batch_id,
         no_of_participants: formData.no_of_participants
           ? +formData.no_of_participants
           : null,
@@ -226,9 +234,8 @@ const CourseCostForm = () => {
           setStep={setStep}
         />
       )}
-
       {step === 5 && (
-        <CourseCostSummaryForm
+        <SpecialCasePaymentsForm
           successMessage={successMessage}
           setSuccessMessage={setSuccessMessage}
           error={error}
@@ -238,6 +245,31 @@ const CourseCostForm = () => {
           setStep={setStep}
         />
       )}
+
+      {step === 6 && (
+        <CourseCostSummaryForm
+          successMessage={successMessage}
+          setSuccessMessage={setSuccessMessage}
+          error={error}
+          setError={setError}
+          step={step}
+          currentStep={6}
+          setStep={setStep}
+        />
+      )}
+
+      {step === 7 && (
+        <PayHerePaymentForm
+          successMessage={successMessage}
+          setSuccessMessage={setSuccessMessage}
+          error={error}
+          setError={setError}
+          step={step}
+          currentStep={7}
+          setStep={setStep}
+        />
+      )}
+
       {storedCourseCostId && (
         <div className="PMD_id-box">
           <p>

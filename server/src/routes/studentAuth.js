@@ -4,7 +4,7 @@ const db = require('../db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const logger = require('../logger');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 const { sendEmail } = require('../utils/emailService');
 
 // Middleware imports

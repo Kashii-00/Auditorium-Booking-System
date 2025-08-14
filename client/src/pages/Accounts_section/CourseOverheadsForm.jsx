@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
 import CreatableSelect from "react-select/creatable";
-import { authRequest } from "../../services/authService"
-import { getApiUrl } from '../../utils/apiUrl';
+import { authRequest } from "../../services/authService";
 import "./styles/styles.css";
+import { getApiUrl } from '../../utils/apiUrl';
 
 const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager", "admin"];
 
@@ -34,12 +34,6 @@ const CourseOverheadsForm = ({
 }) => {
   const DRAFT_KEY = "draftCourseOverheadsForm";
 
-  // const [formData, setFormData] = useState({
-  //   payments_main_details_id: "",
-  //   teaching_aids: [],
-  //   training_environments: [],
-  //   overheads: [],
-  // });
   const [formData, setFormData] = useState(() => {
     const saved = localStorage.getItem(DRAFT_KEY);
     return saved
@@ -480,22 +474,24 @@ const CourseOverheadsForm = ({
         )}
         {error && <div className="error-popup2">{error}</div>}
 
-        <div className="aid-request-form-type2" style={{ width: "30%" }}>
-          <div className="form-step">
-            <input
-              type="number"
-              name="payments_main_details_id"
-              value={formData.payments_main_details_id}
-              onChange={handleChange}
-              required
-              placeholder=" "
-              className="input"
-            />
-            <label
-              className={formData.payments_main_details_id ? "active2" : ""}
-            >
-              Payments Main Details ID
-            </label>
+        <div className="aid-request-form-type2">
+          <div className="step-two-grid aid-request-form-type2">
+            <div className="form-step">
+              <input
+                type="number"
+                name="payments_main_details_id"
+                value={formData.payments_main_details_id}
+                onChange={handleChange}
+                required
+                placeholder=" "
+                className="input"
+              />
+              <label
+                className={formData.payments_main_details_id ? "active2" : ""}
+              >
+                Payments Main Details ID
+              </label>
+            </div>
           </div>
         </div>
 

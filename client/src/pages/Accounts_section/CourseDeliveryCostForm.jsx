@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
 import CreatableSelect from "react-select/creatable";
 import Select from "react-select";
-import { authRequest } from "../../services/authService"
 import { getApiUrl } from '../../utils/apiUrl';
+import { authRequest } from "../../services/authService";
 import "./styles/styles.css";
 
 const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager", "admin"];
@@ -70,21 +70,14 @@ const CourseDeliveryCostForm = ({
 }) => {
   const DRAFT_KEY = "draftCourseDeliveryCostForm";
 
-  // const [formData, setFormData] = useState({
-  //   payments_main_details_id: "",
-  //   Md_approval_obtained: "",
-  //   Md_details: "",
-  //   cost_items: [],
-  //   materials: [],
-  // });
   const [formData, setFormData] = useState(() => {
     const saved = localStorage.getItem(DRAFT_KEY);
     return saved
       ? JSON.parse(saved)
       : {
           payments_main_details_id: "",
-          Md_approval_obtained: "",
-          Md_details: "",
+          Md_approval_obtained: null,
+          Md_details: null,
           cost_items: [],
           materials: [],
         };
@@ -513,16 +506,35 @@ const CourseDeliveryCostForm = ({
             </label>
           </div>
 
-          {/* MD Approval */}
           <div className="form-step">
-            <input
-              type="text"
+            <Select
+              styles={customSelectStyles}
               name="Md_approval_obtained"
-              value={formData.Md_approval_obtained}
-              onChange={handleChange}
-              placeholder=" "
+              options={[
+                { value: "Pending", label: "Pending" },
+                { value: "Approved", label: "Approved" },
+                { value: "Denied", label: "Denied" },
+              ]}
+              value={
+                formData.Md_approval_obtained
+                  ? {
+                      value: formData.Md_approval_obtained,
+                      label: formData.Md_approval_obtained,
+                    }
+                  : null
+              }
+              onChange={(selected) =>
+                handleChange({
+                  target: {
+                    name: "Md_approval_obtained",
+                    value: selected?.value || "",
+                  },
+                })
+              }
               onFocus={() => onFocus("Md_approval_obtained")}
               onBlur={() => onBlur("Md_approval_obtained")}
+              placeholder=" "
+              isClearable
             />
             <label
               className={

@@ -31,7 +31,7 @@ router.post('/', auth.authMiddleware, (req, res) => {
 
 router.get('/', auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
-  console.log(`[${now}] GET /api/busBookings`);
+  //console.log(`[${now}] GET /api/busBookings`);
   const sql = `SELECT b.*, u.name, u.email, u.phone 
                FROM busBooking b
                JOIN users u ON b.user_id = u.id`;

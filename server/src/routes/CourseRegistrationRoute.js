@@ -56,9 +56,9 @@ const ensureJsonField = (value) => {
 // Get all courses
 router.get('/', auth.authMiddleware, async (req, res) => {
   const now = new Date().toISOString();
-  console.log(`[${now}] GET /api/courses`);
-  console.log('GET params:', req.params);
-  console.log('GET query:', req.query);
+  //console.log(`[${now}] GET /api/courses`);
+  //console.log('GET params:', req.params);
+  //console.log('GET query:', req.query);
 
   try {
     const query = 'SELECT * FROM courses ORDER BY courseName';

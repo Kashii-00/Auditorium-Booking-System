@@ -1,18 +1,26 @@
 // routes/panelMeetingParticipants.js
 const express = require("express");
-const db = require("../../db");
-const auth = require("../../auth");
-const logger = require("../../logger");
+const db = require("../../../db");
+const auth = require("../../../auth");
+const logger = require("../../../logger");
 const Joi = require("joi");
-const { standardLimiter } = require("../../middleware/rateLimiter");
+const rateLimit = require("express-rate-limit");
 
 const router = express.Router();
 
-// Using standardLimiter for IPv6-compatible rate limiting
-
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 15,
+  keyGenerator: (req) => req.user?.id || req.ip,
+  handler: (req, res) => {
+    res
+      .status(429)
+      .json({ error: "Too many requests. Please try again later." });
+  },
+});
 
 router.use(auth.authMiddleware);
-router.use(standardLimiter);
+router.use(limiter);
 
 const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager", "admin"];
 const CATEGORY = "Course Development Work";

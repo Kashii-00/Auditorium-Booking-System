@@ -10,7 +10,7 @@ const logger = require('../logger');
 const moment = require('moment');
 const bcrypt = require('bcryptjs');
 const { sendEmail } = require('../utils/emailService');
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 const studentIdGenerator = require('../services/studentIdGenerator');
 
 // Ensure uploads directory exists
@@ -71,9 +71,9 @@ function generateTemporaryPassword(length = 10) {
 // GET /students/courses
 router.get('/courses', auth.authMiddleware, async (req, res) => {
   const now = new Date().toISOString();
-  console.log(`[${now}] GET /api/students/courses`);
-  console.log('GET params:', req.params);
-  console.log('GET query:', req.query);
+  //console.log(`[${now}] GET /api/students/courses`);
+  //console.log('GET params:', req.params);
+  //console.log('GET query:', req.query);
 
   try {
     const sql = `SELECT id, courseId, courseName, stream FROM courses WHERE status = ? ORDER BY courseName`;
@@ -88,9 +88,9 @@ router.get('/courses', auth.authMiddleware, async (req, res) => {
 // GET /students
 router.get('/', auth.authMiddleware, async (req, res) => {
   const now = new Date().toISOString();
-  console.log(`[${now}] GET /api/students`);
-  console.log('GET params:', req.params);
-  console.log('GET query:', req.query);
+  //console.log(`[${now}] GET /api/students`);
+  //console.log('GET params:', req.params);
+  //console.log('GET query:', req.query);
 
   try {
     const sql = `
@@ -117,7 +117,6 @@ router.get('/', auth.authMiddleware, async (req, res) => {
 router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] POST /api/students`);
-  console.log('POST body:', req.body);
 
   let conn;
   try {
@@ -146,8 +145,11 @@ router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
       ) VALUES (${new Array(27).fill('?').join(',')})
     `;
     const files = req.files;
+    // Handle email field - convert "null" string to actual null
+    const emailValue = data.email === "null" || data.email === "" ? null : data.email;
+    
     const vals = [
-      data.full_name, data.email, data.identification_type, data.id_number, data.nationality,
+      data.full_name, emailValue, data.identification_type, data.id_number, data.nationality,
       data.date_of_birth, data.country||null, data.cdc_number||null, data.address, data.department||null,
       data.company||null, data.sea_service||null, data.emergency_contact_name, data.emergency_contact_number,
       isSwimmer ? 1 : 0, isSlpaEmployee ? 1 : 0, data.designation||null, data.division||null, data.service_no||null,
@@ -179,48 +181,85 @@ router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
     const tempPassword = generateTemporaryPassword();
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
     
-    // Insert into student_users table
-    await conn.queryPromise(
-      `INSERT INTO student_users (student_id, email, password, is_temp_password, status)
-       VALUES (?, ?, ?, TRUE, 'ACTIVE')`,
-      [insertId, data.email, hashedPassword]
+    // Insert into student_users table (only if email is provided)
+    if (emailValue) {
+      await conn.queryPromise(
+        `INSERT INTO student_users (student_id, email, password, is_temp_password, status)
+         VALUES (?, ?, ?, TRUE, 'ACTIVE')`,
+        [insertId, emailValue, hashedPassword]
+      );
+    }
+
+    // Get enrolled courses for welcome email
+    const enrolledCourses = await conn.queryPromise(
+      `SELECT c.courseName, c.courseId, c.duration, c.fees 
+       FROM courses c 
+       JOIN student_courses sc ON c.id = sc.course_id 
+       WHERE sc.student_id = ?`,
+      [insertId]
     );
 
     await conn.commitPromise();
     
-    // Send welcome email with login credentials
-    try {
-      const emailResult = await sendEmail({
-        to: data.email,
-        subject: 'Welcome to Maritime Training Center - Your Account Details',
-        userType: 'student', // Add user type for email control
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-            <h2 style="color: #3b82f6;">Welcome to Maritime Training Center!</h2>
-            <p>Dear ${data.full_name},</p>
-            <p>Your student account has been created successfully. You can now access the student portal using the following credentials:</p>
-            <div style="background-color: #f8fafc; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p><strong>Student ID:</strong> ${insertId}</p>
-              <p><strong>Email:</strong> ${data.email}</p>
-              <p><strong>Temporary Password:</strong> ${tempPassword}</p>
-              <p style="color: #ef4444; font-size: 14px;">Important: You will be required to change this password on your first login.</p>
+    // Send welcome email WITHOUT login credentials (only if email is provided)
+    if (emailValue) {
+      try {
+        const coursesListHtml = enrolledCourses.map(course => 
+          `<li style="margin: 5px 0;"><strong>${course.courseName}</strong> (${course.courseId}) - ${course.duration}</li>`
+        ).join('');
+
+        const emailResult = await sendEmail({
+          to: emailValue,
+          subject: 'Welcome to Mahapola Ports & Maritime Academy - Registration Successful',
+          userType: 'student',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 100%; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0;">
+              <!-- Header -->
+              <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="color: #1e40af; margin: 0; font-size: 20px;">Mahapola Ports & Maritime Academy</h2>
+              </div>
+
+              <p style="font-size: 16px; margin-bottom: 15px;">Dear <strong>${data.full_name}</strong>,</p>
+              <p style="font-size: 16px; margin-bottom: 15px;">Your student registration has been completed successfully.</p>
+              
+              <!-- Registration Details -->
+              <div style="margin: 20px 0; padding: 15px; background-color: #f8fafc; border-left: 4px solid #1e40af;">
+                <h3 style="color: #1e40af; margin: 0 0 10px 0; font-size: 16px;">Registration Details</h3>
+                <p style="margin: 5px 0;"><strong>Student ID:</strong> ${insertId}</p>
+                <p style="margin: 5px 0;"><strong>Email:</strong> ${emailValue}</p>
+                <p style="margin: 5px 0;"><strong>Identification:</strong> ${data.identification_type} - ${data.id_number}</p>
+              </div>
+
+              <!-- Enrolled Courses -->
+              <div style="margin: 20px 0; padding: 15px; background-color: #f0f9ff; border-left: 4px solid #0ea5e9;">
+                <h3 style="color: #0c4a6e; margin: 0 0 10px 0; font-size: 16px;">Enrolled Courses</h3>
+                <ul style="margin: 8px 0; padding-left: 20px;">
+                  ${coursesListHtml}
+                </ul>
+              </div>
+
+              <p style="font-size: 16px; margin: 20px 0;">If you have any questions or need assistance, please contact our support team.</p>
+              <p style="font-size: 16px; margin: 20px 0;">Thank you for choosing Mahapola Ports & Maritime Academy!</p>
+              
+              <!-- Footer -->
+              <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; text-align: center;">
+                <p style="color: #6b7280; margin: 0; font-size: 14px;">Best regards,<br><strong>Mahapola Ports & Maritime Academy Team</strong></p>
+              </div>
             </div>
-            <p>You will receive a formatted student code when you are assigned to a batch for your courses.</p>
-            <p>You can access the student portal at: <a href="${process.env.CLIENT_URL || 'https://mpmaerp.slpa.lk'}/student-login" style="color: #3b82f6;">Student Portal</a></p>
-            <p>If you have any questions or need assistance, please contact our support team.</p>
-            <p>Thank you,<br>Maritime Training Center Team</p>
-          </div>
-        `
-      });
-      
-      if (emailResult.success) {
-        logger.info(`Welcome email sent to student: ${data.email}`);
-      } else {
-        logger.warn(`Welcome email could not be sent to: ${data.email}, but registration completed successfully`);
+          `
+        });
+        
+        if (emailResult.success) {
+          logger.info(`Welcome email sent to student: ${emailValue}`);
+        } else {
+          logger.warn(`Welcome email could not be sent to: ${emailValue}, but registration completed successfully`);
+        }
+      } catch (emailErr) {
+        logger.error('Failed to send welcome email:', emailErr);
+        // Continue despite email failure - don't fail the registration
       }
-    } catch (emailErr) {
-      logger.error('Failed to send welcome email:', emailErr);
-      // Continue despite email failure - don't fail the registration
+    } else {
+      logger.info(`Student registered without email: ${data.full_name} (ID: ${insertId})`);
     }
 
     console.log(`Student registered successfully with ID: ${insertId}`);
@@ -249,7 +288,7 @@ router.get('/:id', auth.authMiddleware, async (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] GET /api/students/:id`);
   console.log('GET params:', req.params);
-  console.log('GET query:', req.query);
+  //console.log('GET query:', req.query);
 
   try {
     const [student] = await db.queryPromise('SELECT * FROM students WHERE id = ?', [req.params.id]);
@@ -283,7 +322,7 @@ router.get('/:id', auth.authMiddleware, async (req, res) => {
 router.put('/:id', auth.authMiddleware, uploadFields, async (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] PUT /api/students/:id`);
-  console.log('PUT body:', req.body);
+  console.log('GET params:', req.params);
 
   let conn;
   try {
@@ -296,8 +335,15 @@ router.put('/:id', auth.authMiddleware, uploadFields, async (req, res) => {
     const vals = [];
     const mapField = (bodyKey, col) => {
       if (data[bodyKey] !== undefined) {
-        fields.push(`${col} = ?`);
-        vals.push(data[bodyKey]);
+        // Handle email field - convert "null" string to actual null
+        if (bodyKey === 'email') {
+          const emailValue = data[bodyKey] === "null" || data[bodyKey] === "" ? null : data[bodyKey];
+          fields.push(`${col} = ?`);
+          vals.push(emailValue);
+        } else {
+          fields.push(`${col} = ?`);
+          vals.push(data[bodyKey]);
+        }
       }
     };
     ['full_name','email','identification_type','id_number','nationality',
@@ -421,6 +467,204 @@ router.delete('/:id', auth.authMiddleware, async (req, res) => {
     res.status(500).json({ error:'Delete failed', details:err.message });
   } finally {
     if (conn) conn.release();
+  }
+});
+
+// POST /students/:id/send-credentials - Send login credentials manually
+router.post('/:id/send-credentials', auth.authMiddleware, async (req, res) => {
+  try {
+    // Get student details
+    const student = await db.queryPromise(
+      `SELECT s.*, su.email as user_email, su.password, su.is_temp_password
+       FROM students s
+       LEFT JOIN student_users su ON s.id = su.student_id
+       WHERE s.id = ?`,
+      [req.params.id]
+    );
+
+    if (!student.length) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    const studentData = student[0];
+
+    // Check if student has a valid email address
+    if (!studentData.email || studentData.email === 'null' || studentData.email === null || studentData.email.trim() === '') {
+      return res.status(400).json({ error: 'Student does not have a valid email address' });
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(studentData.email)) {
+      return res.status(400).json({ error: 'Student email address is not valid' });
+    }
+
+    // Check if student already has login credentials
+    const existingUser = await db.queryPromise(
+      'SELECT id, password, email, created_at FROM student_users WHERE student_id = ?',
+      [req.params.id]
+    );
+
+    if (existingUser.length > 0 && existingUser[0].password) {
+      // Student already has credentials - suggest password reset instead
+      return res.status(400).json({ 
+        error: 'Credentials already exist', 
+        message: 'Login credentials have already been sent to this student. If the student needs access, please use "Password Reset" instead.',
+        hasCredentials: true,
+        createdAt: existingUser[0].created_at
+      });
+    }
+
+    // Create or update student credentials (first time or email updated)
+    const tempPassword = generateTemporaryPassword();
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    if (existingUser.length > 0) {
+      // Update existing record (email was updated)
+      await db.queryPromise(
+        'UPDATE student_users SET email = ?, password = ?, is_temp_password = TRUE, updated_at = NOW() WHERE student_id = ?',
+        [studentData.email, hashedPassword, req.params.id]
+      );
+    } else {
+      // Create new student_users entry (first time)
+      await db.queryPromise(
+        'INSERT INTO student_users (student_id, email, password, is_temp_password) VALUES (?, ?, ?, TRUE)',
+        [req.params.id, studentData.email, hashedPassword]
+      );
+    }
+
+    // Send email with login credentials
+    const emailResult = await sendEmail({
+      to: studentData.email,
+      subject: 'Mahapola Ports & Maritime Academy - Your Login Credentials',
+      userType: 'student',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 100%; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0;">
+          <!-- Header -->
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #1e40af; margin: 0; font-size: 20px;">Mahapola Ports & Maritime Academy</h2>
+          </div>
+
+          <p style="font-size: 16px; margin-bottom: 15px;">Dear <strong>${studentData.full_name}</strong>,</p>
+          <p style="font-size: 16px; margin-bottom: 15px;">Your login credentials for the Student Portal are ready:</p>
+          
+          <!-- Login Details -->
+          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Email:</strong> ${studentData.email}</p>
+            <p style="margin: 5px 0;"><strong>Temporary Password:</strong> <code style="background-color: #e5e7eb; padding: 5px 10px; border-radius: 3px; font-family: monospace; font-size: 14px;">${tempPassword}</code></p>
+          </div>
+
+          <p style="font-size: 16px; margin: 20px 0;">You will be required to change this password on your first login. Keep your credentials confidential and do not share them with anyone. If you encounter any issues, contact our support team immediately.</p>
+          <p style="font-size: 16px; margin: 20px 0;">If you have any questions or need assistance, please contact our support team.</p>
+          
+          <!-- Footer -->
+          <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; text-align: center;">
+            <p style="color: #6b7280; margin: 0; font-size: 14px;">Best regards,<br><strong>Mahapola Ports & Maritime Academy Team</strong></p>
+          </div>
+        </div>
+      `
+    });
+
+    if (emailResult.success) {
+      logger.info(`Login credentials created and sent to student: ${studentData.email} by user: ${req.user.id}`);
+      res.json({ 
+        success: true, 
+        message: 'Login credentials created and sent successfully' 
+      });
+    } else {
+      logger.error(`Failed to send login credentials to: ${studentData.email}`);
+      res.status(500).json({ error: 'Failed to send email' });
+    }
+
+
+
+  } catch (error) {
+    logger.error('Send credentials error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /students/:id/send-password-reset - Send password reset email manually
+router.post('/:id/send-password-reset', auth.authMiddleware, async (req, res) => {
+  try {
+    // Get student details
+    const student = await db.queryPromise(
+      `SELECT s.*, su.email as user_email, su.id as user_id
+       FROM students s
+       LEFT JOIN student_users su ON s.id = su.student_id
+       WHERE s.id = ?`,
+      [req.params.id]
+    );
+
+    if (!student.length) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    const studentData = student[0];
+
+    // Check if student has login credentials
+    if (!studentData.user_id) {
+      return res.status(400).json({ error: 'Student does not have login credentials yet' });
+    }
+
+    // Generate new temporary password
+    const tempPassword = generateTemporaryPassword();
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    // Update password in database
+    await db.queryPromise(
+      'UPDATE student_users SET password = ?, is_temp_password = TRUE, updated_at = NOW() WHERE student_id = ?',
+      [hashedPassword, req.params.id]
+    );
+
+    // Send password reset email
+    const emailResult = await sendEmail({
+      to: studentData.email,
+      subject: 'Mahapola Ports & Maritime Academy - Password Reset',
+      userType: 'student',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 100%; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0;">
+          <!-- Header -->
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #dc2626; margin: 0; font-size: 20px;">Mahapola Ports & Maritime Academy</h2>
+          </div>
+
+          <p style="font-size: 16px; margin-bottom: 15px;">Dear <strong>${studentData.full_name}</strong>,</p>
+          <p style="font-size: 16px; margin-bottom: 15px;">Your password has been reset as requested by our administrative team.</p>
+          
+          <!-- New Login Details -->
+          <div style="margin: 20px 0; padding: 15px; background-color: #fef2f2; border-left: 4px solid #dc2626;">
+            <h3 style="color: #991b1b; margin: 0 0 10px 0; font-size: 16px;">New Login Details</h3>
+            <p style="margin: 5px 0;"><strong>Student Portal:</strong> <a href="${process.env.CLIENT_URL || 'https://mpmaerp.slpa.lk'}/student-login" style="color: #dc2626;">Click here to login</a></p>
+            <p style="margin: 5px 0;"><strong>Email:</strong> ${studentData.email}</p>
+            <p style="margin: 5px 0;"><strong>New Temporary Password:</strong> <code style="background-color: #e5e7eb; padding: 5px 10px; border-radius: 3px; font-family: monospace; font-size: 14px;">${tempPassword}</code></p>
+          </div>
+
+          <p style="font-size: 16px; margin: 20px 0;">You must change this temporary password when you first log in. For security reasons, this password is only valid for your next login. If you did not request this reset, please contact support immediately.</p>
+          <p style="font-size: 16px; margin: 20px 0;">If you have any questions or need assistance, please contact our support team.</p>
+          
+          <!-- Footer -->
+          <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; text-align: center;">
+            <p style="color: #6b7280; margin: 0; font-size: 14px;">Best regards,<br><strong>Mahapola Ports & Maritime Academy Team</strong></p>
+          </div>
+        </div>
+      `
+    });
+
+    if (emailResult.success) {
+      logger.info(`Password reset email sent to student: ${studentData.email} by user: ${req.user.id}`);
+      res.json({ 
+        success: true, 
+        message: 'Password reset email sent successfully' 
+      });
+    } else {
+      logger.error(`Failed to send password reset email to: ${studentData.email}`);
+      res.status(500).json({ error: 'Failed to send email' });
+    }
+
+  } catch (error) {
+    logger.error('Send password reset error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

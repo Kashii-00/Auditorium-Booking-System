@@ -1,32 +1,19 @@
-const nodemailer = require('nodemailer');
 const logger = require('../logger');
+const MicrosoftGraphService = require('../services/microsoftGraphService');
 
-// Email configuration
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_PORT) || 587,
-  secure: process.env.EMAIL_SECURE === 'true',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  // Add these options for better compatibility with various email providers
-  tls: {
-    rejectUnauthorized: false
-  }
-});
+// Initialize Microsoft Graph Service
+let graphService = null;
 
-// Test connection on startup
-transporter.verify(function (error) {
-  if (error) {
-    logger.error('Email service configuration error:', error);
-  } else {
-    logger.info('Email server connection successful');
-  }
-});
+try {
+  graphService = new MicrosoftGraphService();
+  logger.info('Microsoft Graph email service initialized 📧');
+} catch (error) {
+  logger.error('Microsoft Graph initialization failed:', error);
+  throw new Error('Microsoft Graph service is required but failed to initialize');
+}
 
 /**
- * Send an email
+ * Send an email using Microsoft Graph
  * @param {Object} options - Email options
  * @param {string} options.to - Recipient email
  * @param {string} options.subject - Email subject
@@ -37,14 +24,14 @@ transporter.verify(function (error) {
  */
 const sendEmail = async (options) => {
   try {
-    // Check if emails are disabled globally in development
-    if (process.env.NODE_ENV === 'development' && process.env.DISABLE_EMAILS === 'true') {
-      logger.info('Email sending disabled in development. Would have sent:', {
+    // Check if emails are disabled globally
+    if (process.env.DISABLE_EMAILS === 'true') {
+      logger.info('Email sending disabled. Would have sent:', {
         to: options.to,
         subject: options.subject,
         userType: options.userType || 'general'
       });
-      return { success: true, info: { response: 'Email disabled in development' } };
+      return { success: true, info: { response: 'Email disabled' } };
     }
 
     // Check user-specific email controls
@@ -68,17 +55,14 @@ const sendEmail = async (options) => {
       return { success: true, info: { response: 'Lecturer emails disabled' } };
     }
 
-    const mailOptions = {
-      from: process.env.EMAIL_FROM || '"Maritime Training Center" <no-reply@maritimetraining.com>',
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-      text: options.text || stripHtml(options.html),
-    };
+    // Use Microsoft Graph service
+    if (!graphService) {
+      throw new Error('Microsoft Graph service not available');
+    }
 
-    const info = await transporter.sendMail(mailOptions);
-    logger.info(`Email sent to ${options.to}: ${info.response}`);
-    return { success: true, info };
+    logger.info(`Sending email via Microsoft Graph to: ${options.to}`);
+    return await graphService.sendEmail(options);
+
   } catch (error) {
     logger.error('Email sending failed:', error);
     // Don't throw the error - return failure status instead
@@ -104,7 +88,42 @@ async function sendBasicEmail(to, subject, content, userType = 'general') {
   });
 }
 
+// Test Microsoft Graph connection
+async function testGraphConnection() {
+  if (!graphService) {
+    return { success: false, error: 'Microsoft Graph service not initialized' };
+  }
+  return await graphService.testConnection();
+}
+
+// Send test email
+async function sendTestEmail(toEmail, testMessage) {
+  return sendEmail({
+    to: toEmail,
+    subject: 'Microsoft Graph Email Test - ' + new Date().toLocaleString(),
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #2563eb;">Microsoft Graph Email Test</h2>
+        <p>This is a test email sent using Microsoft Graph API.</p>
+        <p><strong>Message:</strong> ${testMessage}</p>
+        <div style="background-color: #f0f9ff; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 0;"><strong>✅ Microsoft Graph Integration Working!</strong></p>
+        </div>
+        <p style="color: #6b7280; font-size: 14px;">
+          Sent on: ${new Date().toLocaleString()}
+        </p>
+      </div>
+    `,
+    text: `Microsoft Graph Email Test\n\n${testMessage}\n\nSent on: ${new Date().toLocaleString()}`,
+    userType: 'general'
+  });
+}
+
 module.exports = {
   sendEmail,
-  sendBasicEmail
+  sendBasicEmail,
+  testGraphConnection,
+  sendTestEmail,
+  graphService,
+  emailProvider: 'graph'
 };

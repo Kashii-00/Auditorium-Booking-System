@@ -1,16 +1,25 @@
 const express = require("express");
-const db = require("../../db");
-const auth = require("../../auth");
-const logger = require("../../logger");
+const db = require("../../../db");
+const auth = require("../../../auth");
+const logger = require("../../../logger");
 const Joi = require("joi");
-const { standardLimiter } = require("../../middleware/rateLimiter");
+const rateLimit = require("express-rate-limit");
 
 const router = express.Router();
 
-// Using standardLimiter for IPv6-compatible rate limiting
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 15,
+  keyGenerator: (req) => req.user?.id || req.ip,
+  handler: (req, res) => {
+    res
+      .status(429)
+      .json({ error: "Too many requests. Please try again later." });
+  },
+});
 
 router.use(auth.authMiddleware);
-router.use(standardLimiter);
+router.use(limiter);
 
 const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager", "admin"];
 const CATEGORY = "Course Delivery (Materials)";
@@ -170,6 +179,126 @@ router.post("/", (req, res) => {
               }
               logger.info(`Material created by user ${user.id}`);
               res.status(201).json({ message: "Material created." });
+            }
+          );
+        }
+      );
+    }
+  );
+});
+
+router.patch("/:id", (req, res) => {
+  const { id } = req.params;
+  const user = req.user;
+
+  const patchSchema = Joi.object({
+    rate: Joi.number().precision(2).min(0).optional(),
+    required_quantity: Joi.number().integer().min(1).optional(),
+    cost: Joi.number().precision(2).min(0).optional(),
+  }).or("rate", "required_quantity", "cost");
+
+  const { error, value } = patchSchema.validate(req.body);
+  if (error) return res.status(400).json({ error: error.details[0].message });
+
+  db.query(
+    `SELECT cmc.*, cdc.payments_main_details_id, pmd.user_id
+     FROM course_materials_costing cmc
+     JOIN course_delivery_costs cdc ON cmc.course_delivery_cost_id = cdc.id
+     JOIN payments_main_details pmd ON cdc.payments_main_details_id = pmd.id
+     WHERE cmc.id = ?`,
+    [id],
+    (err, rows) => {
+      if (err) {
+        logger.error("DB error:", err);
+        return res.status(500).json({ error: "DB error" });
+      }
+      if (rows.length === 0) {
+        return res.status(404).json({ error: "Material not found" });
+      }
+
+      const existing = rows[0];
+      if (user.id !== existing.user_id) {
+        return res.status(403).json({
+          error: "Forbidden: Only the owner can update this material.",
+        });
+      }
+
+      const privileged = isPrivileged(user);
+      const { item_description } = existing;
+
+      const { rate = null, required_quantity = null, cost = null } = value;
+
+      db.query(
+        `SELECT * FROM rates WHERE item_description = ? AND category = ?`,
+        [item_description, CATEGORY],
+        (err2, rateRows) => {
+          if (err2) {
+            logger.error("Rates lookup error:", err2);
+            return res.status(500).json({ error: "DB error" });
+          }
+
+          let finalRate = existing.rate;
+          let finalQty = existing.required_quantity;
+          let finalCost = existing.cost;
+
+          if (rateRows.length > 0) {
+            const rateEntry = rateRows[0];
+
+            if (rateEntry.rate_type === "Full Payment") {
+              if (typeof cost !== "number") {
+                return res.status(400).json({
+                  error: "Cost must be provided for Full Payment items.",
+                });
+              }
+              finalCost = cost;
+              finalRate = privileged && rate ? rate : rateEntry.rate;
+              finalQty = 0;
+            } else if (rateEntry.rate_type === "Quantity") {
+              if (required_quantity == null) {
+                return res.status(400).json({
+                  error: "Quantity is required for this item.",
+                });
+              }
+
+              finalQty = required_quantity;
+              if (privileged && rate) {
+                finalRate = rate;
+              } else {
+                finalRate = rateEntry.rate;
+              }
+              finalCost = finalRate * finalQty;
+            } else {
+              return res.status(400).json({
+                error: "Unsupported rate type in database.",
+              });
+            }
+          } else {
+            // No rate entry in rates table → Both privileged and non-privileged allowed
+            if (rate == null || required_quantity == null) {
+              return res.status(400).json({
+                error:
+                  "Rate and quantity are required for items not in rates table.",
+              });
+            }
+            finalRate = rate;
+            finalQty = required_quantity;
+            finalCost = finalRate * finalQty; // Always calculate cost
+          }
+
+          db.query(
+            `UPDATE course_materials_costing
+             SET rate = ?, required_quantity = ?, cost = ?
+             WHERE id = ?`,
+            [finalRate, finalQty, finalCost, id],
+            (err3) => {
+              if (err3) {
+                logger.error("Update error:", err3);
+                return res
+                  .status(500)
+                  .json({ error: "Failed to update material" });
+              }
+              logger.info(`Material ${id} updated by user ${user.id}`);
+              res.json({ message: "Material updated successfully." });
             }
           );
         }

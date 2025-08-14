@@ -2,9 +2,9 @@ const moment = require("moment");
 const express = require("express");
 const { query, validationResult } = require("express-validator");
 const router = express.Router();
-const db = require("../../db");
-const logger = require("../../logger");
-const auth = require("../../auth");
+const db = require("../db");
+const logger = require("../logger");
+const auth = require("../auth");
 
 // Delete rate by item description (query-based)
 router.delete(

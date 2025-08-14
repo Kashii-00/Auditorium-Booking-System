@@ -10,9 +10,9 @@ const batchManager = require("../services/batchManager")
 // GET /batches?course_id=...&year=...
 router.get("/", auth.authMiddleware, async (req, res) => {
   const now = new Date().toISOString();
-  console.log(`[${now}] GET /api/batches`);
-  console.log('GET params:', req.params);
-  console.log('GET query:', req.query);
+  //console.log(`[${now}] GET /api/batches`);
+  //console.log('GET params:', req.params);
+  //console.log('GET query:', req.query);
 
   try {
     const { course_id, year } = req.query
@@ -344,12 +344,92 @@ router.post("/:batchId/students", auth.authMiddleware, async (req, res) => {
     const studentIdGenerator = require('../services/studentIdGenerator');
     let successCount = 0
     
-    for (const studentId of existingStudentIds) {
+    // Pre-generate unique student codes for all students to avoid sequence conflicts
+    const currentYear = new Date().getFullYear()
+    let actualYear = currentYear
+    let batchNumber = 1
+    
+    // Get batch info to determine year and batch number
+    if (req.params.batchId) {
+      const batchQuery = `SELECT batch_number, year FROM batches WHERE id = ?`
+      const batchResult = await db.queryPromise(batchQuery, [req.params.batchId])
+      if (batchResult.length > 0) {
+        batchNumber = batchResult[0].batch_number || 1
+        if (batchResult[0].year) {
+          actualYear = batchResult[0].year
+        }
+      }
+    }
+    
+    // Get course code
+    const courseQuery = `SELECT courseId FROM courses WHERE id = ?`
+    const courseResult = await db.queryPromise(courseQuery, [batch.course_id])
+    const courseCode = courseResult[0].courseId.replace('MP-', '')
+    const shortYear = actualYear.toString().slice(-2)
+    
+    // Get all existing sequences for this batch to find gaps
+    const codePattern = `MP-${courseCode}${shortYear}.${batchNumber}-%`
+    const existingCodesQuery = `
+      SELECT student_code FROM (
+        SELECT student_code 
+        FROM student_courses 
+        WHERE course_id = ? 
+          AND student_code LIKE ? 
+          AND student_code IS NOT NULL
+        UNION
+        SELECT student_code 
+        FROM student_batches sb
+        JOIN batches b ON sb.batch_id = b.id
+        WHERE b.course_id = ? 
+          AND sb.student_code LIKE ? 
+          AND sb.student_code IS NOT NULL
+      ) AS all_codes
+      ORDER BY student_code
+    `
+    
+    const existingCodes = await db.queryPromise(existingCodesQuery, [batch.course_id, codePattern, batch.course_id, codePattern])
+    
+    // Extract sequence numbers from existing codes and sort them
+    const existingSequences = existingCodes
+      .map(row => {
+        const match = row.student_code.match(/-(\d+)$/)
+        return match ? parseInt(match[1]) : null
+      })
+      .filter(num => num !== null)
+      .sort((a, b) => a - b)
+    
+    console.log(`Existing sequences for ${codePattern}:`, existingSequences)
+    
+    // Find all available sequence numbers (including gaps) for the number of students we need
+    const availableSequences = []
+    let nextSequence = 1
+    
+    while (availableSequences.length < existingStudentIds.length) {
+      if (!existingSequences.includes(nextSequence)) {
+        availableSequences.push(nextSequence)
+      }
+      nextSequence++
+    }
+    
+    console.log(`Available sequences for ${existingStudentIds.length} students:`, availableSequences)
+    
+    // Generate student codes using the available sequences
+    const studentCodes = []
+    for (let i = 0; i < existingStudentIds.length; i++) {
+      const sequenceNumber = availableSequences[i]
+      const sequenceStr = sequenceNumber.toString().padStart(3, '0')
+      const studentCode = `MP-${courseCode}${shortYear}.${batchNumber}-${sequenceStr}`
+      
+      studentCodes.push(studentCode)
+      console.log(`Pre-generated student code: ${studentCode} for student ${i + 1} (sequence: ${sequenceNumber})`)
+    }
+    
+    for (let i = 0; i < existingStudentIds.length; i++) {
+      const studentId = existingStudentIds[i]
+      const studentCode = studentCodes[i]
+      
       try {
-        // Generate student code first
-        const studentCode = await studentIdGenerator.generateStudentCode(batch.course_id, req.params.batchId);
-        
-        // Insert into student_batches with student code
+        // Insert into student_batches with pre-generated student code
         const result = await db.queryPromise(
           `INSERT IGNORE INTO student_batches (student_id, batch_id, student_code, status, created_at) 
            VALUES (?, ?, ?, 'Active', NOW())`,
@@ -358,14 +438,15 @@ router.post("/:batchId/students", auth.authMiddleware, async (req, res) => {
         
         if (result.affectedRows > 0) {
           // Update the student_courses record with the generated student code
+          // Note: Remove "AND student_code IS NULL" to allow updating existing codes
           await db.queryPromise(
             `UPDATE student_courses 
              SET student_code = ? 
-             WHERE student_id = ? AND course_id = ? AND student_code IS NULL`,
+             WHERE student_id = ? AND course_id = ?`,
             [studentCode, studentId, batch.course_id]
           );
           
-          console.log(`Generated student code: ${studentCode} for student ${studentId} in batch ${req.params.batchId}`);
+          console.log(`Assigned student code: ${studentCode} to student ${studentId} in batch ${req.params.batchId}`);
           successCount++
         }
       } catch (err) {

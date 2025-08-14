@@ -15,6 +15,7 @@ class StudentIdGenerator {
   async generateStudentCode(courseId, batchId = null, year = null) {
     try {
       const currentYear = year || new Date().getFullYear();
+      let actualYear = currentYear; // Track the actual year being used
       let shortYear = currentYear.toString().slice(-2); // 2025 -> 25
 
       // Get course details
@@ -39,17 +40,15 @@ class StudentIdGenerator {
           // If batch has a specific year, use that instead
           if (batchResult[0].year) {
             const batchYear = batchResult[0].year;
+            actualYear = batchYear; // Update the actual year
             const batchShortYear = batchYear.toString().slice(-2);
-            // Update shortYear if batch has specific year
-            if (batchYear !== currentYear) {
-              shortYear = batchShortYear;
-            }
+            shortYear = batchShortYear;
           }
         }
       }
 
       // Get next available sequence number (fills gaps automatically)
-      const nextSequence = await this.getNextAvailableSequence(courseId, batchId, currentYear, batchNumber);
+      const nextSequence = await this.getNextAvailableSequence(courseId, batchId, actualYear, batchNumber);
       
       // Format sequence number with leading zeros (001, 002, etc.)
       const sequenceStr = nextSequence.toString().padStart(3, '0');
@@ -390,16 +389,26 @@ class StudentIdGenerator {
       const codePattern = `MP-${courseCode}${shortYear}.${batchNumber}-%`;
       
       // Get all existing codes for this course/batch/year combination
+      // Check both student_courses and student_batches tables
       const existingCodesQuery = `
-        SELECT student_code 
-        FROM student_courses 
-        WHERE course_id = ? 
-          AND student_code LIKE ? 
-          AND student_code IS NOT NULL
+        SELECT student_code FROM (
+          SELECT student_code 
+          FROM student_courses 
+          WHERE course_id = ? 
+            AND student_code LIKE ? 
+            AND student_code IS NOT NULL
+          UNION
+          SELECT student_code 
+          FROM student_batches sb
+          JOIN batches b ON sb.batch_id = b.id
+          WHERE b.course_id = ? 
+            AND sb.student_code LIKE ? 
+            AND sb.student_code IS NOT NULL
+        ) AS all_codes
         ORDER BY student_code
       `;
       
-      const existingCodes = await db.queryPromise(existingCodesQuery, [courseId, codePattern]);
+      const existingCodes = await db.queryPromise(existingCodesQuery, [courseId, codePattern, courseId, codePattern]);
       
       // Extract sequence numbers from existing codes
       const existingSequences = existingCodes
@@ -410,18 +419,13 @@ class StudentIdGenerator {
         .filter(num => num !== null)
         .sort((a, b) => a - b);
       
-      // Find the first gap or return the next number
+      // Find the first available sequence (fills gaps)
       let nextSequence = 1;
-      for (const seq of existingSequences) {
-        if (seq === nextSequence) {
-          nextSequence++;
-        } else if (seq > nextSequence) {
-          // Found a gap, use the current nextSequence
-          break;
-        }
+      while (existingSequences.includes(nextSequence)) {
+        nextSequence++;
       }
       
-      console.log(`Next available sequence for ${codePattern}: ${nextSequence}`);
+      console.log(`Next available sequence for ${codePattern}: ${nextSequence} (existing: [${existingSequences.join(', ')}])`);
       return nextSequence;
       
     } catch (error) {

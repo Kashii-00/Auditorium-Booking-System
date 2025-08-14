@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { authRequest } from "../../services/authService"
-import { getApiUrl } from '../../utils/apiUrl';
+import { authRequest } from "../../services/authService";
 import "./styles/styles.css";
+import { getApiUrl } from '../../utils/apiUrl';
+// import SpecialCasePaymentsForm from "./SpecialCasePaymentsForm";
 
 const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager", "admin"];
 
@@ -36,10 +37,6 @@ const CourseCostSummaryForm = ({
 }) => {
   const DRAFT_KEY = "draftCourseCostSummaryForm";
 
-  // const [formData, setFormData] = useState({
-  //   payment_main_details_id: "",
-  //   check_by: "",
-  // });
   const [formData, setFormData] = useState(() => {
     const saved = localStorage.getItem(DRAFT_KEY);
     return saved
@@ -54,7 +51,6 @@ const CourseCostSummaryForm = ({
   const [isPrivileged, setIsPrivileged] = useState(false);
   const [summary, setSummary] = useState(null);
   const [isFetchingSummary, setIsFetchingSummary] = useState(false);
-  // const [fetchError, setError] = useState("");
 
   useEffect(() => {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
@@ -206,7 +202,6 @@ const CourseCostSummaryForm = ({
           </div>
         </div>
       </form>
-
       {summary && (
         <div className="review2Con">
           <h2>Course Cost Summary</h2>
