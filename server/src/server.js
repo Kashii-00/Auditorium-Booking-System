@@ -79,7 +79,7 @@ const corsOptions = {
 };
 
 // Every 5 minutes
-cron.schedule("*/1 * * * *", () => {
+cron.schedule("*/10 * * * *", () => {
   logger.email("⏰ Checking for approved/denied requests needing emails...");
   processPendingEmails();
 });

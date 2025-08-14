@@ -3,8 +3,6 @@ const { ConfidentialClientApplication } = require('@azure/msal-node');
 
 const logger = require('../logger');
 
-
-
 class MicrosoftGraphService {
   constructor() {
     this.clientId = process.env.MICROSOFT_GRAPH_CLIENT_ID;

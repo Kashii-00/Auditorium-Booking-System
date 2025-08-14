@@ -1,10 +1,13 @@
-// routes/student_payments.js
 const express = require("express");
 const db = require("../../../db");
 const auth = require("../../../auth");
 const Joi = require("joi");
 const crypto = require("crypto");
 const config = require("../../../config/app.config");
+
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
 require("dotenv").config();
 
@@ -38,8 +41,58 @@ const patchSchema = Joi.object({
   amount_paid: Joi.number().precision(2).min(0.01).required(),
 });
 
-// Add a small epsilon for float comparison
-const EPSILON = 0.01;
+// // Multer setup for proof uploads
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     const dir = path.join(__dirname, "../../../uploads/payment_proofs");
+//     fs.mkdirSync(dir, { recursive: true });
+//     cb(null, dir);
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, Date.now() + "_" + file.originalname);
+//   },
+// });
+
+// const upload = multer({
+//   storage,
+//   limits: { fileSize: 5 * 1024 * 1024 },
+//   fileFilter: (req, file, cb) => {
+//     const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+//     if (allowedTypes.includes(file.mimetype)) {
+//       cb(null, true);
+//     } else {
+//       cb(new Error("Invalid file type. Only JPG, PNG, PDF allowed."));
+//     }
+//   },
+// });
+
+// Absolute path to src/uploads/payment_proofs
+const uploadDir = path.join(process.cwd(), "src/uploads/payment_proofs");
+
+// Ensure folder exists
+fs.mkdirSync(uploadDir, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "_" + file.originalname);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type. Only JPG, PNG, PDF allowed."));
+    }
+  },
+});
 
 // PayHere fee percentage (3.30% as per your plan)
 const PAYHERE_FEE_PERCENT = 0.033;
@@ -313,17 +366,17 @@ function checkCourseCapacity(courseBatch_id, callback) {
 }
 
 // --- POST endpoint for manual/offline payments ---
-router.post("/", (req, res) => {
+router.post("/", upload.single("payment_proof"), (req, res) => {
   const { error, value } = postSchema.validate(req.body);
   if (error) return res.status(400).json({ error: error.details[0].message });
 
   const { student_id, courseBatch_id, amount_paid } = value;
 
-  // 🔹 Step 1: Capacity check before doing anything
+  // Step 1: Capacity check
   checkCourseCapacity(courseBatch_id, (capErr) => {
     if (capErr) return res.status(400).json({ error: capErr.message });
 
-    // Step 2: Check if student already has payment record for this batch
+    // Step 2: Check if payment record exists
     db.query(
       `SELECT id FROM student_payments WHERE student_id = ? AND courseBatch_id = ?`,
       [student_id, courseBatch_id],
@@ -337,23 +390,33 @@ router.post("/", (req, res) => {
           )}`;
           db.query(
             `INSERT INTO student_payment_transactions 
-            (student_payment_id, order_id, amount_paid, status, payment_id, payment_date) 
-            VALUES (?, ?, ?, 'completed', ?, NOW())`,
+             (student_payment_id, order_id, amount_paid, status, payment_id, payment_method) 
+             VALUES (?, ?, ?, 'pending', ?, 'manual')`,
             [student_payment_id, orderId, amount_paid, paymentId],
-            (err2) => {
+            (err2, result) => {
               if (err2)
                 return res.status(500).json({
                   error: "Failed to record manual payment transaction",
                 });
 
-              updatePaymentFromTransactions(student_payment_id, (err3) => {
-                if (err3)
-                  return res
-                    .status(500)
-                    .json({ error: "Failed to update payment summary" });
-                res
-                  .status(201)
-                  .json({ message: "Manual payment recorded successfully." });
+              // Save proof if uploaded
+              if (req.file) {
+                db.query(
+                  `INSERT INTO student_payment_proofs
+                   (transaction_id, file_path, file_name, file_type, uploaded_by)
+                   VALUES (?, ?, ?, ?, ?)`,
+                  [
+                    result.insertId,
+                    req.file.path,
+                    req.file.originalname,
+                    req.file.mimetype,
+                    req.user.id,
+                  ]
+                );
+              }
+
+              res.status(201).json({
+                message: "Manual payment recorded and pending approval.",
               });
             }
           );
@@ -366,7 +429,7 @@ router.post("/", (req, res) => {
           });
         }
 
-        // Step 3: Fetch payable amount and insert payment record
+        // Step 3: Insert student_payment record
         fetchFullAmountPayable(
           courseBatch_id,
           (fetchErr, full_amount_payable) => {
@@ -381,9 +444,9 @@ router.post("/", (req, res) => {
 
             db.query(
               `INSERT INTO student_payments (
-                student_id, courseBatch_id, user_id,
-                amount_paid, full_amount_payable, payment_completed
-              ) VALUES (?, ?, ?, 0, ?, FALSE)`,
+              student_id, courseBatch_id, user_id,
+              amount_paid, full_amount_payable, payment_completed
+            ) VALUES (?, ?, ?, 0, ?, FALSE)`,
               [student_id, courseBatch_id, req.user.id, full_amount_payable],
               (err4, result) => {
                 if (err4) {
@@ -406,7 +469,7 @@ router.post("/", (req, res) => {
 });
 
 // --- PATCH endpoint for manual/offline payment increments ---
-router.patch("/:id", (req, res) => {
+router.patch("/:id", upload.single("payment_proof"), (req, res) => {
   const { id } = req.params;
   const { error, value } = patchSchema.validate(req.body);
   if (error) return res.status(400).json({ error: error.details[0].message });
@@ -419,10 +482,10 @@ router.patch("/:id", (req, res) => {
       return res.status(404).json({ error: "Payment record not found." });
 
     const record = rows[0];
-    if (record.user_id !== req.user.id) {
-      return res.status(403).json({
-        error: "Forbidden. You cannot update as you do not own this record.",
-      });
+    if (record.user_id !== req.user.id && !isPrivileged(req.user)) {
+      return res
+        .status(403)
+        .json({ error: "Forbidden. You cannot update this payment record." });
     }
 
     const remaining =
@@ -439,27 +502,141 @@ router.patch("/:id", (req, res) => {
     )}`;
     db.query(
       `INSERT INTO student_payment_transactions 
-      (student_payment_id, order_id, amount_paid, status, payment_id, payment_date) 
-      VALUES (?, ?, ?, 'completed', ?, NOW())`,
+      (student_payment_id, order_id, amount_paid, status, payment_id, payment_method) 
+      VALUES (?, ?, ?, 'pending', ?, 'manual')`,
       [id, orderId, amount_paid, paymentId],
-      (err2) => {
+      (err2, result) => {
         if (err2)
           return res
             .status(500)
             .json({ error: "Failed to record manual payment transaction" });
 
-        updatePaymentFromTransactions(id, (err3) => {
-          if (err3)
-            return res
-              .status(500)
-              .json({ error: "Failed to update payment summary" });
-          res.json({
-            message: "Manual payment increment recorded successfully.",
-          });
+        if (req.file) {
+          db.query(
+            `INSERT INTO student_payment_proofs
+             (transaction_id, file_path, file_name, file_type, uploaded_by)
+             VALUES (?, ?, ?, ?, ?)`,
+            [
+              result.insertId,
+              req.file.path,
+              req.file.originalname,
+              req.file.mimetype,
+              req.user.id,
+            ]
+          );
+        }
+
+        res.json({
+          message: "Manual payment increment recorded and pending approval.",
         });
       }
     );
   });
+});
+
+// --- Common endpoint for approving/rejecting/pending proofs ---
+router.patch("/proofs/:id/status", (req, res) => {
+  if (!isPrivileged(req.user)) {
+    return res.status(403).json({ error: "Not authorized" });
+  }
+
+  const proofId = req.params.id;
+  const { status } = req.body;
+
+  // Add "pending" as a valid status
+  if (!["approved", "rejected", "pending"].includes(status)) {
+    return res.status(400).json({ error: "Invalid status" });
+  }
+
+  // If rejected → set is_active = false
+  if (status === "rejected") {
+    db.query(
+      `UPDATE student_payment_proofs SET status=?, is_active=false WHERE id=?`,
+      [status, proofId],
+      (err) => {
+        if (err) return res.status(500).json({ error: "DB error" });
+        return res.json({ message: "Payment proof rejected and deactivated" });
+      }
+    );
+    return;
+  }
+
+  // For pending → just update status
+  if (status === "pending") {
+    db.query(
+      `UPDATE student_payment_proofs SET status=? WHERE id=?`,
+      [status, proofId],
+      (err) => {
+        if (err) return res.status(500).json({ error: "DB error" });
+        return res.json({ message: "Payment proof marked as pending" });
+      }
+    );
+    return;
+  }
+
+  // If approved → complete transaction, set payment_date, update summary
+  // If approved → complete transaction, set payment_date, update summary
+  db.query(
+    `SELECT transaction_id FROM student_payment_proofs WHERE id=?`,
+    [proofId],
+    (err2, rows) => {
+      if (err2 || rows.length === 0)
+        return res.status(404).json({ error: "Proof not found" });
+
+      const transactionId = rows[0].transaction_id;
+
+      // ✅ First update proof status to approved
+      db.query(
+        `UPDATE student_payment_proofs SET status='approved' WHERE id=?`,
+        [proofId],
+        (err3) => {
+          if (err3)
+            return res
+              .status(500)
+              .json({ error: "Failed to update proof status" });
+
+          // ✅ Then update transaction to completed
+          db.query(
+            `UPDATE student_payment_transactions 
+           SET status='completed', payment_date = NOW() 
+           WHERE id=?`,
+            [transactionId],
+            (err4) => {
+              if (err4)
+                return res
+                  .status(500)
+                  .json({ error: "Failed to update transaction" });
+
+              db.query(
+                `SELECT student_payment_id FROM student_payment_transactions WHERE id=?`,
+                [transactionId],
+                (err5, trows) => {
+                  if (err5 || trows.length === 0)
+                    return res
+                      .status(404)
+                      .json({ error: "Transaction not found" });
+
+                  updatePaymentFromTransactions(
+                    trows[0].student_payment_id,
+                    (err6) => {
+                      if (err6)
+                        return res
+                          .status(500)
+                          .json({ error: "Failed to update payment summary" });
+                      res.json({
+                        message:
+                          "Payment proof approved and transaction completed",
+                      });
+                    }
+                  );
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
 });
 
 // Existing GET and DELETE remain unchanged
@@ -673,8 +850,8 @@ router.post("/payhere/initiate-payment", (req, res) => {
         // Store only the net amount (amount) in the transaction, NOT grossAmount
         db.query(
           `INSERT INTO student_payment_transactions
-            (student_payment_id, order_id, amount_paid, status)
-            VALUES (?, ?, ?, 'pending')`,
+          (student_payment_id, order_id, amount_paid, status, payment_method)
+          VALUES (?, ?, ?, 'pending', 'online')`,
           [paymentRecord.id, orderId, amount],
           (insertErr) => {
             if (insertErr)
