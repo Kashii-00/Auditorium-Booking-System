@@ -91,7 +91,7 @@ router.post('/', auth.authMiddleware, upload.none(), async (req, res) => {
     const {
       courseId, stream, courseName, medium, location, assessmentCriteria, 
       resources, fees, registrationFee, installment1, installment2, 
-      additionalInstallments, description, duration, status = 'Active'
+      additionalInstallments, description, duration, no_of_participants, status = 'Active'
     } = req.body;
 
     // Ensure required fields
@@ -111,16 +111,16 @@ router.post('/', auth.authMiddleware, upload.none(), async (req, res) => {
         user_id, courseId, stream, courseName, medium, location, 
         assessmentCriteria, resources, fees, registrationFee, 
         installment1, installment2, additionalInstallments, description, 
-        duration, status, created_at, updated_at
+        duration, no_of_participants, status, created_at, updated_at
       ) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `;
 
     const values = [
       req.user.id, courseId, stream, courseName, mediumJson, locationJson,
       assessmentJson, resourcesJson, parseFloat(fees || 0), parseFloat(registrationFee || 0),
       parseFloat(installment1 || 0), parseFloat(installment2 || 0), additionalJson,
-      description, duration, status
+      description, duration, parseInt(no_of_participants || 25), status
     ];
 
     const result = await db.queryPromise(query, values);
@@ -158,7 +158,7 @@ router.put('/:id', auth.authMiddleware, upload.none(), async (req, res) => {
     const {
       courseId, stream, courseName, medium, location, assessmentCriteria, 
       resources, fees, registrationFee, installment1, installment2, 
-      additionalInstallments, description, duration, status
+      additionalInstallments, description, duration, no_of_participants, status
     } = req.body;
 
     // Ensure required fields
@@ -177,8 +177,8 @@ router.put('/:id', auth.authMiddleware, upload.none(), async (req, res) => {
       UPDATE courses SET
         courseId = ?, stream = ?, courseName = ?, medium = ?, location = ?,
         assessmentCriteria = ?, resources = ?, fees = ?, registrationFee = ?,
-        installment1 = ?, installment2 = ?, additionalInstallments = ?,
-        description = ?, duration = ?, status = ?, updated_at = NOW()
+        installment1 = ?, installment2 = ?, additionalInstallments = ?, description = ?,
+        duration = ?, no_of_participants = ?, status = ?, updated_at = NOW()
       WHERE id = ?
     `;
 
@@ -186,7 +186,7 @@ router.put('/:id', auth.authMiddleware, upload.none(), async (req, res) => {
       courseId, stream, courseName, mediumJson, locationJson,
       assessmentJson, resourcesJson, parseFloat(fees || 0), parseFloat(registrationFee || 0),
       parseFloat(installment1 || 0), parseFloat(installment2 || 0), additionalJson,
-      description, duration, status, req.params.id
+      description, duration, parseInt(no_of_participants || 25), status, req.params.id
     ];
 
     const result = await db.queryPromise(query, values);

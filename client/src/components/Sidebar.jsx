@@ -506,29 +506,30 @@ const Sidebar = ({ user, onLogout }) => {
         subLinks: [
           {
             path: "/classroombookingform",
-            title: "ᴇᴅᴜʀᴇꜱᴏᴜʀᴄᴇ ᴅᴀꜱʜʙᴏᴀʀᴅ",
+            title: "ᴄʟᴀꜱꜱ-ᴄᴛʀ",
             roles: ["cb_SU_access", "cb_Admin_access"]
           },
           {
-            path: "/classroomcalendar",
-            title: "ᴄʟᴀꜱꜱʀᴏᴏᴍ ꜱᴄʜᴇᴅᴜʟᴇʀ",
-            roles: ["cb_Admin_access"]
-          },
-          {
-            path: "/calendarbookingtable",
-            title: "ᴄʟᴀꜱꜱʀᴏᴏᴍ ʙᴏᴏᴋɪɴɢꜱ",
-            roles: ["cb_Admin_access"]
-          },
-          {
             path: "/classroombooking",
-            title: "ᴄʙ ᴅᴇᴛᴀɪʟꜱ ᴛᴀʙʟᴇ",
+            title: "ᴄʀʙ-ᴛᴀʙʟᴇ",
+            roles: ["cb_Admin_access"]
+          },
+          {
+            path: "/classroomcalendar",
+            title: "ᴄ-ꜱᴄʜᴇᴅᴜʟᴇʀ",
             roles: ["cb_Admin_access"]
           },
           {
             path: "/classroombookingschedule",
-            title: "ᴄʟᴀꜱꜱʀᴏᴏᴍ ꜱᴄʜᴇᴅᴜʟᴇ",
+            title: "ᴄ-ᴛɪᴍᴇᴛᴀʙʟᴇ",
             roles: ["cb_Admin_access", "cb_SU_access"]
-          }
+          },
+          {
+            path: "/calendarbookingtable",
+            title: "ᴄ-ʙᴏᴏᴋɪɴɢʟᴏɢ",
+            roles: ["cb_Admin_access"]
+          },
+          
         ]
       },
       {
@@ -636,7 +637,8 @@ const Sidebar = ({ user, onLogout }) => {
             (link.path === "/course-registration" && (location.pathname === "/courseregistration" || location.pathname.startsWith("/course-registration"))) ||
             (link.path === "/lecturer-registration" && location.pathname.includes("/LRegistration/edit/")) ||
             (link.path === "/users" && location.pathname.startsWith("/users")) ||
-            (link.path === "/create-user" && location.pathname.startsWith("/create-user"))
+            (link.path === "/create-user" && location.pathname.startsWith("/create-user")) ||
+            (link.path === "/classroombookingform" && location.pathname.startsWith("/cancelRequestByUser"))
           )
 
           return (
@@ -667,7 +669,8 @@ const Sidebar = ({ user, onLogout }) => {
                       (link.path === "/course-registration" && (location.pathname === "/courseregistration" || location.pathname.startsWith("/course-registration"))) ||
                       (link.path === "/lecturer-registration" && location.pathname.includes("/LRegistration/edit/")) ||
                       (link.path === "/users" && location.pathname.startsWith("/users")) ||
-                      (link.path === "/create-user" && location.pathname.startsWith("/create-user"))
+                      (link.path === "/create-user" && location.pathname.startsWith("/create-user")) ||
+                      (link.path === "/classroombookingform" && location.pathname.startsWith("/cancelRequestByUser"))
 
                     return (
                       <Link

@@ -76,6 +76,7 @@ const FIELD_PERMISSIONS = {
   finance_manager: [
     "accountant_approval_obtained",
     "accountant_details",
+    "course_id",
     "course_name",
     "customer_type",
     "stream",
@@ -84,10 +85,11 @@ const FIELD_PERMISSIONS = {
     "no_of_participants",
     "duration",
   ],
-  user: ["special_justifications", "no_of_participants", "duration"],
+  user: ["course_id", "course_name", "special_justifications", "no_of_participants", "duration"],
   CTM: [
     "CTM_approved",
     "CTM_details",
+    "course_id",
     "course_name",
     "customer_type",
     "stream",
@@ -99,6 +101,7 @@ const FIELD_PERMISSIONS = {
   DCTM01: [
     "DCTM01_approval_obtained",
     "DCTM01_details",
+    "course_id",
     "course_name",
     "customer_type",
     "stream",
@@ -110,6 +113,7 @@ const FIELD_PERMISSIONS = {
   DCTM02: [
     "DCTM02_approval_obtained",
     "DCTM02_details",
+    "course_id",
     "course_name",
     "customer_type",
     "stream",
@@ -122,6 +126,7 @@ const FIELD_PERMISSIONS = {
     "sectional_approval_obtained",
     "section_type",
     "sectional_details",
+    "course_id",
     "course_name",
     "customer_type",
     "stream",
@@ -139,6 +144,7 @@ function getAllowedFieldsForRole(roles, isOwner = false) {
   // If any role has full access
   if (roles.some((role) => FIELD_PERMISSIONS[role]?.includes("*"))) {
     return [
+      "course_id",
       "course_name",
       "customer_type",
       "stream",
@@ -171,6 +177,7 @@ function getAllowedFieldsForRole(roles, isOwner = false) {
 
   // ✅ Allow basic fields if the user is the owner
   if (isOwner) {
+    allowedFieldsSet.add("course_id");
     allowedFieldsSet.add("course_name");
     allowedFieldsSet.add("customer_type");
     allowedFieldsSet.add("stream");
@@ -185,7 +192,11 @@ function getAllowedFieldsForRole(roles, isOwner = false) {
 
 // Joi validation schemas
 const paymentSchema = Joi.object({
-  // course_id: Joi.number().required(),
+  course_id: Joi.alternatives().try(
+    Joi.number().integer().positive(),
+    Joi.string().allow("", null),
+    Joi.valid(null)
+  ).optional(),
   // batch_id: Joi.number().required(),
   course_name: Joi.string().required(),
   no_of_participants: Joi.number().optional(),
@@ -208,6 +219,11 @@ const paymentSchema = Joi.object({
 });
 
 const patchSchema = Joi.object({
+  course_id: Joi.alternatives().try(
+    Joi.number().integer().positive(),
+    Joi.string().allow("", null),
+    Joi.valid(null)
+  ).optional(),
   course_name: Joi.string().optional(),
   customer_type: Joi.string().optional(),
   stream: Joi.string().optional(),
@@ -271,6 +287,7 @@ function sanitizePaymentOutput(payment, roles, currentUserId) {
   // Return only limited fields for other users
   return {
     id: payment.id,
+    course_id: payment.course_id,
     course_name: payment.course_name,
     duration: payment.duration,
     customer_type: payment.customer_type,
@@ -293,6 +310,7 @@ router.post("/", (req, res) => {
 
   const fields = [
     "user_id",
+    "course_id",
     "course_name",
     "no_of_participants",
     "duration",
@@ -342,6 +360,14 @@ router.post("/", (req, res) => {
 
     if (nullableFields.includes(f)) {
       return body[f] && body[f].trim() !== "" ? body[f] : null;
+    }
+
+    // Handle course_id specifically for manual entry
+    if (f === "course_id") {
+      if (body[f] === "" || body[f] === null || body[f] === undefined) {
+        return null; // Allow null for manual entry
+      }
+      return body[f];
     }
 
     return body[f] || null;
@@ -564,6 +590,13 @@ router.patch("/:id", (req, res) => {
           // Auto-format date if provided
           if (key === "date" && value) {
             value = moment(value).format("YYYY-MM-DD");
+          }
+
+          // Handle course_id specifically for manual entry
+          if (key === "course_id") {
+            if (value === "" || value === null || value === undefined) {
+              value = null; // Allow null for manual entry
+            }
           }
 
           // Check if no_of_participants changed

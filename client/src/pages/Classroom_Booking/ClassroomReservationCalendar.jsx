@@ -122,16 +122,14 @@ const EnhancedEventCard = memo(({ event, onEventClick, formatTime, getEventDurat
 
   return (
     <div
-      className="group bg-white/95 backdrop-blur-sm border border-slate-200 rounded-2xl p-5 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 hover:border-blue-300 overflow-hidden relative"
+      className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:shadow-md cursor-pointer hover:border-blue-300 overflow-hidden relative"
       onClick={handleClick}
     >
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-purple-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
 
       <div className="relative z-10">
         <div className="flex items-start gap-4">
           {/* Enhanced Date Badge */}
-          <div className="flex-shrink-0 flex flex-col items-center justify-center w-18 h-18 text-white rounded-2xl shadow-xl transform group-hover:scale-105 transition-all duration-300 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700">
+          <div className="flex-shrink-0 flex flex-col items-center justify-center w-16 h-16 text-white rounded-lg shadow-sm bg-blue-500">
             <span className="text-2xl font-black">{event.date_from?.split("-")[2] || "00"}</span>
             <span className="text-xs uppercase tracking-wider font-bold opacity-90">
               {getWeekday(event.date_from || new Date().toISOString().split("T")[0]).slice(0, 3)}
@@ -141,28 +139,28 @@ const EnhancedEventCard = memo(({ event, onEventClick, formatTime, getEventDurat
           {/* Event Details */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-3 mb-3">
-              <h3 className="text-xl font-black text-slate-900 group-hover:text-blue-700 transition-colors duration-300 leading-tight">
+              <h3 className="text-lg font-bold text-slate-900 leading-tight">
                 {event.course_name || event.calendar_course || "Classroom Booking"}
               </h3>
-              <Badge className="bg-gradient-to-r from-emerald-100 via-green-100 to-teal-100 text-emerald-800 border-emerald-300 px-3 py-1 text-xs font-bold shadow-sm border whitespace-nowrap">
+              <Badge className="bg-green-100 text-green-800 border-green-300 px-2 py-1 text-xs font-medium whitespace-nowrap">
                 Scheduled
               </Badge>
             </div>
 
             <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-sm">
+                <div className="p-1 bg-blue-100 rounded-lg">
                   <Clock className="h-4 w-4 text-blue-600" />
                 </div>
-                <span className="font-semibold">
+                <span className="font-medium">
                   {formatTime(event.time_from)} • {getEventDuration(event.time_from, event.time_to)}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl shadow-sm">
-                  <MapPin className="h-4 w-4 text-purple-600" />
+                <div className="p-1 bg-slate-100 rounded-lg">
+                  <MapPin className="h-4 w-4 text-slate-600" />
                 </div>
-                <span className="font-semibold">{event.classes_allocated || "TBD"}</span>
+                <span className="font-medium">{event.classes_allocated || "TBD"}</span>
               </div>
             </div>
           </div>
@@ -607,7 +605,7 @@ function ClassroomCalendarInner({ user = { id: 1, name: "Demo User" } }) {
   // Initial fetch and polling setup
   useEffect(() => {
     fetchBookings()
-    const interval = setInterval(fetchBookings, 30000)
+    const interval = setInterval(fetchBookings, 60000)
     return () => clearInterval(interval)
   }, [fetchBookings])
 
@@ -756,12 +754,12 @@ function ClassroomCalendarInner({ user = { id: 1, name: "Demo User" } }) {
                 placeholder="Search bookings..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-10 lg:h-12 text-sm lg:text-base border-2 border-slate-200 focus:border-blue-500 rounded-xl bg-white/90 backdrop-blur-sm shadow-lg focus:shadow-xl transition-all duration-300"
+                className="pl-10 h-10 lg:h-12 text-sm lg:text-base border-2 border-slate-200 focus:border-blue-500 rounded-xl bg-white/90 backdrop-blur-sm shadow-lg focus:shadow-xl "
               />
             </div>
             <Button
               onClick={handleOpenBookingForm}
-              className="flex items-center gap-2 h-10 lg:h-12 px-4 lg:px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-800 rounded-xl shadow-xl font-bold transition-all duration-300 transform hover:scale-105 text-sm lg:text-base"
+              className="flex items-center gap-2 h-10 lg:h-12 px-4 lg:px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-800 rounded-xl shadow-xl font-bold  transform hover:scale-105 text-sm lg:text-base"
             >
               <Plus className="h-4 w-4" />
               <Sparkles className="h-3 w-3" />
@@ -796,7 +794,7 @@ function ClassroomCalendarInner({ user = { id: 1, name: "Demo User" } }) {
                     variant="ghost"
                     size="sm"
                     onClick={handlePreviousMonth}
-                    className="h-8 w-8 p-0 hover:bg-gradient-to-r hover:from-blue-100 hover:to-indigo-100 rounded-xl transition-all duration-300"
+                    className="h-8 w-8 p-0 hover:bg-blue-100 rounded-lg"
                   >
                     <ChevronLeft className="h-4 w-4 text-blue-600" />
                   </Button>
@@ -807,7 +805,7 @@ function ClassroomCalendarInner({ user = { id: 1, name: "Demo User" } }) {
                     variant="ghost"
                     size="sm"
                     onClick={handleNextMonth}
-                    className="h-8 w-8 p-0 hover:bg-gradient-to-r hover:from-blue-100 hover:to-indigo-100 rounded-xl transition-all duration-300"
+                    className="h-8 w-8 p-0 hover:bg-blue-100 rounded-lg"
                   >
                     <ChevronRight className="h-4 w-4 text-blue-600" />
                   </Button>
@@ -841,20 +839,20 @@ function ClassroomCalendarInner({ user = { id: 1, name: "Demo User" } }) {
                       return (
                         <button
                           key={index}
-                          className={`h-10 flex flex-col items-center justify-center rounded-xl relative transition-all duration-300 transform hover:scale-105 ${
+                          className={`h-10 flex flex-col items-center justify-center rounded-lg relative ${
                             !day.isCurrentMonth
-                              ? "text-slate-400 hover:bg-gradient-to-r hover:from-slate-100 hover:to-gray-100"
+                              ? "text-slate-400 hover:bg-slate-100"
                               : day.isToday
-                                ? "bg-gradient-to-r from-amber-100 via-yellow-100 to-orange-100 text-amber-800 font-bold shadow-md border border-amber-200"
+                                ? "bg-yellow-100 text-yellow-800 font-bold border border-yellow-200"
                                 : isSelected
-                                  ? "bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-700 text-white font-bold shadow-xl"
-                                  : "text-slate-700 hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 hover:shadow-md"
+                                  ? "bg-blue-500 text-white font-bold"
+                                  : "text-slate-700 hover:bg-blue-50"
                           }`}
                           onClick={() => setSelectedDate(day.date)}
                         >
                           <span className="text-sm">{day.date.getDate()}</span>
                           {hasEventsForDay && day.isCurrentMonth && (
-                            <div className="absolute bottom-1 w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 shadow-sm animate-pulse"></div>
+                            <div className="absolute bottom-1 w-2 h-2 rounded-full bg-blue-500"></div>
                           )}
                         </button>
                       )
@@ -925,7 +923,7 @@ function ClassroomCalendarInner({ user = { id: 1, name: "Demo User" } }) {
                       </p>
                       <Button
                         onClick={handleOpenBookingForm}
-                        className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-800 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-xl"
+                        className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-800 rounded-xl font-bold  transform hover:scale-105 shadow-xl"
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         <Sparkles className="h-3 w-3 mr-1" />
@@ -1173,7 +1171,7 @@ function ClassroomCalendarInner({ user = { id: 1, name: "Demo User" } }) {
                 <Button
                   onClick={handleBooking}
                   disabled={isSubmitting}
-                  className="flex-1 h-10 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-800 rounded-xl shadow-xl font-bold transition-all duration-300 text-sm transform hover:scale-105"
+                  className="flex-1 h-10 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-800 rounded-xl shadow-xl font-bold  text-sm transform hover:scale-105"
                 >
                   {isSubmitting ? (
                     <span>Submitting...</span>
@@ -1201,7 +1199,7 @@ function ClassroomCalendarInner({ user = { id: 1, name: "Demo User" } }) {
                       setDraftRestored(false)
                     }
                   }}
-                  className="h-10 px-3 border-2 border-slate-200 hover:border-blue-400 rounded-xl font-bold text-sm transition-all duration-300 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50"
+                  className="h-10 px-3 border-2 border-slate-200 hover:border-blue-400 rounded-xl font-bold text-sm  hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50"
                 >
                   Clear
                 </Button>

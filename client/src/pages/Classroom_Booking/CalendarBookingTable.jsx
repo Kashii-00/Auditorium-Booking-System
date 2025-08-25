@@ -50,12 +50,15 @@ const debounce = (func, wait) => {
 // Memoized Success popup component
 const SuccessPopup = memo(({ message }) => {
   return (
-    <div className="fixed top-6 right-6 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-3 rounded-xl shadow-2xl z-50 animate-in slide-in-from-top-4 duration-300 border border-white/20">
-      <div className="flex items-center gap-2">
+    <div className="fixed top-6 right-6 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 border border-white/20">
+      <div className="flex items-center gap-3">
         <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-          <Check className="w-4 h-4 text-white" />
+          <div className="w-2 h-2 bg-white rounded-full"></div>
         </div>
-        <p className="font-bold text-sm">{message}</p>
+        <div>
+          <p className="font-bold text-base">{message}</p>
+          <p className="text-emerald-100 text-sm">Action completed successfully</p>
+        </div>
       </div>
     </div>
   )
@@ -83,7 +86,7 @@ const TableSkeleton = memo(() => (
 
 TableSkeleton.displayName = "TableSkeleton"
 
-// Column header with sort functionality
+// Column header with sort functionality - styled like BusBookingList
 const ColumnHeader = memo(({ title, sortable = false, sortKey, currentSort, onSort }) => {
   const handleSort = useCallback(() => {
     if (sortable && onSort) {
@@ -97,14 +100,14 @@ const ColumnHeader = memo(({ title, sortable = false, sortKey, currentSort, onSo
 
   return (
     <th
-      className={`text-left py-2 px-3 font-bold text-slate-700 text-sm ${
-        sortable ? "cursor-pointer hover:bg-slate-50" : ""
+      className={`text-left p-4 font-black text-slate-700 ${
+        sortable ? "cursor-pointer hover:bg-blue-100 transition-colors" : ""
       }`}
       onClick={handleSort}
     >
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center gap-2">
         <span>{title}</span>
-        {sortable && <ArrowUpDown size={14} className={currentSort.key === sortKey ? "opacity-100" : "opacity-50"} />}
+        {sortable && <ArrowUpDown className="w-4 h-4" />}
       </div>
     </th>
   )
@@ -112,85 +115,91 @@ const ColumnHeader = memo(({ title, sortable = false, sortKey, currentSort, onSo
 
 ColumnHeader.displayName = "ColumnHeader"
 
-// Pagination component
-const Pagination = memo(({ currentPage, totalPages, totalItems, onPageChange }) => {
-  const pageNumbers = useMemo(() => {
-    const pages = []
-    const maxVisiblePages = 3
-
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i)
-      }
-    } else {
-      if (currentPage <= Math.ceil(maxVisiblePages / 2)) {
-        for (let i = 1; i <= maxVisiblePages; i++) {
-          pages.push(i)
-        }
-      } else if (currentPage >= totalPages - Math.floor(maxVisiblePages / 2)) {
-        for (let i = totalPages - maxVisiblePages + 1; i <= totalPages; i++) {
-          pages.push(i)
-        }
-      } else {
-        for (
-          let i = currentPage - Math.floor(maxVisiblePages / 2);
-          i <= currentPage + Math.floor(maxVisiblePages / 2);
-          i++
-        ) {
-          pages.push(i)
-        }
-      }
-    }
-
-    return pages
-  }, [currentPage, totalPages])
-
-  const startItem = (currentPage - 1) * 10 + 1
-  const endItem = Math.min(currentPage * 10, totalItems)
-
-  return (
-    <div className="flex items-center justify-between mt-4 px-4">
-      <div className="text-sm text-gray-600">
-        Showing {startItem}-{endItem} of {totalItems} bookings
+// Pagination Controls Component - Styled like BusBookingList
+const CalendarPaginationControls = memo(
+  ({ currentPage, totalPages, indexOfFirstBooking, indexOfLastBooking, totalItems, onPageChange }) => {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between mt-6 pt-1 border-t-2 border-slate-200 px-6">
+          <div className="text-sm text-slate-600 font-semibold pb-10">
+            Showing {indexOfFirstBooking + 1} to {Math.min(indexOfLastBooking, totalItems)} of {totalItems} bookings
+          </div>
+          <div className="flex flex-wrap gap-2 justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(1)}
+              disabled={currentPage === 1}
+              className="border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl font-bold"
+            >
+              First
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl font-bold"
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Prev
+            </Button>
+            {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+              let pageNumber;
+              if (totalPages <= 7) {
+                pageNumber = i + 1;
+              } else {
+                const start = Math.max(1, currentPage - 3);
+                const end = Math.min(totalPages, start + 6);
+                const adjustedStart = Math.max(1, end - 6);
+                pageNumber = adjustedStart + i;
+              }
+              
+              if (pageNumber > totalPages) return null;
+              
+              return (
+                <Button
+                  key={`page-${pageNumber}`}
+                  variant={currentPage === pageNumber ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onPageChange(pageNumber)}
+                  className={`border-2 rounded-xl font-bold ${
+                    currentPage === pageNumber
+                      ? "bg-blue-600 border-blue-600 text-white"
+                      : "border-slate-200 hover:border-blue-400 hover:bg-blue-50"
+                  }`}
+                >
+                  {pageNumber}
+                </Button>
+              )
+            }).filter(Boolean)}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl font-bold"
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(totalPages)}
+              disabled={currentPage === totalPages}
+              className="border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl font-bold"
+            >
+              Last
+            </Button>
+          </div>
+        </div>
       </div>
-      <div className="flex space-x-1">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="h-8 w-8 p-0 flex items-center justify-center"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+    )
+  },
+)
 
-        {pageNumbers.map((page) => (
-          <Button
-            key={page}
-            variant={currentPage === page ? "default" : "outline"}
-            size="sm"
-            onClick={() => onPageChange(page)}
-            className={`h-8 w-8 p-0 ${currentPage === page ? "bg-blue-600" : ""}`}
-          >
-            {page}
-          </Button>
-        ))}
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="h-8 w-8 p-0 flex items-center justify-center"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  )
-})
-
-Pagination.displayName = "Pagination"
+CalendarPaginationControls.displayName = "CalendarPaginationControls"
 
 // Debounced search hook
 const useDebounce = (value, delay) => {
@@ -214,9 +223,9 @@ const CalendarBookingTable = () => {
   const [showPopup, setShowPopup] = useState(false)
   const [error, setError] = useState(null)
   const location = useLocation()
-  const [showInfo, setShowInfo] = useState(false)
+
   const [showWeeklyTimetable, setShowWeeklyTimetable] = useState(false)
-  const [showPendingPopup, setShowPendingPopup] = useState(false)
+
   const [unassignedIds, setUnassignedIds] = useState([])
   const [loading, setLoading] = useState(true)
   const [initialLoad, setInitialLoad] = useState(true)
@@ -242,7 +251,7 @@ const CalendarBookingTable = () => {
   const MIN_FETCH_INTERVAL = 2000
 
   const highlightId = location.state?.highlightId ? Number(location.state.highlightId) : null
-  const ITEMS_PER_PAGE = 10
+  const ITEMS_PER_PAGE = 5
 
   // Debounced search for better performance
   const debouncedSearchTerm = useDebounce(searchTerm, 500)
@@ -659,12 +668,6 @@ const CalendarBookingTable = () => {
     window.URL.revokeObjectURL(url)
   }, [filteredBookings, filterMonth])
 
-  const handleResetFilters = useCallback(() => {
-    setSearchTerm("")
-    setFilterMonth("ALL")
-    setCurrentPage(1)
-    localStorage.removeItem("calendarBookingFilters")
-  }, [])
 
   // Handle opening the weekly timetable
   const handleOpenWeeklyTimetable = useCallback(() => {
@@ -688,25 +691,6 @@ const CalendarBookingTable = () => {
     }
   }, [highlightId])
 
-  // Click outside handlers
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (infoRef.current && !infoRef.current.contains(event.target)) {
-        setShowInfo(false)
-      }
-      if (pendingRef.current && !pendingRef.current.contains(event.target)) {
-        setShowPendingPopup(false)
-      }
-    }
-
-    if (showInfo || showPendingPopup) {
-      document.addEventListener("mousedown", handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [showInfo, showPendingPopup])
 
   // Add these optimizations to the useEffect for initial fetch
   useEffect(() => {
@@ -716,7 +700,7 @@ const CalendarBookingTable = () => {
     }, 100)
 
     // Set up polling with increasing intervals based on user activity
-    let pollInterval = 30000 // Start with 30s
+    let pollInterval = 60000 // Start with 60s
     let lastActivityTime = Date.now()
 
     const activityHandler = () => {
@@ -761,43 +745,53 @@ const CalendarBookingTable = () => {
   }, [fetchBookings])
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 relative">
+    <div
+      className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative"
+      data-page="calendar-booking-table"
+    >
       {initialLoad && (
         <div className="fixed inset-0 z-50">
           <LoadingScreen message="Loading calendar booking system..." type="calendar" />
         </div>
       )}
 
+      {/* Simple Background */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute inset-0 bg-slate-50"></div>
+      </div>
+
       {showPopup && <SuccessPopup message={popupMessage} />}
 
-      <div className="relative z-10 p-4 xl:p-6 space-y-6">
+      <div className="relative z-10 p-4 xl:p-6 space-y-6 xl:space-y-8">
         {error && (
-          <Alert className="border-red-200 bg-red-50">
+          <Alert className="border-red-200 bg-gradient-to-r from-red-50 via-rose-50 to-pink-50 shadow-xl backdrop-blur-xl">
             <XCircle className="h-4 w-4 text-red-600" />
             <AlertDescription className="text-red-800 font-semibold">{error}</AlertDescription>
           </Alert>
         )}
 
         {/* Main Content */}
-        <Card className="border shadow-md">
-          <CardHeader className="border-b bg-white">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-xl relative z-10">
+          <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div>
-                <CardTitle className="text-xl font-bold text-blue-700 flex items-center gap-2">
-                  <Calendar className="w-6 h-6 text-blue-600" />
+                <CardTitle className="text-2xl xl:text-3xl font-black bg-gradient-to-r from-slate-800 via-blue-700 to-indigo-700 bg-clip-text text-transparent flex items-center gap-3">
+                  <Calendar className="w-8 h-8 text-blue-600" />
                   Calendar Booking Details
                 </CardTitle>
-                <p className="text-slate-600 mt-1 text-sm">Manage and review all calendar bookings in one place</p>
+                <p className="text-slate-600 mt-2 text-base xl:text-lg font-semibold">
+                  Manage and review all calendar bookings in one place
+                </p>
               </div>
             </div>
           </CardHeader>
 
-          <CardContent className="p-4">
-            {/* Search and Filters */}
-            <div className="flex flex-col lg:flex-row gap-3 items-center justify-between mb-4">
-              <div className="flex gap-3 flex-1 max-w-xl w-full lg:w-auto">
+          <CardContent className="p-4 xl:p-6">
+            {/* Enhanced Search and Filters */}
+            <div className="flex flex-col lg:flex-row gap-3 xl:gap-4 items-center justify-between mb-4 xl:mb-6">
+              <div className="flex gap-3 flex-1 max-w-2xl w-full lg:w-auto">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4 z-10" />
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5 z-10 pointer-events-none" />
                   <Input
                     placeholder="Search by course, id:ID, request:ID, user:ID"
                     value={searchTerm}
@@ -805,48 +799,16 @@ const CalendarBookingTable = () => {
                       setSearchTerm(e.target.value)
                       setCurrentPage(1)
                     }}
-                    className="pl-9 h-10 text-sm border rounded-lg"
+                    className="pl-12 h-12 xl:h-14 text-base border-2 border-slate-200 focus:border-blue-500 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg focus:shadow-xl "
                   />
                 </div>
 
                 <div className="relative" ref={infoRef}>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setShowInfo(!showInfo)}
-                    className="h-10 w-10 border rounded-lg"
-                  >
-                    <Info className="w-4 h-4" />
-                  </Button>
 
-                  {showInfo && (
-                    <div className="absolute top-12 right-0 z-50 w-72 p-3 bg-white rounded-lg shadow-lg border border-slate-200">
-                      <div className="space-y-2">
-                        <h4 className="font-bold text-slate-800">🌟 Search Tips:</h4>
-                        <p className="text-xs text-slate-600">
-                          Use the search bar to quickly find calendar bookings by:
-                        </p>
-                        <ul className="text-xs text-slate-600 space-y-1">
-                          <li>
-                            • <strong>Course Name</strong> (e.g., "Mathematics")
-                          </li>
-                          <li>
-                            • <strong>Calendar Booking ID</strong> (e.g., "id:1")
-                          </li>
-                          <li>
-                            • <strong>Request ID</strong> (e.g., "request:123")
-                          </li>
-                          <li>
-                            • <strong>User ID</strong> (e.g., "user:456")
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2 w-full lg:w-auto justify-center lg:justify-end">
+              <div className="flex flex-wrap gap-2 xl:gap-3 w-full lg:w-auto justify-center lg:justify-end">
                 <Select
                   value={filterMonth}
                   onValueChange={(value) => {
@@ -854,8 +816,8 @@ const CalendarBookingTable = () => {
                     setCurrentPage(1)
                   }}
                 >
-                  <SelectTrigger className="w-32 h-10 border rounded-lg text-sm">
-                    <Filter className="h-4 w-4 mr-2" />
+                  <SelectTrigger className="w-32 xl:w-40 h-12 xl:h-14 border-2 border-slate-200 focus:border-blue-500 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg">
+                    <Filter className="h-5 w-5 mr-2" />
                     <SelectValue placeholder="All Months" />
                   </SelectTrigger>
                   <SelectContent>
@@ -875,70 +837,39 @@ const CalendarBookingTable = () => {
                   </SelectContent>
                 </Select>
 
-                <Button variant="outline" onClick={handleResetFilters} className="h-10 px-4 border rounded-lg text-sm">
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Reset
-                </Button>
 
-                <Button variant="outline" onClick={exportToCSV} className="h-10 px-4 border rounded-lg text-sm">
-                  <Download className="h-4 w-4 mr-2" />
+                <Button
+                  variant="outline"
+                  onClick={exportToCSV}
+                  className=" xl:h-9 px-6 border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-2xl font-bold  shadow-lg hover:shadow-xl bg-white/90 backdrop-blur-sm"
+                >
+                  <Download className="h-5 w-5 mr-2" />
                   Export
                 </Button>
 
                 <Button
                   variant="outline"
                   onClick={handleOpenWeeklyTimetable}
-                  className="h-10 px-4 border rounded-lg text-sm flex items-center gap-2 bg-blue-50 border-blue-200 hover:bg-blue-100"
+                  className="h-12 xl:h-9 px-6 border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-2xl font-bold  shadow-lg hover:shadow-xl bg-white/90 backdrop-blur-sm flex items-center gap-2"
                 >
-                  <FileText className="h-4 w-4" />
+                  <FileText className="h-5 w-5" />
                   <span>Weekly Timetable</span>
                 </Button>
-
-                <div className="relative" ref={pendingRef}>
-                  <Button
-                    variant="outline"
-                    onClick={fetchUnassignedRequestIds}
-                    className="h-10 px-4 border rounded-lg text-sm"
-                  >
-                    <Clock className="h-4 w-4 mr-2" />
-                    Pending
-                  </Button>
-
-                  {showPendingPopup && (
-                    <div className="absolute top-12 right-0 z-50 w-64 p-3 bg-white rounded-lg shadow-lg border border-slate-200">
-                      <h5 className="font-bold text-slate-800 mb-2">Unassigned Request IDs:</h5>
-                      <div className="max-h-40 overflow-y-auto">
-                        {unassignedIds.length > 0 ? (
-                          <ul className="space-y-1">
-                            {unassignedIds.map((id) => (
-                              <li key={id} className="text-xs text-slate-600">
-                                • {id}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-xs text-slate-600">All requests of classroom bookings added.</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
 
             {/* Bulk Actions Bar */}
             {selectedBookings.length > 0 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
-                  <span className="text-sm font-semibold text-blue-700">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <span className="text-sm font-bold text-blue-700">
                     {selectedBookings.length} booking(s) selected
                   </span>
                   <div className="flex flex-wrap gap-2">
                     <Button
                       size="sm"
+                      className="bg-red-500 hover:bg-red-600 text-white font-bold text-xs rounded-lg"
                       onClick={handleBulkDelete}
-                      variant="destructive"
-                      className="h-8 text-sm bg-red-600 hover:bg-red-700"
                     >
                       Delete Selected
                     </Button>
@@ -947,13 +878,13 @@ const CalendarBookingTable = () => {
               </div>
             )}
 
-            {/* Table */}
-            <div className="border rounded-lg overflow-hidden shadow-sm">
+            {/* Modern Table */}
+            <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[900px]">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="text-left py-2 px-3 text-sm">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50">
+                      <th className="text-left p-4 font-bold text-slate-700">
                         <Checkbox
                           checked={selectedBookings.length === paginatedBookings.length && paginatedBookings.length > 0}
                           onCheckedChange={handleSelectAll}
@@ -988,23 +919,34 @@ const CalendarBookingTable = () => {
                         currentSort={sort}
                         onSort={setSort}
                       />
-                      <ColumnHeader title="Time Period" sortable={false} />
-                      <ColumnHeader title="Preferred Days" sortable={false} />
+                      {sidebarCollapsed && (
+                        <ColumnHeader 
+                          title="Time Period" 
+                          sortable={false} 
+                        />
+                      )}
+                      {sidebarCollapsed && (
+                        <ColumnHeader title="Preferred Days" sortable={false} />
+                      )}
                       <ColumnHeader title="Classes" sortable={false} />
                       <ColumnHeader title="Actions" sortable={false} />
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="bg-white">
                     {loading ? (
                       <tr>
-                        <td colSpan={10} className="p-0">
+                        <td colSpan={sidebarCollapsed ? 10 : 8} className="p-0">
                           <TableSkeleton />
                         </td>
                       </tr>
                     ) : paginatedBookings.length === 0 ? (
                       <tr>
-                        <td colSpan={10} className="text-center py-8 text-gray-500">
-                          No calendar bookings found
+                        <td colSpan={sidebarCollapsed ? 10 : 8} className="text-center py-12">
+                          <div className="flex flex-col items-center justify-center text-slate-500">
+                            <Calendar className="h-16 w-16 text-slate-300 mb-4" />
+                            <p className="text-lg font-semibold">No calendar bookings found</p>
+                            <p className="text-sm">Try adjusting your search or filter criteria</p>
+                          </div>
                         </td>
                       </tr>
                     ) : (
@@ -1012,80 +954,80 @@ const CalendarBookingTable = () => {
                         <tr
                           key={booking.id}
                           data-booking-id={booking.id}
-                          className={`${
-                            index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                          } hover:bg-blue-50 border-b border-gray-100 ${
-                            highlightId === booking.id ? "bg-blue-100 border-blue-300" : ""
+                          className={`table-row border-b border-slate-200 hover:bg-blue-50 transition-colors duration-150 ${
+                            highlightId === booking.id ? "bg-blue-100 border border-blue-300" : ""
                           }`}
                         >
-                          <td className="py-2 px-3">
+                          <td className="p-4">
                             <Checkbox
                               checked={selectedBookings.includes(booking.id)}
                               onCheckedChange={(checked) => handleSelectBooking(booking.id, checked)}
                             />
                           </td>
-                          <td className="py-2 px-3">
-                            <Badge
-                              variant="outline"
-                              className="font-medium text-xs bg-blue-50 text-blue-800 border-blue-200"
-                            >
+                          <td className="p-4">
+                            <Badge className="bg-blue-100 text-blue-800 border-blue-300 text-xs font-bold px-2 py-1">
                               {booking.id}
                             </Badge>
                           </td>
-                          <td className="py-2 px-3">
-                            <div className="font-medium text-gray-900 text-sm flex items-center gap-1">
-                              <User className="w-3 h-3 text-blue-600" />
+                          <td className="p-4">
+                            <div className="font-bold text-slate-900 flex items-center gap-2">
+                              <User className="w-4 h-4 text-blue-600" />
                               {booking.user_id}
                             </div>
                           </td>
-                          <td className="py-2 px-3">
-                            <div className="text-sm text-gray-900">
+                          <td className="p-4">
+                            <div className="text-sm font-semibold text-slate-700">
                               {booking.request_id ? (
-                                <Badge
-                                  variant="outline"
-                                  className="font-medium text-xs bg-green-50 text-green-800 border-green-200"
-                                >
+                                <Badge className="bg-green-100 text-green-800 border-green-300 text-xs font-bold px-2 py-1">
                                   {booking.request_id}
                                 </Badge>
                               ) : (
-                                <span className="text-gray-400 text-xs">—</span>
+                                <span className="text-slate-400 text-sm">—</span>
                               )}
                             </div>
                           </td>
-                          <td className="py-2 px-3">
-                            <div className="flex items-center gap-1">
-                              <BookOpen className="w-3 h-3 text-blue-600" />
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <BookOpen className="w-4 h-4 text-blue-600" />
                               <span
-                                className="text-sm font-medium text-gray-900 truncate max-w-[150px]"
+                                className="text-sm font-medium text-slate-900 truncate max-w-[150px]"
                                 title={booking.course_name}
                               >
                                 {getAcronym(booking.course_name)}
                               </span>
                             </div>
                           </td>
-                          <td className="py-2 px-3">
-                            <div className="text-xs">
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3 text-blue-600" />
-                                <span className="font-medium text-gray-900">{formatDate(booking.date_from)}</span>
+                          <td className="p-4">
+                            <div className="text-sm">
+                              <div className="font-bold text-slate-900 flex items-center gap-1">
+                                <Calendar className="w-3 h-3 text-slate-500" />
+                                {formatDate(booking.date_from)}
                               </div>
-                              <div className="text-gray-500">to {formatDate(booking.date_to)}</div>
-                            </div>
-                          </td>
-                          <td className="py-2 px-3">
-                            <div className="text-xs">
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-3 h-3 text-blue-600" />
-                                <span className="font-medium text-gray-900">{formatTime(booking.time_from)}</span>
+                              <div className="text-slate-600 font-medium mt-1">
+                                to {formatDate(booking.date_to)}
                               </div>
-                              <div className="text-gray-500">to {formatTime(booking.time_to)}</div>
                             </div>
                           </td>
-                          <td className="py-2 px-3">
-                            <div className="text-xs text-gray-600">
-                              {booking.preferred_days_of_week || <span className="text-gray-400">—</span>}
-                            </div>
-                          </td>
+                          {sidebarCollapsed && (
+                            <td className="p-4">
+                              <div className="text-sm">
+                                <div className="font-bold text-slate-900 flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-slate-500" />
+                                  {formatTime(booking.time_from)}
+                                </div>
+                                <div className="text-slate-600 font-medium mt-1">
+                                  to {formatTime(booking.time_to)}
+                                </div>
+                              </div>
+                            </td>
+                          )}
+                          {sidebarCollapsed && (
+                            <td className="p-4">
+                              <div className="text-sm font-semibold text-slate-700">
+                                {booking.preferred_days_of_week || <span className="text-slate-400">—</span>}
+                              </div>
+                            </td>
+                          )}
                           <td className="py-2 px-3">
                             <div
                               className="text-xs text-gray-600 max-w-[100px] truncate"
@@ -1113,9 +1055,11 @@ const CalendarBookingTable = () => {
 
               {/* Pagination */}
               {!loading && filteredBookings.length > 0 && (
-                <Pagination
+                <CalendarPaginationControls
                   currentPage={currentPage}
                   totalPages={totalPages}
+                  indexOfFirstBooking={(currentPage - 1) * ITEMS_PER_PAGE}
+                  indexOfLastBooking={currentPage * ITEMS_PER_PAGE}
                   totalItems={filteredBookings.length}
                   onPageChange={handlePageChange}
                 />

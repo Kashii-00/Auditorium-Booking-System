@@ -31,6 +31,7 @@ import {
   Loader2,
   Download,
   Printer,
+  Calculator,
 } from "lucide-react"
 import { authRequest } from "../../services/authService"
 import { getApiUrl } from '../../utils/apiUrl'
@@ -129,20 +130,26 @@ function CourseRegistrationForm({ onBack, onSuccess, editingCourse, isEditMode =
     additionalInstallments: editingCourse ? safeParseToArray(editingCourse.additionalInstallments) : [],
     status: editingCourse?.status || "Active",
     duration: editingCourse?.duration || "",
+    no_of_participants: editingCourse?.no_of_participants || 25,
   })
+
+  // Separate state for payment ID (not stored in database)
+  const [paymentMainDetailsId, setPaymentMainDetailsId] = useState("")
 
   const [errors, setErrors] = useState({})
   const [courseIdError, setCourseIdError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
   const [notificationMessage, setNotificationMessage] = useState("")
+  const [isFetchingCFPH, setIsFetchingCFPH] = useState(false)
+  const [cfphData, setCfphData] = useState(null)
   const { toast } = useToast()
 
   const formSections = useMemo(() => [
     {
       title: "Basic Information",
       icon: BookOpen,
-      fields: ["courseId", "stream", "courseName", "description", "duration", "status"]
+      fields: ["courseId", "stream", "courseName", "description", "duration", "no_of_participants", "status"]
     },
     {
       title: "Course Details", 
@@ -157,7 +164,7 @@ function CourseRegistrationForm({ onBack, onSuccess, editingCourse, isEditMode =
     {
       title: "Financial Information",
       icon: DollarSign,
-      fields: ["fees", "installment1", "installment2"]
+      fields: ["payment_main_details_id", "fees", "installment1", "installment2"]
     }
   ], [])
 
@@ -214,6 +221,21 @@ function CourseRegistrationForm({ onBack, onSuccess, editingCourse, isEditMode =
             newErrors.registrationFee = "Enter a valid registration fee"
           }
           break
+        case "duration":
+          if (!formData.duration.trim()) {
+            newErrors.duration = "Duration is required"
+          }
+          break
+        case "no_of_participants":
+          if (!formData.no_of_participants || isNaN(Number(formData.no_of_participants)) || Number(formData.no_of_participants) <= 0) {
+            newErrors.no_of_participants = "Enter a valid number of participants"
+          }
+          break
+        case "status":
+          if (!formData.status) {
+            newErrors.status = "Status is required"
+          }
+          break
       }
     })
 
@@ -240,15 +262,65 @@ function CourseRegistrationForm({ onBack, onSuccess, editingCourse, isEditMode =
     setCurrentStep(newStep)
   }, [])
 
+  // Function to generate course ID from course name
+  const generateCourseId = useCallback((courseName) => {
+    if (!courseName || courseName.trim() === "") return "";
+    
+    // Remove special characters and split into words
+    const words = courseName
+      .replace(/[^\w\s]/g, '') // Remove special characters except spaces
+      .split(' ')
+      .filter(word => word.length > 0); // Remove empty strings
+    
+    if (words.length === 0) return "";
+    
+    // Generate abbreviation from first letters of each word
+    let abbreviation = "";
+    
+    if (words.length === 1) {
+      // Single word: take first 3-4 letters
+      const word = words[0];
+      if (word.length <= 4) {
+        abbreviation = word.toUpperCase();
+      } else {
+        abbreviation = word.substring(0, 4).toUpperCase();
+      }
+    } else if (words.length === 2) {
+      // Two words: take first letter of each
+      abbreviation = words[0].charAt(0) + words[1].charAt(0);
+    } else {
+      // Multiple words: take first letter of each word
+      abbreviation = words.map(word => word.charAt(0)).join('');
+    }
+    
+    // Ensure abbreviation is not too long (max 6 characters)
+    if (abbreviation.length > 6) {
+      abbreviation = abbreviation.substring(0, 6);
+    }
+    
+    // Ensure abbreviation is at least 2 characters
+    if (abbreviation.length < 2) {
+      abbreviation = words[0].substring(0, 2).toUpperCase();
+    }
+    
+    return `MP-${abbreviation.toUpperCase()}`;
+  }, []);
+
   const handleInputChange = useCallback((e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    
+    // Auto-generate course ID when course name is entered
+    if (name === "courseName" && !isEditMode) {
+      const generatedCourseId = generateCourseId(value);
+      setFormData(prev => ({ ...prev, courseId: generatedCourseId }));
+    }
     
     // Clear related errors
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: "" }))
     }
-  }, [errors])
+  }, [errors, generateCourseId, isEditMode])
 
   const handleCheckboxChange = useCallback((field, value, checked) => {
     setFormData(prev => ({
@@ -288,6 +360,46 @@ function CourseRegistrationForm({ onBack, onSuccess, editingCourse, isEditMode =
     } catch (err) {
       console.error("Error checking course ID:", err)
       setCourseIdError("Unable to verify Course ID availability")
+    }
+  }
+
+  const fetchCFPHData = async () => {
+    if (!paymentMainDetailsId.trim()) {
+      setCfphData(null)
+      return
+    }
+    
+    setIsFetchingCFPH(true)
+    try {
+      const response = await authRequest("get", getApiUrl(`/payment-course-final-summary/rounded-cfph/${paymentMainDetailsId}`))
+      setCfphData(response)
+      toast({
+        title: "CFPH Data Fetched",
+        description: `Rounded CFPH: Rs.${response.Rounded_CFPH?.toLocaleString()}`,
+      })
+    } catch (err) {
+      console.error("Error fetching CFPH data:", err)
+      setCfphData(null)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: err.response?.data?.error || "Failed to fetch CFPH data",
+      })
+    } finally {
+      setIsFetchingCFPH(false)
+    }
+  }
+
+  const applyCFPHToFees = () => {
+    if (cfphData && cfphData.Rounded_CFPH) {
+      setFormData(prev => ({
+        ...prev,
+        fees: cfphData.Rounded_CFPH.toString()
+      }))
+      toast({
+        title: "Fee Updated",
+        description: `Course fee has been set to Rs.${cfphData.Rounded_CFPH.toLocaleString()}`,
+      })
     }
   }
 
@@ -371,7 +483,7 @@ function CourseRegistrationForm({ onBack, onSuccess, editingCourse, isEditMode =
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                       <Label htmlFor="courseId" className="text-sm font-bold text-slate-700">
-                Course ID *
+                Course ID * {!isEditMode && <span className="text-xs text-blue-600 font-normal">(Auto-generated)</span>}
               </Label>
               <Input
                 id="courseId"
@@ -385,11 +497,14 @@ function CourseRegistrationForm({ onBack, onSuccess, editingCourse, isEditMode =
                 disabled={isEditMode}
                         className={`mt-2 h-12 border-2 focus:border-blue-500 rounded-xl bg-white/90 backdrop-blur-sm shadow-lg ${
                           errors.courseId || courseIdError ? "border-red-500" : "border-slate-200"
-                        }`}
-                        placeholder="e.g., COURSE-001"
+                        } ${!isEditMode && formData.courseId ? "bg-blue-50 border-blue-300" : ""}`}
+                        placeholder={!isEditMode ? "Will be auto-generated from course name" : "e.g., COURSE-001"}
               />
                       {(errors.courseId || courseIdError) && (
                         <p className="text-red-500 text-sm mt-1">{errors.courseId || courseIdError}</p>
+                      )}
+                      {!isEditMode && formData.courseId && (
+                        <p className="text-blue-600 text-xs mt-1">✓ Auto-generated from course name</p>
                       )}
             </div>
             <div>
@@ -405,7 +520,7 @@ function CourseRegistrationForm({ onBack, onSuccess, editingCourse, isEditMode =
                         className={`mt-2 h-12 border-2 focus:border-blue-500 rounded-xl bg-white/90 backdrop-blur-sm shadow-lg ${
                           errors.courseName ? "border-red-500" : "border-slate-200"
                         }`}
-                        placeholder="e.g., Advanced Web Development"
+                        placeholder="e.g., Logistics Management"
               />
                       {errors.courseName && <p className="text-red-500 text-sm mt-1">{errors.courseName}</p>}
             </div>
@@ -473,6 +588,25 @@ function CourseRegistrationForm({ onBack, onSuccess, editingCourse, isEditMode =
                     onChange={handleInputChange}
                     className="mt-2 h-12 border-2 border-slate-200 focus:border-blue-500 rounded-xl bg-white/90 backdrop-blur-sm shadow-lg"
                     placeholder="e.g., 6 months, 12 weeks, 30 days"
+                  />
+                </div>
+              )
+
+            case "no_of_participants":
+              return (
+                <div key={field}>
+                  <Label htmlFor="no_of_participants" className="text-sm font-bold text-slate-700">
+                    Number of Participants
+                  </Label>
+                  <Input
+                    id="no_of_participants"
+                    name="no_of_participants"
+                    type="number"
+                    value={formData.no_of_participants}
+                    onChange={handleInputChange}
+                    className="mt-2 h-12 border-2 border-slate-200 focus:border-blue-500 rounded-xl bg-white/90 backdrop-blur-sm shadow-lg"
+                    placeholder="e.g., 25"
+                    min="1"
                   />
                 </div>
               )
@@ -619,6 +753,99 @@ function CourseRegistrationForm({ onBack, onSuccess, editingCourse, isEditMode =
               ))}
             </div>
           </div>
+              )
+
+            case "payment_main_details_id":
+              return (
+                <div key={field} className="space-y-4">
+                  <div>
+                    <Label htmlFor="payment_main_details_id" className="text-sm font-bold text-slate-700">
+                      Payment Main Details ID
+                    </Label>
+                    <div className="flex gap-2 mt-2">
+                      <Input
+                        id="payment_main_details_id"
+                        type="number"
+                        value={paymentMainDetailsId}
+                        onChange={(e) => setPaymentMainDetailsId(e.target.value)}
+                        className="flex-1 h-12 border-2 border-slate-200 focus:border-blue-500 rounded-xl bg-white/90 backdrop-blur-sm shadow-lg"
+                        placeholder="Enter payment ID to fetch CFPH"
+                      />
+                      <Button
+                        type="button"
+                        onClick={fetchCFPHData}
+                        disabled={isFetchingCFPH || !paymentMainDetailsId}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all duration-300"
+                      >
+                        {isFetchingCFPH ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Search className="w-4 h-4" />
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setPaymentMainDetailsId("")
+                          setCfphData(null)
+                        }}
+                        disabled={!paymentMainDetailsId && !cfphData}
+                        className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl font-bold transition-all duration-300"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Enter the payment_main_details_id to fetch the calculated Rounded CFPH from course cost summary
+                    </p>
+                  </div>
+
+                  {/* CFPH Data Display */}
+                  {cfphData && (
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-bold text-blue-800 flex items-center gap-2">
+                          <Calculator className="w-4 h-4" />
+                          Course Cost Summary Data
+                        </h4>
+                        <Button
+                          type="button"
+                          onClick={applyCFPHToFees}
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg font-bold"
+                        >
+                          Apply to Fee
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="font-semibold text-slate-600">Rounded CFPH:</span>
+                          <div className="text-lg font-bold text-emerald-600">
+                            Rs.{cfphData.Rounded_CFPH?.toLocaleString()}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-600">Course Fee Per Head:</span>
+                          <div className="text-sm font-bold text-blue-600">
+                            Rs.{cfphData.course_fee_per_head?.toLocaleString()}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-600">Total Course Cost:</span>
+                          <div className="text-sm font-bold text-purple-600">
+                            Rs.{cfphData.total_course_cost?.toLocaleString()}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-slate-600">Participants:</span>
+                          <div className="text-sm font-bold text-orange-600">
+                            {cfphData.no_of_participants}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )
 
             case "fees":
@@ -1584,6 +1811,8 @@ const CourseDetailsDialog = memo(({ course, isOpen, onClose, onEdit }) => {
               </p>
             </div>
           )}
+
+
         </div>
 
         <DialogFooter className="pt-4 gap-2">

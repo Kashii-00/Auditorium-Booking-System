@@ -2,9 +2,30 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { authRequest } from "../../services/authService";
 import { getApiUrl } from "../../utils/apiUrl";
-import "./styles/aidHandover.css";
 import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  CheckCircle,
+  ChevronRight,
+  ChevronLeft,
+  FileText,
+  Calendar,
+  Clock,
+  Users,
+  BookOpen,
+  Building,
+  Check,
+  XCircle,
+  Plus,
+  Trash2,
+  Save,
+  RotateCcw,
+} from "lucide-react";
 import {
   itemDescriptionMapping,
   groupedCourseOptions,
@@ -503,15 +524,16 @@ const AidRequestForm = () => {
   }, [successMessage]);
 
   const SuccessPopup = ({ message }) => (
-    <div className="success-popup">
-      <svg
-        className="icon"
-        xmlns="https://www.w3.org/2000/svg"
-        viewBox="0 0 20 20"
-      >
-        <path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z" />
-      </svg>
-      <p className="font-bold">{message}</p>
+    <div className="fixed top-6 right-6 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-600 text-white px-8 py-4 rounded-2xl shadow-2xl z-50 animate-in slide-in-from-top-4 duration-500 border border-white/20 backdrop-blur-xl">
+      <div className="flex items-center gap-4">
+        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+          <Check className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <p className="font-black text-lg">{message}</p>
+          <p className="text-emerald-100 text-sm">Your action has been completed successfully</p>
+        </div>
+      </div>
     </div>
   );
 
@@ -660,7 +682,10 @@ const AidRequestForm = () => {
     switch (field) {
       case "course_name":
         return (
-          <div key={field} className={getClassName()}>
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
             <CreatableSelect
               isClearable
               options={groupedCourseOptions}
@@ -680,23 +705,20 @@ const AidRequestForm = () => {
                     }
                   : null
               }
-              placeholder=" "
+              placeholder="Select course..."
               styles={customSelectStyles}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />
-            <label
-              className={isFocused || hasValue ? "active" : ""}
-              htmlFor={field}
-            >
-              {label}
-            </label>
           </div>
         );
 
       case "preferred_days_of_week":
         return (
-          <div key={field} className={getClassName()}>
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
             <Select
               isMulti
               name={field}
@@ -709,25 +731,20 @@ const AidRequestForm = () => {
                   : []
               }
               onChange={handlePreferredDaysChange}
-              placeholder=" "
+              placeholder="Select preferred days..."
               styles={customSelectStyles}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />
-            <label
-              className={
-                isFocused || aidRequest[field]?.length > 0 ? "active" : ""
-              }
-              htmlFor={field}
-            >
-              {label}
-            </label>
           </div>
         );
 
       case "paid_course_or_not":
         return (
-          <div key={field} className={getClassName()}>
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
             <Select
               name={field}
               options={[
@@ -742,23 +759,20 @@ const AidRequestForm = () => {
               onChange={(selected) =>
                 handleChange({ target: { name: field, value: selected.value } })
               }
-              placeholder=" "
+              placeholder="Select option..."
               styles={customSelectStyles}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />
-            <label
-              className={isFocused || aidRequest[field] !== "" ? "active" : ""}
-              htmlFor={field}
-            >
-              {label}
-            </label>
           </div>
         );
 
       case "audience_type":
         return (
-          <div key={field} className={getClassName()}>
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
             <Select
               name={field}
               options={[
@@ -774,17 +788,11 @@ const AidRequestForm = () => {
               onChange={(selected) =>
                 handleChange({ target: { name: field, value: selected.value } })
               }
-              placeholder=" "
+              placeholder="Select audience type..."
               styles={customSelectStyles}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />
-            <label
-              className={isFocused || aidRequest[field] !== "" ? "active" : ""}
-              htmlFor={field}
-            >
-              {label}
-            </label>
           </div>
         );
 
@@ -798,9 +806,9 @@ const AidRequestForm = () => {
           value: aidRequest[field],
           onChange: handleChange,
           required: true,
-          placeholder: " ",
           type: "date",
           min: today,
+          className: "border-2 border-slate-200 focus:border-blue-500 rounded-lg",
         };
 
         if (field === "date_to") {
@@ -809,9 +817,11 @@ const AidRequestForm = () => {
         }
 
         return (
-          <div key={field} className={getClassName()}>
-            <input {...inputProps} />
-            <label htmlFor={field}>{label}</label>
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
+            <Input {...inputProps} />
           </div>
         );
 
@@ -830,7 +840,10 @@ const AidRequestForm = () => {
             : timeOptions;
 
         return (
-          <div key={field} className={getClassName()}>
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
             <select
               name={field}
               value={aidRequest[field]}
@@ -845,8 +858,8 @@ const AidRequestForm = () => {
                 }
               }}
               required
-              placeholder=" "
               disabled={field === "time_to" && !timeFromValue} // disable time_to if no time_from
+              className="w-full border-2 border-slate-200 focus:border-blue-500 rounded-lg px-3 py-2 text-sm"
             >
               <option value="">Select Time</option>
               {filteredTimeOptions.map((time) => (
@@ -855,22 +868,15 @@ const AidRequestForm = () => {
                 </option>
               ))}
             </select>
-            <label
-              className={
-                aidRequest[field] !== "" && aidRequest[field] !== undefined
-                  ? "active"
-                  : ""
-              }
-              htmlFor={field}
-            >
-              {label}
-            </label>
           </div>
         );
 
       case "classrooms_allocated":
         return (
-          <div key={field} className={getClassName()}>
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700">
+              Classrooms Requested (optional)
+            </label>
             <Select
               isMulti
               name={field}
@@ -886,27 +892,20 @@ const AidRequestForm = () => {
                   classrooms_allocated: selected.map((s) => s.value),
                 }))
               }
-              placeholder=" "
+              placeholder="Select classrooms..."
               styles={customSelectStyles}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />
-            <label
-              className={
-                isFocused || aidRequest.classrooms_allocated.length > 0
-                  ? "active"
-                  : ""
-              }
-              htmlFor={field}
-            >
-              Classrooms Requested (optional)
-            </label>
           </div>
         );
 
       case "exam_or_not":
         return (
-          <div key={field} className={getClassName()}>
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700">
+              Exam or Not
+            </label>
             <Select
               name={field}
               options={[
@@ -923,33 +922,30 @@ const AidRequestForm = () => {
                   exam_or_not: selected.value,
                 }))
               }
-              placeholder=" "
+              placeholder="Select option..."
               styles={customSelectStyles}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />
-            <label
-              className={isFocused || aidRequest.exam_or_not ? "active" : ""}
-              htmlFor={field}
-            >
-              Exam or Not
-            </label>
           </div>
         );
 
       default:
         return (
-          <div key={field} className={getClassName()}>
-            <input
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
+            <Input
               type={field === "no_of_participants" ? "number" : "text"}
               name={field}
               value={aidRequest[field]}
               onChange={handleChange}
               min="1"
               required
-              placeholder=" "
+              placeholder={`Enter ${label.toLowerCase()}`}
+              className="border-2 border-slate-200 focus:border-blue-500 rounded-lg"
             />
-            <label htmlFor={field}>{label}</label>
           </div>
         );
     }
@@ -966,7 +962,10 @@ const AidRequestForm = () => {
     switch (field) {
       case "item_no":
         return (
-          <div key={field} className="form-step">
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
             <Select
               name={field}
               options={Array.from({ length: 14 }, (_, i) => {
@@ -985,24 +984,21 @@ const AidRequestForm = () => {
                   target: { name: field, value: selected.value },
                 })
               }
-              placeholder=" "
+              placeholder="Select item..."
               styles={customSelectStyles}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />
-            <label
-              className={isFocused || item[field] !== "" ? "active" : ""}
-              htmlFor={field}
-            >
-              {label}
-            </label>
           </div>
         );
 
       case "description":
         return (
-          <div key={field} className="form-step">
-            <input
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
+            <Input
               type="text"
               name={field}
               value={item[field]}
@@ -1010,32 +1006,38 @@ const AidRequestForm = () => {
               onBlur={(e) => handleBlur(index, e)}
               readOnly={item.item_no !== "14"}
               required
-              placeholder=" "
+              placeholder="Enter description..."
+              className="border-2 border-slate-200 focus:border-blue-500 rounded-lg"
             />
-            <label htmlFor={field}>{label}</label>
           </div>
         );
 
       case "quantity":
         return (
-          <div key={field} className="form-step">
-            <input
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
+            <Input
               type="number"
               name={field}
               value={item[field]}
               onChange={(e) => handleChange(index, e)}
               min="1"
               required
-              placeholder=" "
+              placeholder="Enter quantity..."
+              className="border-2 border-slate-200 focus:border-blue-500 rounded-lg"
             />
-            <label htmlFor={field}>{label}</label>
           </div>
         );
 
       case "md_approval_required_or_not":
         if (!isAuditoriumOrMisc) return null;
         return (
-          <div key={field} className="form-step">
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
             <Select
               name={field}
               options={[
@@ -1048,24 +1050,21 @@ const AidRequestForm = () => {
                   target: { name: field, value: selected.value },
                 })
               }
-              placeholder=" "
+              placeholder="Select option..."
               styles={customSelectStyles}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />
-            <label
-              className={isFocused || item[field] ? "active" : ""}
-              htmlFor={field}
-            >
-              {label}
-            </label>
           </div>
         );
 
       case "md_approval_obtained":
         if (!isAuditoriumOrMisc) return null;
         return (
-          <div key={field} className="form-step">
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
             <Select
               name={field}
               options={[
@@ -1080,33 +1079,30 @@ const AidRequestForm = () => {
                   target: { name: field, value: selected.value },
                 })
               }
-              placeholder=" "
+              placeholder="Select option..."
               styles={customSelectStyles}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />
-            <label
-              className={isFocused || item[field] ? "active" : ""}
-              htmlFor={field}
-            >
-              {label}
-            </label>
           </div>
         );
 
       case "md_approval_details": {
         if (!isAuditoriumOrMisc) return null;
         return (
-          <div key={field} className="form-step">
-            <input
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
+            <Input
               type="text"
               name={field}
               value={item[field]}
               onChange={(e) => handleChange(index, e)}
               required
-              placeholder=" "
+              placeholder="Enter approval details..."
+              className="border-2 border-slate-200 focus:border-blue-500 rounded-lg"
             />
-            <label htmlFor={field}>{label}</label>
           </div>
         );
       }
@@ -1114,7 +1110,10 @@ const AidRequestForm = () => {
       case "CTM_approval_obtained":
         if (!shouldShowCTMFields) return null;
         return (
-          <div key={field} className="form-step">
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
             <Select
               name={field}
               options={[
@@ -1129,48 +1128,48 @@ const AidRequestForm = () => {
                   target: { name: field, value: selected.value },
                 })
               }
-              placeholder=" "
+              placeholder="Select option..."
               styles={customSelectStyles}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />
-            <label
-              className={isFocused || item[field] ? "active" : ""}
-              htmlFor={field}
-            >
-              {label}
-            </label>
           </div>
         );
 
       case "CTM_Details":
         if (!shouldShowCTMFields) return null;
         return (
-          <div key={field} className="form-step">
-            <input
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
+            <Input
               type="text"
               name={field}
               value={item[field] || ""}
               onChange={(e) => handleChange(index, e)}
               required={shouldShowCTMFields}
-              placeholder=" "
+              placeholder="Enter CTM details..."
+              className="border-2 border-slate-200 focus:border-blue-500 rounded-lg"
             />
-            <label htmlFor={field}>{label}</label>
           </div>
         );
 
       default:
         return (
-          <div key={field} className="form-step">
-            <input
+          <div key={field} className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 capitalize">
+              {label}
+            </label>
+            <Input
               type="text"
               name={field}
               value={item[field]}
               onChange={(e) => handleChange(index, e)}
               required
-              placeholder=" "
+              placeholder={`Enter ${label.toLowerCase()}`}
+              className="border-2 border-slate-200 focus:border-blue-500 rounded-lg"
             />
-            <label htmlFor={field}>{label}</label>
           </div>
         );
     }
@@ -1181,13 +1180,14 @@ const AidRequestForm = () => {
       case 1:
         return (
           <>
-            <p
-              className="page-description-type2"
-              style={{ fontWeight: "bold", textAlign: "center" }}
-            >
-              Step 1: Requesting Officer & Course Details
-            </p>
-            <div className="step-two-grid">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center justify-center gap-2">
+                <Users className="w-5 h-5 text-blue-600" />
+                Step 1: Requesting Officer & Course Details
+              </h2>
+              <p className="text-slate-600 mt-2">Please provide the basic information about the requesting officer and course</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 "requesting_officer_name",
                 "designation",
@@ -1214,13 +1214,14 @@ const AidRequestForm = () => {
       case 2:
         return (
           <>
-            <p
-              className="page-description-type2"
-              style={{ fontWeight: "bold", textAlign: "center" }}
-            >
-              Step 2: Participants, Coordinator & Date/Time
-            </p>
-            <div className="step-two-grid">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center justify-center gap-2">
+                <Calendar className="w-5 h-5 text-blue-600" />
+                Step 2: Participants, Coordinator & Date/Time
+              </h2>
+              <p className="text-slate-600 mt-2">Provide participant details and schedule information</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 "no_of_participants",
                 "course_coordinator",
@@ -1247,13 +1248,14 @@ const AidRequestForm = () => {
       case 3:
         return (
           <>
-            <p
-              className="page-description-type2"
-              style={{ fontWeight: "bold", textAlign: "center" }}
-            >
-              Step 3: Preferences & Sign-Off
-            </p>
-            <div className="centered-form-section">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center justify-center gap-2">
+                <Clock className="w-5 h-5 text-blue-600" />
+                Step 3: Preferences & Sign-Off
+              </h2>
+              <p className="text-slate-600 mt-2">Set your preferences and complete the sign-off process</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {[
                 "preferred_days_of_week",
                 "paid_course_or_not",
@@ -1279,130 +1281,164 @@ const AidRequestForm = () => {
       case 4:
         return (
           <>
-            <p
-              className="page-description-type2"
-              style={{ fontWeight: "bold", textAlign: "center" }}
-            >
-              Step 4: Add Aid Items
-            </p>
-            {aidItems.map((item, index) => (
-              <div key={index} className="aid-item">
-                <div className="step-two-grid">
-                  {Object.keys(item).map((field) =>
-                    renderAidItemField(
-                      field,
-                      item,
-                      index,
-                      handleAidItemChange,
-                      handleAidItemBlur
-                    )
-                  )}
-                </div>
-                <button
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center justify-center gap-2">
+                <BookOpen className="w-5 h-5 text-blue-600" />
+                Step 4: Add Aid Items
+              </h2>
+              <p className="text-slate-600 mt-2">Add the required aid items for your request</p>
+            </div>
+            <div className="space-y-6">
+              {aidItems.map((item, index) => (
+                <Card key={index} className="border border-slate-200 shadow-sm">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-slate-800">Item {index + 1}</h3>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeAidItem(index)}
+                        className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Remove Item
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {Object.keys(item).map((field) =>
+                        renderAidItemField(
+                          field,
+                          item,
+                          index,
+                          handleAidItemChange,
+                          handleAidItemBlur
+                        )
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              <div className="text-center">
+                <Button
                   type="button"
-                  className="add-itemsbtn"
-                  onClick={() => removeAidItem(index)}
+                  onClick={addAidItem}
+                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold"
                 >
-                  Remove Item
-                </button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Item
+                </Button>
               </div>
-            ))}
-            <button type="button" className="add-itemsbtn" onClick={addAidItem}>
-              Add Item
-            </button>
+            </div>
           </>
         );
       case 5:
         return (
           <>
-            <p
-              className="page-description-type2"
-              style={{ fontWeight: "bold", textAlign: "center" }}
-            >
-              Step 5: Confirm your details and submit
-            </p>
-            <div className="review-grid-1">
-              {Object.entries(aidRequest).map(([key, val]) =>
-                key !== "request_status" &&
-                key !== "payment_status" &&
-                key !== "cancelled_by_requester" ? (
-                  <p key={key}>
-                    <strong>
-                      {key === "classrooms_allocated"
-                        ? "Classroom(s) Requested"
-                        : key.replaceAll("_", " ")}
-                      :
-                    </strong>{" "}
-                    {val === null ||
-                    val === undefined ||
-                    val === "" ||
-                    (Array.isArray(val) && val.length === 0)
-                      ? "-"
-                      : Array.isArray(val)
-                      ? val.join(", ")
-                      : val}
-                  </p>
-                ) : null
-              )}
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center justify-center gap-2">
+                <CheckCircle className="w-5 h-5 text-blue-600" />
+                Step 5: Confirm your details and submit
+              </h2>
+              <p className="text-slate-600 mt-2">Review all information before submitting your request</p>
             </div>
-            <div className="review-items">
+            <div className="space-y-6">
+              <Card className="border border-slate-200 shadow-sm">
+                <CardHeader>
+                  <h3 className="text-lg font-semibold text-slate-800">Request Details</h3>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries(aidRequest).map(([key, val]) =>
+                      key !== "request_status" &&
+                      key !== "payment_status" &&
+                      key !== "cancelled_by_requester" ? (
+                        <div key={key} className="flex flex-col">
+                          <span className="text-sm font-semibold text-slate-600 capitalize">
+                            {key === "classrooms_allocated"
+                              ? "Classroom(s) Requested"
+                              : key.replaceAll("_", " ")}
+                          </span>
+                          <span className="text-sm text-slate-800 mt-1">
+                            {val === null ||
+                            val === undefined ||
+                            val === "" ||
+                            (Array.isArray(val) && val.length === 0)
+                              ? "-"
+                              : Array.isArray(val)
+                              ? val.join(", ")
+                              : val}
+                          </span>
+                        </div>
+                      ) : null
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
               {aidItems.length > 0 && (
-                <>
-                  <p
-                    className="page-description-type2"
-                    style={{
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      display: "block",
-                    }}
-                  >
-                    Aid Items:
-                  </p>
-                  {aidItems.map((item, index) => (
-                    <div key={index} style={{ gridColumn: "1 / -1" }}>
-                      {Object.entries(item).map(([key, val]) => {
-                        const shouldShowCTMFields =
-                          aidRequest.paid_course_or_not === "Yes" &&
-                          item.item_no === "03";
+                <Card className="border border-slate-200 shadow-sm">
+                  <CardHeader>
+                    <h3 className="text-lg font-semibold text-slate-800">Aid Items</h3>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {aidItems.map((item, index) => (
+                        <div key={index} className="border border-slate-100 rounded-lg p-4">
+                          <h4 className="font-semibold text-slate-700 mb-3">Item {index + 1}</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {Object.entries(item).map(([key, val]) => {
+                              const shouldShowCTMFields =
+                                aidRequest.paid_course_or_not === "Yes" &&
+                                item.item_no === "03";
 
-                        const isAuditoriumOrMisc =
-                          item.description.toLowerCase().trim() ===
-                            "auditorium" || item.item_no === "14";
+                              const isAuditoriumOrMisc =
+                                item.description.toLowerCase().trim() ===
+                                  "auditorium" || item.item_no === "14";
 
-                        // Skip CTM fields if condition not met
-                        if (
-                          (key === "CTM_approval_obtained" ||
-                            key === "CTM_Details") &&
-                          !shouldShowCTMFields
-                        ) {
-                          return null;
-                        }
+                              // Skip CTM fields if condition not met
+                              if (
+                                (key === "CTM_approval_obtained" ||
+                                  key === "CTM_Details") &&
+                                !shouldShowCTMFields
+                              ) {
+                                return null;
+                              }
 
-                        if (
-                          (key === "md_approval_required_or_not" ||
-                            key === "md_approval_obtained" ||
-                            key === "md_approval_details") &&
-                          !isAuditoriumOrMisc
-                        ) {
-                          return null;
-                        }
-                        const displayValue =
-                          (key === "md_approval_details" ||
-                            key === "CTM_Details") &&
-                          (!val || !val.trim())
-                            ? "-"
-                            : val;
+                              if (
+                                (key === "md_approval_required_or_not" ||
+                                  key === "md_approval_obtained" ||
+                                  key === "md_approval_details") &&
+                                !isAuditoriumOrMisc
+                              ) {
+                                return null;
+                              }
+                              const displayValue =
+                                (key === "md_approval_details" ||
+                                  key === "CTM_Details") &&
+                                (!val || !val.trim())
+                                  ? "-"
+                                  : val;
 
-                        return (
-                          <p key={key}>
-                            <strong>{key.replaceAll("_", " ")}:</strong>{" "}
-                            {displayValue}
-                          </p>
-                        );
-                      })}
+                              return (
+                                <div key={key} className="flex flex-col">
+                                  <span className="text-sm font-semibold text-slate-600 capitalize">
+                                    {key.replaceAll("_", " ")}
+                                  </span>
+                                  <span className="text-sm text-slate-800 mt-1">
+                                    {displayValue}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </>
+                  </CardContent>
+                </Card>
               )}
             </div>
           </>
@@ -1415,93 +1451,96 @@ const AidRequestForm = () => {
   const customSelectStyles = {
     control: (provided, state) => ({
       ...provided,
-      backgroundColor: "transparent",
-      borderColor: state.isFocused ? "#01eeff" : "#00a6ff9d",
-      borderWidth: 3,
-      borderRadius: 4,
-      padding: "0px",
-      minHeight: "32px", // Shrinks overall height
-      boxShadow: "none",
+      backgroundColor: "white",
+      borderColor: state.isFocused ? "#3b82f6" : "#e2e8f0",
+      borderWidth: "2px",
+      borderRadius: "8px",
+      padding: "8px 12px",
+      minHeight: "44px",
+      boxShadow: state.isFocused ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "none",
       cursor: "pointer",
-      color: "#e3eaf5",
-      fontSize: "12px",
+      color: "#1e293b",
+      fontSize: "14px",
       "&:hover": {
-        borderColor: "#01eeff",
+        borderColor: "#3b82f6",
       },
     }),
     valueContainer: (provided) => ({
       ...provided,
-      padding: "2px 6px",
-      fontSize: "12px",
+      padding: "0px",
+      fontSize: "14px",
     }),
     placeholder: (provided) => ({
       ...provided,
-      color: "#999",
-      fontSize: "12px",
+      color: "#94a3b8",
+      fontSize: "14px",
     }),
     input: (provided) => ({
       ...provided,
-      color: "#fff",
-      fontSize: "12px",
+      color: "#1e293b",
+      fontSize: "14px",
       margin: 0,
       padding: 0,
     }),
     singleValue: (provided) => ({
       ...provided,
-      color: "#fff",
-      fontSize: "12px",
+      color: "#1e293b",
+      fontSize: "14px",
     }),
     menu: (provided) => ({
       ...provided,
-      backgroundColor: "#003b5a",
-      color: "#e3eaf5",
-      borderRadius: 4,
-      fontSize: "10px", // Menu font size can stay small
+      backgroundColor: "white",
+      color: "#1e293b",
+      borderRadius: "8px",
+      fontSize: "14px",
+      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+      border: "1px solid #e2e8f0",
     }),
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isFocused ? "#01eeff" : "transparent",
-      color: state.isFocused ? "black" : "#e3eaf5",
+      backgroundColor: state.isFocused ? "#f1f5f9" : "transparent",
+      color: state.isFocused ? "#1e293b" : "#475569",
       cursor: "pointer",
-      fontSize: "12px",
-      padding: "6px 10px", // Still gives clickable area
+      fontSize: "14px",
+      padding: "8px 12px",
     }),
     multiValue: (provided) => ({
       ...provided,
-      backgroundColor: "#00fff253",
-      borderRadius: 4,
-      fontSize: "11px",
+      backgroundColor: "#dbeafe",
+      borderRadius: "6px",
+      fontSize: "12px",
       margin: "2px 4px",
     }),
     multiValueLabel: (provided) => ({
       ...provided,
-      color: "#fff",
-      fontSize: "11px",
+      color: "#1e40af",
+      fontSize: "12px",
     }),
     multiValueRemove: (provided) => ({
       ...provided,
-      color: "#fff",
-      fontSize: "11px",
+      color: "#1e40af",
+      fontSize: "12px",
       ":hover": {
-        backgroundColor: "#01eeff",
-        color: "black",
+        backgroundColor: "#bfdbfe",
+        color: "#1e40af",
       },
     }),
     dropdownIndicator: (provided) => ({
       ...provided,
-      padding: "8.8px 7px",
+      padding: "8px",
       svg: {
-        width: "16px", // reduce arrow size
+        width: "16px",
         height: "16px",
+        color: "#64748b",
       },
     }),
-
     clearIndicator: (provided) => ({
       ...provided,
-      padding: "8.8px 7px",
+      padding: "8px",
       svg: {
-        width: "16px", // reduce × icon size
+        width: "16px",
         height: "16px",
+        color: "#64748b",
       },
     }),
   };
@@ -1513,81 +1552,124 @@ const AidRequestForm = () => {
   return (
     <>
       {successMessage && <SuccessPopup message={successMessage} />}
-      <form
-        onSubmit={handleSubmit}
-        className="aid-request-form-type2"
-        id="aidh2"
-      >
-        <div className="page-header">
-          <h1>Create Classroom/Aid Request</h1> 
-        </div>
+      
+      <div className="w-full max-w-9xl mx-auto">
+        <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-xl">
 
-        <div className="progressbar-container">
-          {[...Array(totalSteps)].map((_, index) => {
-            const stepNum = index + 1;
-            const isCompleted = stepNum < currentStep;
-            const isActive = stepNum === currentStep;
 
-            return (
-              <React.Fragment key={stepNum}>
-                <div
-                  className={`progress-step ${isActive ? "active" : ""} ${
-                    isCompleted ? "completed" : ""
-                  }`}
-                >
-                  <div className="circle">{stepNum}</div>
+          <CardContent className="p-4 xl:p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Progress Bar */}
+              <div className="flex items-center justify-center mb-8">
+                <div className="flex items-center space-x-4">
+                  {[...Array(totalSteps)].map((_, index) => {
+                    const stepNum = index + 1;
+                    const isCompleted = stepNum < currentStep;
+                    const isActive = stepNum === currentStep;
+
+                    return (
+                      <React.Fragment key={stepNum}>
+                        <div className="flex items-center">
+                          <div
+                            className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-300 ${
+                              isActive
+                                ? "bg-blue-600 border-blue-600 text-white shadow-lg"
+                                : isCompleted
+                                ? "bg-emerald-500 border-emerald-500 text-white"
+                                : "bg-white border-slate-300 text-slate-500"
+                            }`}
+                          >
+                            {isCompleted ? <Check className="w-5 h-5" /> : stepNum}
+                          </div>
+                          {stepNum !== totalSteps && (
+                            <div
+                              className={`w-16 h-1 mx-2 transition-all duration-300 ${
+                                isCompleted ? "bg-emerald-500" : "bg-slate-200"
+                              }`}
+                            />
+                          )}
+                        </div>
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
-                {stepNum !== totalSteps && (
-                  <div
-                    className={`line ${isCompleted ? "completed" : ""}`}
-                  ></div>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
+              </div>
 
-        {renderStep()}
+              {/* Step Content */}
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
+                {renderStep()}
+              </div>
 
-        <div className="form-buttons-sticky">
-          <div className="navigation-buttons">
-            {currentStep > 1 && (
-              <button type="button" onClick={prevStep}>
-                Back
-              </button>
-            )}
-            {currentStep < totalSteps && (
-              <button type="button" onClick={nextStep}>
-                Next
-              </button>
-            )}
-            {currentStep === totalSteps && (
-              <button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit Aid Request"}
-              </button>
-            )}
-          </div>
+              {/* Navigation Buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-200">
+                <div className="flex gap-3">
+                  {currentStep > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={prevStep}
+                      className="border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl font-bold"
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-2" />
+                      Back
+                    </Button>
+                  )}
+                  {currentStep < totalSteps && (
+                    <Button
+                      type="button"
+                      onClick={nextStep}
+                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold"
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  )}
+                  {currentStep === totalSteps && (
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          Submit Aid Request
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
 
-          <div className="button-section-aid_req">
-            <button
-              type="button"
-              className="clsrform"
-              onClick={() =>
-                clearAndRefresh(["aidRequestData", "aidItemsData"])
-              }
-            >
-              Clear Request Form
-            </button>
-            <button
-              type="button"
-              className="clsrform"
-              onClick={() => navigate("/cancelRequestByUser")}
-            >
-              Cancel Booked Request
-            </button>
-          </div>
-        </div>
-      </form>
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => clearAndRefresh(["aidRequestData", "aidItemsData"])}
+                    className="border-2 border-slate-200 hover:border-red-400 hover:bg-red-50 text-red-600 rounded-xl font-bold"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Clear Form
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate("/cancelRequestByUser")}
+                    className="border-2 border-slate-200 hover:border-orange-400 hover:bg-orange-50 text-orange-600 rounded-xl font-bold"
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Cancel Request
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </>
   );
 };

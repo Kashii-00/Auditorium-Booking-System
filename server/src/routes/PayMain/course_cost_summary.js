@@ -326,30 +326,48 @@ router.post("/", (req, res) => {
                               .status(500)
                               .json({ error: "Insert failed" });
 
-                          // Call resetApprovalFields here
-                          resetApprovalFields(
-                            payment_main_details_id,
-                            user.id,
-                            (resetErr) => {
-                              if (resetErr) {
-                                console.error(
-                                  "Failed to reset approval fields:",
-                                  resetErr
-                                );
-                                return res.status(500).json({
-                                  error:
-                                    "Insert succeeded but failed to reset approval fields",
+                            // Update course fee in courses table
+                          const updateCourseFeeQuery = `
+                            UPDATE courses c
+                            JOIN payments_main_details pmd ON c.id = pmd.course_id
+                            SET c.fees = ?
+                            WHERE pmd.id = ?
+                          `;
+
+                          db.query(updateCourseFeeQuery, [roundedCourseFeePerHead, payment_main_details_id], (updateErr) => {
+                            if (updateErr) {
+                              console.error("Failed to update course fee:", updateErr);
+                              // Don't fail the entire operation, just log the error
+                            } else {
+                              console.log(`✅ Updated course fee to ${roundedCourseFeePerHead} for payment_main_details_id: ${payment_main_details_id}`);
+                            }
+
+                            // Call resetApprovalFields here
+                            resetApprovalFields(
+                              payment_main_details_id,
+                              user.id,
+                              (resetErr) => {
+                                if (resetErr) {
+                                  console.error(
+                                    "Failed to reset approval fields:",
+                                    resetErr
+                                  );
+                                  return res.status(500).json({
+                                    error:
+                                      "Insert succeeded but failed to reset approval fields",
+                                  });
+                                }
+
+                                // Send success response only after resetApprovalFields completes
+                                res.status(201).json({
+                                  message:
+                                    "Course cost summary created and course fee updated (previous records deleted)",
+                                  id: result.insertId,
+                                  updatedCourseFee: roundedCourseFeePerHead,
                                 });
                               }
-
-                              // Send success response only after resetApprovalFields completes
-                              res.status(201).json({
-                                message:
-                                  "Course cost summary created (previous records deleted)",
-                                id: result.insertId,
-                              });
-                            }
-                          );
+                            );
+                          });
                         }
                       );
                     }
@@ -390,6 +408,40 @@ router.get("/:payment_main_details_id", (req, res) => {
     }
 
     res.json(row);
+  });
+});
+
+// GET endpoint to fetch Rounded_CFPH by payment_main_details_id
+router.get("/rounded-cfph/:payment_main_details_id", (req, res) => {
+  const { payment_main_details_id } = req.params;
+  const user = req.user;
+  const privileged = isPrivileged(user);
+
+  const query = `
+    SELECT pmd.user_id, ccs.Rounded_CFPH, ccs.course_fee_per_head, ccs.total_course_cost, ccs.no_of_participants
+    FROM course_cost_summary ccs
+    JOIN payments_main_details pmd ON ccs.payment_main_details_id = pmd.id
+    WHERE ccs.payment_main_details_id = ?
+    ORDER BY ccs.created_at DESC
+    LIMIT 1
+  `;
+
+  db.query(query, [payment_main_details_id], (err, results) => {
+    if (err) return res.status(500).json({ error: "DB error" });
+    if (results.length === 0)
+      return res.status(404).json({ error: "Course cost summary not found for this payment ID" });
+
+    const row = results[0];
+    if (!privileged && row.user_id !== user.id) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    res.json({
+      Rounded_CFPH: row.Rounded_CFPH,
+      course_fee_per_head: row.course_fee_per_head,
+      total_course_cost: row.total_course_cost,
+      no_of_participants: row.no_of_participants
+    });
   });
 });
 

@@ -69,42 +69,98 @@ const SuccessPopup = memo(({ message }) => {
 
 SuccessPopup.displayName = "SuccessPopup"
 
-// Memoized Statistics Card Component
-const StatCard = memo(({ title, value, icon: Icon, color = "blue" }) => {
-  const colorClasses = useMemo(
+// Circular progress ring StatCard with our color palette for classroom bookings
+const StatCard = memo(({ title, value, icon: Icon, color = "blue", progress = 75 }) => {
+  const colorConfig = useMemo(
     () => ({
-      blue: "bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 text-blue-700 border-blue-300 shadow-blue-200/50",
-      green:
-        "bg-gradient-to-br from-emerald-100 via-green-100 to-teal-100 text-emerald-700 border-emerald-300 shadow-emerald-200/50",
-      yellow:
-        "bg-gradient-to-br from-amber-100 via-yellow-100 to-orange-100 text-amber-700 border-amber-300 shadow-amber-200/50",
-      red: "bg-gradient-to-br from-rose-100 via-red-100 to-pink-100 text-rose-700 border-rose-300 shadow-rose-200/50",
-      purple:
-        "bg-gradient-to-br from-purple-100 via-violet-100 to-indigo-100 text-purple-700 border-purple-300 shadow-purple-200/50",
+      blue: {
+        ring: "stroke-blue-500",
+        bg: "bg-blue-50",
+        iconBg: "bg-blue-500",
+      },
+      green: {
+        ring: "stroke-emerald-500",
+        bg: "bg-emerald-50",
+        iconBg: "bg-emerald-500",
+      },
+      purple: {
+        ring: "stroke-purple-500",
+        bg: "bg-purple-50",
+        iconBg: "bg-purple-500",
+      },
+      orange: {
+        ring: "stroke-orange-500",
+        bg: "bg-orange-50",
+        iconBg: "bg-orange-500",
+      },
+      yellow: {
+        ring: "stroke-yellow-500",
+        bg: "bg-yellow-50",
+        iconBg: "bg-yellow-500",
+      },
+      red: {
+        ring: "stroke-red-500",
+        bg: "bg-red-50",
+        iconBg: "bg-red-500",
+      },
+      gray: {
+        ring: "stroke-slate-300",
+        bg: "bg-slate-50",
+        iconBg: "bg-slate-400",
+      },
     }),
     [],
   )
 
+  const config = colorConfig[color] || colorConfig.blue
+  const circumference = 2 * Math.PI * 42
+  const strokeDasharray = circumference
+  const strokeDashoffset = circumference - (progress / 100) * circumference
+
   return (
-    <Card className="border-0 shadow-2xl hover:shadow-3xl transition-all duration-300 bg-white/95 backdrop-blur-xl min-h-[120px] transform hover:-translate-y-1">
-      <CardContent className="p-4 xl:p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-xs xl:text-sm font-black text-slate-600 mb-1 xl:mb-2 uppercase tracking-wide transition-colors duration-300">
-              {title}
-            </p>
-            <p className="text-2xl xl:text-4xl font-black bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent transition-all duration-300">
-              {value}
-            </p>
-          </div>
-          <div
-            className={`p-3 xl:p-4 rounded-2xl shadow-xl border-2 ${colorClasses[color]} flex-shrink-0 transition-all duration-300 hover:scale-110`}
-          >
-            <Icon className="h-5 w-5 xl:h-7 xl:w-7 transition-transform duration-300" />
+    <div className="flex flex-col items-center group">
+      <div className="relative pt-2">
+        <div className={`w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full ${config.bg} shadow-sm flex items-center justify-center relative`}>
+          <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+            <circle
+              cx="50"
+              cy="50"
+              r="42"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="4"
+              className="text-slate-200"
+            />
+            <circle
+              cx="50"
+              cy="50"
+              r="42"
+              fill="none"
+              strokeWidth="4"
+              className={config.ring}
+              strokeDasharray={strokeDasharray}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+
+            />
+          </svg>
+          
+          <div className="relative z-10">
+            <Icon className="h-3 w-3 md:h-4 md:w-4 lg:h-5 lg:w-5 xl:h-5 xl:w-5 2xl:h-6 2xl:w-6 text-slate-700" />
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        <div className="absolute -bottom-1 md:-bottom-1.5 lg:-bottom-2 left-1/2 transform -translate-x-1/2">
+          <div className="bg-white rounded-full shadow-md px-1.5 py-0.5 md:px-2 md:py-0.5 lg:px-2.5 lg:py-1 border border-slate-200">
+            <span className="text-sm md:text-base lg:text-lg xl:text-lg 2xl:text-xl font-black text-slate-800">{value}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-2 md:mt-3 lg:mt-4 text-center">
+        <h3 className="text-xs md:text-xs lg:text-sm font-bold text-slate-700 leading-tight">{title}</h3>
+      </div>
+    </div>
   )
 })
 
@@ -159,85 +215,91 @@ const ColumnHeader = memo(({ title, sortable = false, sortKey, currentSort, onSo
 
 ColumnHeader.displayName = "ColumnHeader"
 
-// Pagination component
-const Pagination = memo(({ currentPage, totalPages, totalItems, onPageChange }) => {
-  const pageNumbers = useMemo(() => {
-    const pages = []
-    const maxVisiblePages = 3
-
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i)
-      }
-    } else {
-      if (currentPage <= Math.ceil(maxVisiblePages / 2)) {
-        for (let i = 1; i <= maxVisiblePages; i++) {
-          pages.push(i)
-        }
-      } else if (currentPage >= totalPages - Math.floor(maxVisiblePages / 2)) {
-        for (let i = totalPages - maxVisiblePages + 1; i <= totalPages; i++) {
-          pages.push(i)
-        }
-      } else {
-        for (
-          let i = currentPage - Math.floor(maxVisiblePages / 2);
-          i <= currentPage + Math.floor(maxVisiblePages / 2);
-          i++
-        ) {
-          pages.push(i)
-        }
-      }
-    }
-
-    return pages
-  }, [currentPage, totalPages])
-
-  const startItem = (currentPage - 1) * 10 + 1
-  const endItem = Math.min(currentPage * 10, totalItems)
-
-  return (
-    <div className="flex items-center justify-between mt-4 px-4">
-      <div className="text-sm text-gray-600">
-        Showing {startItem}-{endItem} of {totalItems} requests
+// Pagination Controls Component - Styled like BusBookingList
+const BookingPaginationControls = memo(
+  ({ currentPage, totalPages, indexOfFirstRequest, indexOfLastRequest, totalItems, onPageChange }) => {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between mt-6 pt-1 border-t-2 border-slate-200 px-6">
+          <div className="text-sm text-slate-600 font-semibold pb-10">
+            Showing {indexOfFirstRequest + 1} to {Math.min(indexOfLastRequest, totalItems)} of {totalItems} requests
+          </div>
+          <div className="flex flex-wrap gap-2 justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(1)}
+              disabled={currentPage === 1}
+              className="border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl font-bold"
+            >
+              First
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl font-bold"
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Prev
+            </Button>
+            {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+              let pageNumber;
+              if (totalPages <= 7) {
+                pageNumber = i + 1;
+              } else {
+                const start = Math.max(1, currentPage - 3);
+                const end = Math.min(totalPages, start + 6);
+                const adjustedStart = Math.max(1, end - 6);
+                pageNumber = adjustedStart + i;
+              }
+              
+              if (pageNumber > totalPages) return null;
+              
+              return (
+                <Button
+                  key={`page-${pageNumber}`}
+                  variant={currentPage === pageNumber ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onPageChange(pageNumber)}
+                  className={`border-2 rounded-xl font-bold ${
+                    currentPage === pageNumber
+                      ? "bg-blue-600 border-blue-600 text-white"
+                      : "border-slate-200 hover:border-blue-400 hover:bg-blue-50"
+                  }`}
+                >
+                  {pageNumber}
+                </Button>
+              )
+            }).filter(Boolean)}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl font-bold"
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(totalPages)}
+              disabled={currentPage === totalPages}
+              className="border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl font-bold"
+            >
+              Last
+            </Button>
+          </div>
+        </div>
       </div>
-      <div className="flex space-x-1">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="h-8 w-8 p-0 flex items-center justify-center"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+    )
+  },
+)
 
-        {pageNumbers.map((page) => (
-          <Button
-            key={page}
-            variant={currentPage === page ? "default" : "outline"}
-            size="sm"
-            onClick={() => onPageChange(page)}
-            className={`h-8 w-8 p-0 ${currentPage === page ? "bg-blue-600" : ""}`}
-          >
-            {page}
-          </Button>
-        ))}
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="h-8 w-8 p-0 flex items-center justify-center"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  )
-})
-
-Pagination.displayName = "Pagination"
+BookingPaginationControls.displayName = "BookingPaginationControls"
 
 // Optimized Action Menu Component
 const ActionMenu = memo(({ request, onStatusUpdate, onDelete }) => {
@@ -325,7 +387,7 @@ const ActionMenu = memo(({ request, onStatusUpdate, onDelete }) => {
 
 ActionMenu.displayName = "ActionMenu"
 
-// Optimized Table Row Component
+// Optimized Table Row Component - Styled like BusBookingList
 const TableRow = memo(
   ({
     request,
@@ -339,6 +401,7 @@ const TableRow = memo(
     formatDate,
     getAcronym,
     copyToClipboard,
+    sidebarCollapsed,
   }) => {
     const handleRowClick = useCallback(() => {
       onDoubleClick(request)
@@ -355,18 +418,16 @@ const TableRow = memo(
       <tr
         data-request-id={request.id}
         onDoubleClick={handleRowClick}
-        className={`${
-          index % 2 === 0 ? "bg-white" : "bg-gray-50"
-        } hover:bg-blue-50 transition-colors duration-150 cursor-pointer ${
-          isHighlighted ? "bg-blue-100 border border-blue-300 shadow-lg" : ""
+        className={`table-row border-b border-slate-200 hover:bg-blue-50 transition-colors duration-150 cursor-pointer ${
+          isHighlighted ? "bg-blue-100 border border-blue-300" : ""
         }`}
       >
-        <td className="py-3 xl:py-4 px-3 xl:px-4">
+        <td className="p-4">
           <Checkbox checked={isSelected} onCheckedChange={handleSelectChange} />
         </td>
-        <td className="py-3 xl:py-4 px-3 xl:px-4">
+        <td className="p-4">
           <div className="flex items-center gap-2">
-            <Badge className="bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100 text-blue-800 border-blue-300 shadow-blue-200/50 text-xs xl:text-sm font-black px-3 py-1">
+            <Badge className="bg-blue-100 text-blue-800 border-blue-300 text-xs font-bold px-2 py-1">
               {request.id}
             </Badge>
             <Copy
@@ -379,57 +440,60 @@ const TableRow = memo(
             />
           </div>
         </td>
-        <td className="py-3 xl:py-4 px-3 xl:px-4">
-          <div className="font-semibold text-gray-900 text-sm xl:text-base flex items-center gap-2">
+        <td className="p-4">
+          <div className="font-bold text-slate-900 flex items-center gap-2">
             <User className="w-4 h-4 text-blue-600" />
             {request.requesting_officer_name}
           </div>
         </td>
-        <td className="py-3 xl:py-4 px-3 xl:px-4">
-          <span className="text-sm xl:text-base text-gray-900">{request.designation}</span>
+        <td className={`p-4 ${sidebarCollapsed ? '' : 'hidden'}`}>
+          <div className="text-sm font-semibold text-slate-700">{request.designation}</div>
         </td>
-        <td className="py-3 xl:py-4 px-3 xl:px-4">
-          <span className="text-sm xl:text-base text-gray-900">{request.requesting_officer_email}</span>
+        <td className={`p-4 ${sidebarCollapsed ? '' : 'hidden'}`}>
+          <div className="text-sm font-semibold text-slate-700">{request.requesting_officer_email}</div>
         </td>
-        <td className="py-3 xl:py-4 px-3 xl:px-4">
+        <td className="p-4">
           <div className="flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-blue-600" />
             <span
-              className="text-sm xl:text-base font-medium text-gray-900 truncate max-w-[200px]"
+              className="text-sm font-medium text-slate-900 truncate max-w-[200px]"
               title={request.course_name}
             >
               {getAcronym(request.course_name)}
             </span>
           </div>
         </td>
-        <td className="py-3 xl:py-4 px-3 xl:px-4">
-          <Badge className="bg-gradient-to-r from-purple-100 via-violet-100 to-indigo-100 text-purple-800 border-purple-300 shadow-purple-200/50 text-xs xl:text-sm font-black px-3 py-1">
+        <td className="p-4">
+          <Badge className="bg-purple-100 text-purple-800 border-purple-300 text-xs font-bold px-2 py-1">
             {request.duration}
           </Badge>
         </td>
-        <td className="py-3 xl:py-4 px-3 xl:px-4">
-          <div className="flex items-center gap-1">
-            <Calendar className="w-3 h-3 text-blue-600" />
-            <span className="text-sm font-medium text-gray-900">{formatDate(request.signed_date)}</span>
+        <td className="p-4">
+          <div className="text-sm">
+            <div className="font-bold text-slate-900 flex items-center gap-1">
+              <Calendar className="w-3 h-3 text-slate-500" />
+              {formatDate(request.signed_date)}
+            </div>
           </div>
         </td>
-        <td className="py-3 xl:py-4 px-3 xl:px-4">
+        <td className="p-4">
           <Badge
-            className={`text-xs xl:text-sm font-black px-3 py-1 ${
+            variant="outline"
+            className={`font-bold px-3 py-1 ${
               request.request_status?.toLowerCase() === "pending"
-                ? "bg-gradient-to-r from-amber-100 via-yellow-100 to-orange-100 text-amber-800 border-amber-300 shadow-amber-200/50"
+                ? "bg-yellow-100 text-yellow-800 border-yellow-300"
                 : request.request_status?.toLowerCase() === "approved"
-                  ? "bg-gradient-to-r from-emerald-100 via-green-100 to-teal-100 text-emerald-800 border-emerald-300 shadow-emerald-200/50"
-                  : "bg-gradient-to-r from-rose-100 via-red-100 to-pink-100 text-rose-800 border-rose-300 shadow-rose-200/50"
+                  ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                  : "bg-red-100 text-red-800 border-red-300"
             }`}
           >
-            {request.request_status?.toLowerCase() === "pending" && <Clock className="w-3 h-3 mr-1 inline" />}
-            {request.request_status?.toLowerCase() === "approved" && <CheckCircle className="w-3 h-3 mr-1 inline" />}
-            {request.request_status?.toLowerCase() === "denied" && <XCircle className="w-3 h-3 mr-1 inline" />}
+            {request.request_status?.toLowerCase() === "pending" && <Clock className="h-3 w-3 mr-1" />}
+            {request.request_status?.toLowerCase() === "approved" && <CheckCircle className="h-3 w-3 mr-1" />}
+            {request.request_status?.toLowerCase() === "denied" && <XCircle className="h-3 w-3 mr-1" />}
             {request.request_status || "Pending"}
           </Badge>
         </td>
-        <td className="py-3 xl:py-4 px-3 xl:px-4">
+        <td className="p-4">
           <ActionMenu request={request} onStatusUpdate={onStatusUpdate} onDelete={onDelete} />
         </td>
       </tr>
@@ -471,7 +535,7 @@ const ClassroomBooking = () => {
   const [selectedRequests, setSelectedRequests] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [sort, setSort] = useState({ key: "course_name", direction: "asc" })
-  const [showInfo, setShowInfo] = useState(false)
+
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const stored = localStorage.getItem("sidebarState")
@@ -488,7 +552,7 @@ const ClassroomBooking = () => {
   const MIN_FETCH_INTERVAL = 2000
 
   const highlightId = location.state?.highlightId ? Number(location.state.highlightId) : null
-  const ITEMS_PER_PAGE = 10
+  const ITEMS_PER_PAGE = 5
 
   // Debounced search for better performance
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
@@ -952,13 +1016,7 @@ const ClassroomBooking = () => {
     window.URL.revokeObjectURL(url)
   }, [filteredRequests, filterStatus, filterMonth])
 
-  const handleResetFilters = useCallback(() => {
-    setSearchTerm("")
-    setFilterStatus("ALL")
-    setFilterMonth("ALL")
-    setCurrentPage(1)
-    localStorage.removeItem("classroomBookingFilters")
-  }, [])
+
 
   const handleRowDoubleClick = useCallback(
     (req) => {
@@ -991,22 +1049,7 @@ const ClassroomBooking = () => {
     }
   }, [highlightId])
 
-  // Click outside handlers
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (infoRef.current && !infoRef.current.contains(event.target)) {
-        setShowInfo(false)
-      }
-    }
 
-    if (showInfo) {
-      document.addEventListener("mousedown", handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [showInfo])
 
   // Initial fetch and periodic updates
   useEffect(() => {
@@ -1015,7 +1058,7 @@ const ClassroomBooking = () => {
       fetchHandoverData()
     }, 100)
 
-    let pollInterval = 30000
+    let pollInterval = 60000
     let inactiveTime = 0
     let lastActivityTime = Date.now()
 
@@ -1064,9 +1107,7 @@ const ClassroomBooking = () => {
     <div
       className={`min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative sidebar-transition`}
       data-page="classroom-booking"
-      style={{
-        paddingLeft: sidebarCollapsed ? "50px" : "50px",
-      }}
+
     >
       {initialLoad && (
         <div className="fixed inset-0 z-50">
@@ -1074,19 +1115,12 @@ const ClassroomBooking = () => {
         </div>
       )}
 
-      {/* Enhanced Background Pattern */}
-      <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-indigo-50/50 to-purple-50/50"></div>
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='https://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23e0e7ff' fillOpacity='0.4'%3E%3Ccircle cx='40' cy='40' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: "80px 80px",
-          }}
-        ></div>
+      {/* Simple Background */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute inset-0 bg-slate-50"></div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .highlight-pulse {
           animation: highlightPulse 2s ease-in-out;
         }
@@ -1118,7 +1152,7 @@ const ClassroomBooking = () => {
         {/* Main Content */}
         <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-xl relative z-10">
           <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div>
                 <CardTitle className="text-2xl xl:text-3xl font-black bg-gradient-to-r from-slate-800 via-blue-700 to-indigo-700 bg-clip-text text-transparent flex items-center gap-3">
                   <Building className="w-8 h-8 text-blue-600" />
@@ -1127,6 +1161,39 @@ const ClassroomBooking = () => {
                 <p className="text-slate-600 mt-2 text-base xl:text-lg font-semibold">
                   Manage and review all classroom booking requests in one place
                 </p>
+              </div>
+              
+              {/* Stats Cards */}
+              <div className="flex flex-wrap lg:flex-nowrap gap-1 sm:gap-2 md:gap-3 lg:gap-4 xl:gap-5 justify-center lg:justify-end">
+                <StatCard
+                  title="Total Requests"
+                  value={stats.total}
+                  icon={BookOpen}
+                  color="blue"
+                  progress={100}
+                />
+                <StatCard
+                  title="Approved"
+                  value={stats.approved}
+                  icon={CheckCircle}
+                  color="green"
+                  progress={stats.total > 0 ? (stats.approved / stats.total) * 100 : 0}
+                />
+                <StatCard
+                  title="Pending"
+                  value={stats.pending}
+                  icon={Clock}
+                  color="yellow"
+                  progress={stats.total > 0 ? (stats.pending / stats.total) * 100 : 0}
+                />
+                <StatCard
+                  title="Denied"
+                  value={stats.denied}
+                  icon={XCircle}
+                  color="red"
+                  progress={stats.total > 0 ? (stats.denied / stats.total) * 100 : 0}
+                />
+                
               </div>
             </div>
           </CardHeader>
@@ -1144,32 +1211,13 @@ const ClassroomBooking = () => {
                       setSearchTerm(e.target.value)
                       setCurrentPage(1)
                     }}
-                    className="pl-12 h-12 xl:h-14 text-base border-2 border-slate-200 focus:border-blue-500 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg focus:shadow-xl transition-all duration-300"
+                    className="pl-12 h-12 xl:h-14 text-base border-2 border-slate-200 focus:border-blue-500 rounded-2xl bg-white/90 backdrop-blur-sm shadow-lg focus:shadow-xl"
                   />
                 </div>
 
                 <div className="relative" ref={infoRef}>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setShowInfo(!showInfo)}
-                    className="h-12 xl:h-14 w-12 xl:w-14 border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-2xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl bg-white/90 backdrop-blur-sm"
-                  >
-                    <Info className="w-5 h-5" />
-                  </Button>
 
-                  {showInfo && (
-                    <div className="absolute top-16 right-0 z-50 w-80 p-4 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200">
-                      <div className="space-y-2">
-                        <h4 className="font-black text-slate-800 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                          🌟 Tips:
-                        </h4>
-                        <p className="text-sm text-slate-600 font-medium">
-                          Double-click records to view more details in the table below.
-                        </p>
-                      </div>
-                    </div>
-                  )}
+
                 </div>
               </div>
 
@@ -1221,19 +1269,12 @@ const ClassroomBooking = () => {
                   </SelectContent>
                 </Select>
 
-                <Button
-                  variant="outline"
-                  onClick={handleResetFilters}
-                  className="h-12 xl:h-14 px-6 border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-2xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl bg-white/90 backdrop-blur-sm"
-                >
-                  <RotateCcw className="h-5 w-5 mr-2" />
-                  Reset
-                </Button>
+
 
                 <Button
                   variant="outline"
                   onClick={handleExport}
-                  className="h-12 xl:h-14 px-6 border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-2xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl bg-white/90 backdrop-blur-sm"
+                  className="xl:w-30 h-12 xl:h-9 border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-2xl shadow-lg hover:shadow-xl bg-white/90 backdrop-blur-sm"
                 >
                   <Download className="h-5 w-5 mr-2" />
                   Export
@@ -1243,15 +1284,15 @@ const ClassroomBooking = () => {
 
             {/* Bulk Actions Bar */}
             {selectedRequests.length > 0 && (
-              <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300 rounded-2xl p-4 xl:p-6 mb-4 xl:mb-6 shadow-2xl backdrop-blur-xl">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <span className="text-sm font-black bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
+                  <span className="text-sm font-bold text-blue-700">
                     {selectedRequests.length} request(s) selected
                   </span>
-                  <div className="flex flex-wrap gap-2 xl:gap-3">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       size="sm"
-                      className="bg-gradient-to-r from-rose-500 via-red-500 to-pink-500 hover:from-rose-600 hover:via-red-600 hover:to-pink-600 text-white shadow-xl font-bold text-xs xl:text-sm rounded-xl transform hover:scale-105 transition-all duration-300"
+                      className="bg-red-500 hover:bg-red-600 text-white font-bold text-xs rounded-lg"
                       onClick={handleBulkDelete}
                     >
                       Delete Selected
@@ -1261,71 +1302,64 @@ const ClassroomBooking = () => {
               </div>
             )}
 
-            {/* Enhanced Table */}
-            <div className="border-2 border-slate-200/60 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl bg-white/95">
+            {/* Modern Table */}
+            <div className="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[1200px]">
-                  <thead className="bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50 border-b-2 border-slate-200/60">
-                    <tr>
-                      <th className="text-left py-3 xl:py-4 px-3 xl:px-4 font-black text-slate-700 w-12 text-sm xl:text-base">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50">
+                      <th className="text-left p-4 font-bold text-slate-700">
                         <Checkbox
                           checked={selectedRequests.length === paginatedRequests.length && paginatedRequests.length > 0}
                           onCheckedChange={handleSelectAll}
                         />
                       </th>
-                      <ColumnHeader
-                        title="Request ID"
-                        sortable={true}
-                        sortKey="id"
-                        currentSort={sort}
-                        onSort={setSort}
-                      />
-                      <ColumnHeader
-                        title="Officer Name"
-                        sortable={true}
-                        sortKey="requesting_officer_name"
-                        currentSort={sort}
-                        onSort={setSort}
-                      />
-                      <ColumnHeader title="Designation" sortable={false} />
-                      <ColumnHeader title="Email" sortable={false} />
-                      <ColumnHeader
-                        title="Course Name"
-                        sortable={true}
-                        sortKey="course_name"
-                        currentSort={sort}
-                        onSort={setSort}
-                      />
-                      <ColumnHeader title="Duration" sortable={false} />
-                      <ColumnHeader
-                        title="Signed Date"
-                        sortable={true}
-                        sortKey="signed_date"
-                        currentSort={sort}
-                        onSort={setSort}
-                      />
-                      <ColumnHeader
-                        title="Status"
-                        sortable={true}
-                        sortKey="request_status"
-                        currentSort={sort}
-                        onSort={setSort}
-                      />
-                      <th className="text-left py-3 xl:py-4 px-3 xl:px-4 font-black bg-gradient-to-r from-slate-700 to-blue-700 bg-clip-text text-transparent text-sm xl:text-base">
-                        Actions
+                      <th className="text-left p-4 cursor-pointer hover:bg-blue-100 transition-colors">
+                        <div className="flex items-center gap-2 font-bold text-slate-700">
+                          Request ID
+                          <ArrowUpDown className="w-4 h-4" />
+                        </div>
                       </th>
+                      <th className="text-left p-4 cursor-pointer hover:bg-blue-100 transition-colors">
+                        <div className="flex items-center gap-2 font-bold text-slate-700">
+                          Officer Name
+                          <ArrowUpDown className="w-4 h-4" />
+                        </div>
+                      </th>
+                      <th className={`text-left p-4 font-bold text-slate-700 ${sidebarCollapsed ? '' : 'hidden'}`}>Designation</th>
+                      <th className={`text-left p-4 font-bold text-slate-700 ${sidebarCollapsed ? '' : 'hidden'}`}>Email</th>
+                      <th className="text-left p-4 cursor-pointer hover:bg-blue-100 transition-colors">
+                        <div className="flex items-center gap-2 font-bold text-slate-700">
+                          Course Name
+                          <ArrowUpDown className="w-4 h-4" />
+                        </div>
+                      </th>
+                      <th className="text-left p-4 font-bold text-slate-700">Duration</th>
+                      <th className="text-left p-4 cursor-pointer hover:bg-blue-100 transition-colors">
+                        <div className="flex items-center gap-2 font-bold text-slate-700">
+                          Signed Date
+                          <ArrowUpDown className="w-4 h-4" />
+                        </div>
+                      </th>
+                      <th className="text-left p-4 cursor-pointer hover:bg-blue-100 transition-colors">
+                        <div className="flex items-center gap-2 font-bold text-slate-700">
+                          Status
+                          <ArrowUpDown className="w-4 h-4" />
+                        </div>
+                      </th>
+                      <th className="text-left p-4 font-bold text-slate-700 rounded-tr-xl">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white/95 backdrop-blur-sm">
+                  <tbody className="bg-white">
                     {loading ? (
                       <tr>
-                        <td colSpan={10} className="p-0">
+                        <td colSpan={sidebarCollapsed ? 10 : 8} className="p-0">
                           <TableSkeleton />
                         </td>
                       </tr>
                     ) : paginatedRequests.length === 0 ? (
                       <tr>
-                        <td colSpan={10} className="text-center py-8 text-gray-500">
+                        <td colSpan={sidebarCollapsed ? 10 : 8} className="text-center py-8 text-gray-500">
                           No classroom booking requests found
                         </td>
                       </tr>
@@ -1344,6 +1378,7 @@ const ClassroomBooking = () => {
                           formatDate={formatDate}
                           getAcronym={getAcronym}
                           copyToClipboard={copyToClipboard}
+                          sidebarCollapsed={sidebarCollapsed}
                         />
                       ))
                     )}
@@ -1353,9 +1388,11 @@ const ClassroomBooking = () => {
 
               {/* Pagination */}
               {!loading && filteredRequests.length > 0 && (
-                <Pagination
+                <BookingPaginationControls
                   currentPage={currentPage}
                   totalPages={totalPages}
+                  indexOfFirstRequest={(currentPage - 1) * ITEMS_PER_PAGE}
+                  indexOfLastRequest={currentPage * ITEMS_PER_PAGE}
                   totalItems={filteredRequests.length}
                   onPageChange={handlePageChange}
                 />

@@ -1,7 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { authRequest } from "../../services/authService"
 import { getApiUrl } from '../../utils/apiUrl';
-import "./styles/aidHandover.css";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  CheckCircle,
+  ChevronRight,
+  ChevronLeft,
+  FileText,
+  Calendar,
+  Clock,
+  Users,
+  BookOpen,
+  Building,
+  Check,
+  XCircle,
+  Plus,
+  Trash2,
+  Save,
+  RotateCcw,
+  Key,
+  Package,
+  UserCheck,
+} from "lucide-react";
 
 const AidHandoverForm = () => {
   const [aidHandover, setAidHandover] = useState({
@@ -284,15 +308,16 @@ const AidHandoverForm = () => {
   };
 
   const SuccessPopup = ({ message }) => (
-    <div className="success-popup">
-      <svg
-        className="icon"
-        xmlns="https://www.w3.org/2000/svg"
-        viewBox="0 0 20 20"
-      >
-        <path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z" />
-      </svg>
-      <p className="font-bold">{message}</p>
+    <div className="fixed top-6 right-6 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-600 text-white px-8 py-4 rounded-2xl shadow-2xl z-50 animate-in slide-in-from-top-4 duration-500 border border-white/20 backdrop-blur-xl">
+      <div className="flex items-center gap-4">
+        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+          <Check className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <p className="font-black text-lg">{message}</p>
+          <p className="text-emerald-100 text-sm">Your handover has been saved successfully</p>
+        </div>
+      </div>
     </div>
   );
 
@@ -344,271 +369,354 @@ const AidHandoverForm = () => {
   return (
     <>
       {successMessage && <SuccessPopup message={successMessage} />}
-      <form
-        onSubmit={handleAidHandoverSave}
-        className="aid-request-form-type2"
-        id="aidh"
-      >
-        <div className="page-header">
-          <h1>Handover Details Form</h1>
-        </div>
-        <p className="page-description" style={{ fontWeight: "bold" }}>
-          Fill out this form to submit or update Handover Details.
-        </p>
+      
+      <div className="w-full max-w-8xl mx-auto">
+        <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-xl">
+          <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">
+            <CardTitle className="text-2xl xl:text-3xl font-black bg-gradient-to-r from-slate-800 via-blue-700 to-indigo-700 bg-clip-text text-transparent flex items-center gap-3">
+              <Key className="w-8 h-8 text-blue-600" />
+              Handover Details Form
+            </CardTitle>
+            <p className="text-slate-600 mt-2 text-base xl:text-lg font-semibold">
+              Fill out this form to submit or update Handover Details.
+            </p>
+          </CardHeader>
 
-        <div className="progressbar-container">
-          {[...Array(totalSteps)].map((_, index) => {
-            const stepNum = index + 1;
-            const isCompleted = stepNum < currentStep;
-            const isActive = stepNum === currentStep;
+          <CardContent className="p-6">
+            <form onSubmit={handleAidHandoverSave} className="space-y-8">
+              {/* Progress Bar */}
+              <div className="flex items-center justify-center mb-8">
+                <div className="flex items-center space-x-4">
+                  {[...Array(totalSteps)].map((_, index) => {
+                    const stepNum = index + 1;
+                    const isCompleted = stepNum < currentStep;
+                    const isActive = stepNum === currentStep;
 
-            return (
-              <React.Fragment key={stepNum}>
-                <div
-                  className={`progress-step ${isActive ? "active" : ""} ${
-                    isCompleted ? "completed" : ""
-                  }`}
-                >
-                  <div className="circle">{stepNum}</div>
+                    return (
+                      <React.Fragment key={stepNum}>
+                        <div className="flex items-center">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold transition-all duration-300 ${
+                            isActive 
+                              ? 'bg-blue-600 text-white shadow-lg scale-110' 
+                              : isCompleted 
+                                ? 'bg-green-500 text-white' 
+                                : 'bg-slate-200 text-slate-500'
+                          }`}>
+                            {isCompleted ? <Check className="w-6 h-6" /> : stepNum}
+                          </div>
+                        </div>
+                        {stepNum !== totalSteps && (
+                          <div className={`w-16 h-1 rounded-full transition-all duration-300 ${
+                            isCompleted ? 'bg-green-500' : 'bg-slate-200'
+                          }`}></div>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
-                {stepNum !== totalSteps && (
-                  <div
-                    className={`line ${isCompleted ? "completed" : ""}`}
-                  ></div>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
-
-        {/* Step 1: Request ID */}
-        {currentStep === 1 && (
-          <>
-            <p
-              className="page-description-type2"
-              style={{ fontWeight: "bold", textAlign: "center" }}
-            >
-              Step 1: Request Identification & Item Details
-            </p>
-            <div className="centered-form-section">
-              <div className="form-step half-width">
-                <input
-                  id="request_id"
-                  type="number"
-                  name="request_id"
-                  value={aidHandover.request_id}
-                  onChange={handleAidHandoverChange}
-                  placeholder=" "
-                  required
-                />
-                <label htmlFor="request_id">Request ID</label>
-              </div>
-              <div className="form-step half-width">
-                <input
-                  id="items_taken_over"
-                  type="text"
-                  name="items_taken_over"
-                  value={aidHandover.items_taken_over}
-                  onChange={handleAidHandoverChange}
-                  placeholder=" "
-                  required
-                />
-                <label htmlFor="items_taken_over">Items Taken Over</label>
-              </div>
-              <div className="form-step half-width">
-                <input
-                  id="items_returned"
-                  type="text"
-                  name="items_returned"
-                  value={aidHandover.items_returned}
-                  onChange={handleAidHandoverChange}
-                  placeholder=" "
-                />
-                <label htmlFor="items_returned">
-                  Items Returned (optional)
-                </label>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Step 2: Receiver details */}
-        {currentStep === 2 && (
-          <>
-            <p
-              className="page-description-type2"
-              style={{ fontWeight: "bold", textAlign: "center" }}
-            >
-              Step 2: Receiver & Confirmer Details
-            </p>
-            <div className="step-two-grid">
-              <div className="form-step">
-                <input
-                  id="receiver_name"
-                  type="text"
-                  name="receiver_name"
-                  value={aidHandover.receiver_name}
-                  onChange={handleAidHandoverChange}
-                  placeholder=" "
-                  required
-                />
-                <label htmlFor="receiver_name">Receiver Name</label>
-              </div>
-              <div className="form-step">
-                <input
-                  id="handover_confirmer_name"
-                  type="text"
-                  name="handover_confirmer_name"
-                  value={aidHandover.handover_confirmer_name}
-                  onChange={handleAidHandoverChange}
-                  placeholder=" "
-                  required
-                />
-                <label htmlFor="handover_confirmer_name">
-                  Handover Confirmer Name
-                </label>
-              </div>
-              <div className="form-step">
-                <input
-                  id="receiver_designation"
-                  type="text"
-                  name="receiver_designation"
-                  value={aidHandover.receiver_designation}
-                  onChange={handleAidHandoverChange}
-                  placeholder=" "
-                  required
-                />
-                <label htmlFor="receiver_designation">
-                  Receiver Designation
-                </label>
-              </div>
-              <div className="form-step">
-                <input
-                  id="handover_confirmer_designation"
-                  type="text"
-                  name="handover_confirmer_designation"
-                  value={aidHandover.handover_confirmer_designation}
-                  onChange={handleAidHandoverChange}
-                  placeholder=" "
-                  required
-                />
-                <label htmlFor="handover_confirmer_designation">
-                  Handover Confirmer Designation
-                </label>
-              </div>
-              <div className="form-step">
-                <input
-                  id="receiver_date"
-                  type="date"
-                  name="receiver_date"
-                  value={aidHandover.receiver_date}
-                  onChange={handleAidHandoverChange}
-                  min={today}
-                  placeholder=" "
-                  required
-                />
-                <label htmlFor="receiver_date">Receiver Date</label>
               </div>
 
-              <div className="form-step">
-                <input
-                  id="handover_confirmer_date"
-                  type="date"
-                  name="handover_confirmer_date"
-                  value={aidHandover.handover_confirmer_date}
-                  onChange={handleAidHandoverChange}
-                  min={aidHandover.receiver_date || today}
-                  placeholder=" "
-                  required
-                />
-                <label htmlFor="handover_confirmer_date">
-                  Handover Confirmer Date
-                </label>
+              {/* Step 1: Request ID */}
+              {currentStep === 1 && (
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold text-slate-800 flex items-center justify-center gap-3 mb-2">
+                      <Package className="w-6 h-6 text-blue-600" />
+                      Step 1: Request Identification & Item Details
+                    </h2>
+                    <p className="text-slate-600">Please provide the request ID and item details for handover.</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <label htmlFor="request_id" className="text-sm font-semibold text-slate-700">
+                        Request ID *
+                      </label>
+                      <Input
+                        id="request_id"
+                        type="number"
+                        name="request_id"
+                        value={aidHandover.request_id}
+                        onChange={handleAidHandoverChange}
+                        placeholder="Enter request ID"
+                        required
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="items_taken_over" className="text-sm font-semibold text-slate-700">
+                        Items Taken Over *
+                      </label>
+                      <Input
+                        id="items_taken_over"
+                        type="text"
+                        name="items_taken_over"
+                        value={aidHandover.items_taken_over}
+                        onChange={handleAidHandoverChange}
+                        placeholder="Enter items taken over"
+                        required
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="items_returned" className="text-sm font-semibold text-slate-700">
+                        Items Returned (Optional)
+                      </label>
+                      <Input
+                        id="items_returned"
+                        type="text"
+                        name="items_returned"
+                        value={aidHandover.items_returned}
+                        onChange={handleAidHandoverChange}
+                        placeholder="Enter items returned"
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Receiver details */}
+              {currentStep === 2 && (
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold text-slate-800 flex items-center justify-center gap-3 mb-2">
+                      <UserCheck className="w-6 h-6 text-blue-600" />
+                      Step 2: Receiver & Confirmer Details
+                    </h2>
+                    <p className="text-slate-600">Please provide the receiver and confirmer information.</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label htmlFor="receiver_name" className="text-sm font-semibold text-slate-700">
+                        Receiver Name *
+                      </label>
+                      <Input
+                        id="receiver_name"
+                        type="text"
+                        name="receiver_name"
+                        value={aidHandover.receiver_name}
+                        onChange={handleAidHandoverChange}
+                        placeholder="Enter receiver name"
+                        required
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="handover_confirmer_name" className="text-sm font-semibold text-slate-700">
+                        Handover Confirmer Name *
+                      </label>
+                      <Input
+                        id="handover_confirmer_name"
+                        type="text"
+                        name="handover_confirmer_name"
+                        value={aidHandover.handover_confirmer_name}
+                        onChange={handleAidHandoverChange}
+                        placeholder="Enter confirmer name"
+                        required
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="receiver_designation" className="text-sm font-semibold text-slate-700">
+                        Receiver Designation *
+                      </label>
+                      <Input
+                        id="receiver_designation"
+                        type="text"
+                        name="receiver_designation"
+                        value={aidHandover.receiver_designation}
+                        onChange={handleAidHandoverChange}
+                        placeholder="Enter receiver designation"
+                        required
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="handover_confirmer_designation" className="text-sm font-semibold text-slate-700">
+                        Handover Confirmer Designation *
+                      </label>
+                      <Input
+                        id="handover_confirmer_designation"
+                        type="text"
+                        name="handover_confirmer_designation"
+                        value={aidHandover.handover_confirmer_designation}
+                        onChange={handleAidHandoverChange}
+                        placeholder="Enter confirmer designation"
+                        required
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="receiver_date" className="text-sm font-semibold text-slate-700">
+                        Receiver Date *
+                      </label>
+                      <Input
+                        id="receiver_date"
+                        type="date"
+                        name="receiver_date"
+                        value={aidHandover.receiver_date}
+                        onChange={handleAidHandoverChange}
+                        min={today}
+                        required
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="handover_confirmer_date" className="text-sm font-semibold text-slate-700">
+                        Handover Confirmer Date *
+                      </label>
+                      <Input
+                        id="handover_confirmer_date"
+                        type="date"
+                        name="handover_confirmer_date"
+                        value={aidHandover.handover_confirmer_date}
+                        onChange={handleAidHandoverChange}
+                        min={aidHandover.receiver_date || today}
+                        required
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Confirmation step */}
+              {currentStep === 3 && (
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold text-slate-800 flex items-center justify-center gap-3 mb-2">
+                      <CheckCircle className="w-6 h-6 text-blue-600" />
+                      Step 3: Confirm your details and submit
+                    </h2>
+                    <p className="text-slate-600">Please review all the information before submitting.</p>
+                  </div>
+
+                  <Card className="border border-slate-200 bg-slate-50/50">
+                    <CardContent className="p-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-slate-600">Request ID</p>
+                          <p className="text-lg font-bold text-slate-800">{aidHandover.request_id}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-slate-600">Items Taken Over</p>
+                          <p className="text-lg font-bold text-slate-800">{aidHandover.items_taken_over}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-slate-600">Items Returned</p>
+                          <p className="text-lg font-bold text-slate-800">{aidHandover.items_returned || "(none)"}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-slate-600">Receiver Name</p>
+                          <p className="text-lg font-bold text-slate-800">{aidHandover.receiver_name}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-slate-600">Receiver Designation</p>
+                          <p className="text-lg font-bold text-slate-800">{aidHandover.receiver_designation}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-slate-600">Receiver Date</p>
+                          <p className="text-lg font-bold text-slate-800">{aidHandover.receiver_date}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-slate-600">Handover Confirmer Name</p>
+                          <p className="text-lg font-bold text-slate-800">{aidHandover.handover_confirmer_name}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-slate-600">Handover Confirmer Designation</p>
+                          <p className="text-lg font-bold text-slate-800">{aidHandover.handover_confirmer_designation}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-slate-600">Handover Confirmer Date</p>
+                          <p className="text-lg font-bold text-slate-800">{aidHandover.handover_confirmer_date}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Navigation and Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-between items-center pt-8 border-t border-slate-200">
+                {/* Navigation buttons */}
+                <div className="flex gap-3">
+                  {currentStep > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={prevStep}
+                      className="flex items-center gap-2 px-6 py-3 border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-xl font-bold"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Back
+                    </Button>
+                  )}
+                  {currentStep < totalSteps && (
+                    <Button
+                      type="button"
+                      onClick={nextStep}
+                      className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold"
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {currentStep === totalSteps && (
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" />
+                          Submit Handover
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+
+                {/* Clear and Cancel buttons */}
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => clearAndRefresh(["aidHandoverData"])}
+                    className="flex items-center gap-2 px-6 py-3 border-2 border-red-200 hover:border-red-400 hover:bg-red-50 text-red-600 rounded-xl font-bold"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Clear Form
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => window.history.back()}
+                    className="flex items-center gap-2 px-6 py-3 border-2 border-orange-200 hover:border-orange-400 hover:bg-orange-50 text-orange-600 rounded-xl font-bold"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Cancel Request
+                  </Button>
+                </div>
               </div>
-            </div>
-          </>
-        )}
-
-        {/* Step 3: Confirmation step */}
-        {currentStep === 3 && (
-          <div className="form-step confirmation-step">
-            <p
-              className="page-description-type2"
-              style={{ fontWeight: "bold", textAlign: "center" }}
-            >
-              Step 3: Confirm your details and submit
-            </p>
-
-            <div className="review-grid-1">
-              <p>
-                <strong>Request ID:</strong> {aidHandover.request_id}
-              </p>
-              <p>
-                <strong>Items Taken Over:</strong>{" "}
-                {aidHandover.items_taken_over}
-              </p>
-              <p>
-                <strong>Items Returned:</strong>{" "}
-                {aidHandover.items_returned || "(none)"}
-              </p>
-              <p>
-                <strong>Receiver Name:</strong> {aidHandover.receiver_name}
-              </p>
-              <p>
-                <strong>Receiver Designation:</strong>{" "}
-                {aidHandover.receiver_designation}
-              </p>
-              <p>
-                <strong>Receiver Date:</strong> {aidHandover.receiver_date}
-              </p>
-              <p>
-                <strong>Handover Confirmer Name:</strong>{" "}
-                {aidHandover.handover_confirmer_name}
-              </p>
-              <p>
-                <strong>Handover Confirmer Designation:</strong>{" "}
-                {aidHandover.handover_confirmer_designation}
-              </p>
-              <p>
-                <strong>Handover Confirmer Date:</strong>{" "}
-                {aidHandover.handover_confirmer_date}
-              </p>
-            </div>
-          </div>
-        )}
-
-        <div className="form-buttons-sticky">
-          {/* Navigation buttons */}
-          <div className="navigation-buttons">
-            {currentStep > 1 && (
-              <button type="button" onClick={prevStep}>
-                Back
-              </button>
-            )}
-            {currentStep < totalSteps && (
-              <button type="button" onClick={nextStep}>
-                Next
-              </button>
-            )}
-            {currentStep === totalSteps && (
-              <button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit Handover"}
-              </button>
-            )}
-          </div>
-
-          {/* Clear and Refresh button */}
-          <div className="button-section-aid_req">
-            <button
-              type="button"
-              className="clsrform"
-              onClick={() => clearAndRefresh(["aidHandoverData"])}
-            >
-              Clear Handover Form
-            </button>
-          </div>
-        </div>
-      </form>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </>
   );
 };
