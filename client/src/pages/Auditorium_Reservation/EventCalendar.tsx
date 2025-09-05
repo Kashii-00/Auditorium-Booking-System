@@ -278,7 +278,7 @@ function EventCalendarFullInner({
           } else {
             const currentPath = window.location.pathname
             if (!currentPath.includes("/bookings")) {
-              window.location.href = "/bookings"
+              window.location.href = "/erp/bookings"
             }
           }
         }

@@ -26,6 +26,7 @@ interface CalendarModalProps {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { SecureDisplay } from "../SecureForm"
 import { 
   Calendar, 
   CalendarDays, 
@@ -57,21 +58,21 @@ const CalendarModal = memo<CalendarModalProps>(({
   onQuickBookClick,
   isMobile
 }) => {
-  const [hoveredCalendarEvent, setHoveredCalendarEvent] = useState(null)
+  const [hoveredCalendarEvent, setHoveredCalendarEvent] = useState<Event | null>(null)
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 })
 
   // Generate time slots for day view
   const timeSlots = useMemo(() => generateTimeSlots(), [])
 
   const getEventsForDate = useCallback(
-    (date) => {
+    (date: number) => {
       const dateStr = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, "0")}-${date.toString().padStart(2, "0")}`
       return events.filter((event) => event.booking_date === dateStr)
     },
     [events, currentDate],
   )
 
-  const navigateMonth = useCallback((direction) => {
+  const navigateMonth = useCallback((direction: "prev" | "next") => {
     const newDate = new Date(currentDate)
     if (direction === "prev") {
       newDate.setMonth(currentDate.getMonth() - 1)
@@ -81,7 +82,7 @@ const CalendarModal = memo<CalendarModalProps>(({
     onDateChange(newDate)
   }, [currentDate, onDateChange])
 
-  const navigateDay = useCallback((direction) => {
+  const navigateDay = useCallback((direction: "prev" | "next") => {
     const newDate = new Date(currentDate)
     if (direction === "prev") {
       newDate.setDate(currentDate.getDate() - 1)
@@ -118,7 +119,7 @@ const CalendarModal = memo<CalendarModalProps>(({
   }, [currentDate, calendarViewMode])
 
   const getNavigationFunction = useCallback(
-    (direction) => {
+    (direction: "prev" | "next") => {
       switch (calendarViewMode) {
         case "month":
           return () => navigateMonth(direction)
@@ -131,12 +132,12 @@ const CalendarModal = memo<CalendarModalProps>(({
     [calendarViewMode, navigateMonth, navigateDay],
   )
 
-  const handleCalendarEventHover = useCallback((event, mouseEvent) => {
+  const handleCalendarEventHover = useCallback((event: Event, mouseEvent: React.MouseEvent) => {
     setHoveredCalendarEvent(event)
     setPopupPosition({ x: mouseEvent.clientX + 20, y: mouseEvent.clientY - 10 })
   }, [])
 
-  const handleCalendarEventMouseMove = useCallback((event, mouseEvent) => {
+  const handleCalendarEventMouseMove = useCallback((event: Event, mouseEvent: React.MouseEvent) => {
     if (hoveredCalendarEvent?.id === event.id) {
       setPopupPosition({ x: mouseEvent.clientX + 20, y: mouseEvent.clientY - 10 })
     }
@@ -146,12 +147,12 @@ const CalendarModal = memo<CalendarModalProps>(({
     setHoveredCalendarEvent(null)
   }, [])
 
-  const handleCalendarEventClick = useCallback((event, mouseEvent) => {
+  const handleCalendarEventClick = useCallback((event: Event, mouseEvent: React.MouseEvent) => {
     mouseEvent.stopPropagation()
     console.log("Calendar event clicked:", event.id)
   }, [])
 
-  const handleQuickBook = useCallback((date) => {
+  const handleQuickBook = useCallback((date: number) => {
     const dateObj = new Date(currentDate.getFullYear(), currentDate.getMonth(), date)
     onQuickBookClick(dateObj)
   }, [currentDate, onQuickBookClick])
@@ -406,17 +407,18 @@ const CalendarModal = memo<CalendarModalProps>(({
       {/* Event Tooltip */}
       {hoveredCalendarEvent && (
         <div
-          className="fixed z-50 pointer-events-none animate-in fade-in-0 duration-200"
+          className="fixed z-50 pointer-events-none animate-in fade-in-0 duration-200 -translate-x-1/2 -translate-y-full"
           style={{
             left: `${popupPosition.x}px`,
             top: `${popupPosition.y}px`,
-            transform: "translate(-50%, -100%)",
           }}
         >
           <div className="bg-white/98 backdrop-blur-xl shadow-2xl rounded-2xl p-5 border border-white/40 max-w-xs">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-black text-slate-900 text-base">{hoveredCalendarEvent.description}</h3>
+                <h3 className="font-black text-slate-900 text-base">
+                  <SecureDisplay content={hoveredCalendarEvent.description} />
+                </h3>
                 <Badge className={`${getStatusColor(hoveredCalendarEvent.status)} text-xs font-black`}>
                   {getStatusLabel(hoveredCalendarEvent.status)}
                 </Badge>

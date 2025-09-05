@@ -261,42 +261,6 @@ router.post("/", (req, res) => {
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                       `;
 
-                      // db.query(
-                      //   insertQuery,
-                      //   [
-                      //     payment_main_details_id,
-                      //     profitPercent,
-                      //     profitAmount,
-                      //     inflationPercent,
-                      //     inflationAmount,
-                      //     total_cost_expense,
-                      //     nbtAmount,
-                      //     nbtPercent,
-                      //     vatAmount,
-                      //     vatPercent,
-                      //     total_course_cost,
-                      //     participants,
-                      //     course_fee_per_head,
-                      //     roundedCourseFeePerHead,
-                      //     roundedCourseTotal,
-                      //     user.name || null,
-                      //     user.id,
-                      //     check_by || null,
-                      //     user.id,
-                      //   ],
-                      //   (err, result) => {
-                      //     if (err)
-                      //       return res
-                      //         .status(500)
-                      //         .json({ error: "Insert failed" });
-
-                      //     return res.status(201).json({
-                      //       message:
-                      //         "Course cost summary created (previous records deleted)",
-                      //       id: result.insertId,
-                      //     });
-                      //   }
-                      // );
                       db.query(
                         insertQuery,
                         [
@@ -326,7 +290,7 @@ router.post("/", (req, res) => {
                               .status(500)
                               .json({ error: "Insert failed" });
 
-                            // Update course fee in courses table
+                          // Update course fee in courses table
                           const updateCourseFeeQuery = `
                             UPDATE courses c
                             JOIN payments_main_details pmd ON c.id = pmd.course_id
@@ -334,40 +298,49 @@ router.post("/", (req, res) => {
                             WHERE pmd.id = ?
                           `;
 
-                          db.query(updateCourseFeeQuery, [roundedCourseFeePerHead, payment_main_details_id], (updateErr) => {
-                            if (updateErr) {
-                              console.error("Failed to update course fee:", updateErr);
-                              // Don't fail the entire operation, just log the error
-                            } else {
-                              console.log(`✅ Updated course fee to ${roundedCourseFeePerHead} for payment_main_details_id: ${payment_main_details_id}`);
-                            }
+                          db.query(
+                            updateCourseFeeQuery,
+                            [roundedCourseFeePerHead, payment_main_details_id],
+                            (updateErr) => {
+                              if (updateErr) {
+                                console.error(
+                                  "Failed to update course fee:",
+                                  updateErr
+                                );
+                                // Don't fail the entire operation, just log the error
+                              } else {
+                                console.log(
+                                  `✅ Updated course fee to ${roundedCourseFeePerHead} for payment_main_details_id: ${payment_main_details_id}`
+                                );
+                              }
 
-                            // Call resetApprovalFields here
-                            resetApprovalFields(
-                              payment_main_details_id,
-                              user.id,
-                              (resetErr) => {
-                                if (resetErr) {
-                                  console.error(
-                                    "Failed to reset approval fields:",
-                                    resetErr
-                                  );
-                                  return res.status(500).json({
-                                    error:
-                                      "Insert succeeded but failed to reset approval fields",
+                              // Call resetApprovalFields here
+                              resetApprovalFields(
+                                payment_main_details_id,
+                                user.id,
+                                (resetErr) => {
+                                  if (resetErr) {
+                                    console.error(
+                                      "Failed to reset approval fields:",
+                                      resetErr
+                                    );
+                                    return res.status(500).json({
+                                      error:
+                                        "Insert succeeded but failed to reset approval fields",
+                                    });
+                                  }
+
+                                  // Send success response only after resetApprovalFields completes
+                                  res.status(201).json({
+                                    message:
+                                      "Course cost summary created and course fee updated (previous records deleted)",
+                                    id: result.insertId,
+                                    updatedCourseFee: roundedCourseFeePerHead,
                                   });
                                 }
-
-                                // Send success response only after resetApprovalFields completes
-                                res.status(201).json({
-                                  message:
-                                    "Course cost summary created and course fee updated (previous records deleted)",
-                                  id: result.insertId,
-                                  updatedCourseFee: roundedCourseFeePerHead,
-                                });
-                              }
-                            );
-                          });
+                              );
+                            }
+                          );
                         }
                       );
                     }
@@ -411,28 +384,73 @@ router.get("/:payment_main_details_id", (req, res) => {
   });
 });
 
+// // GET endpoint to fetch Rounded_CFPH by payment_main_details_id
+// router.get("/rounded-cfph/:payment_main_details_id", (req, res) => {
+//   const { payment_main_details_id } = req.params;
+//   const user = req.user;
+//   const privileged = isPrivileged(user);
+
+//   const query = `
+//     SELECT pmd.user_id, ccs.Rounded_CFPH, ccs.course_fee_per_head, ccs.total_course_cost, ccs.no_of_participants
+//     FROM course_cost_summary ccs
+//     LEFT JOIN payments_main_details pmd ON ccs.payment_main_details_id = pmd.id
+//     WHERE ccs.payment_main_details_id = ?
+//     ORDER BY ccs.created_at DESC
+//     LIMIT 1
+//   `;
+
+//   db.query(query, [payment_main_details_id], (err, results) => {
+//     if (err) return res.status(500).json({ error: "DB error" });
+//     if (results.length === 0)
+//       return res
+//         .status(404)
+//         .json({ error: "Course cost summary not found for this payment ID" });
+
+//     const row = results[0];
+//     if (!privileged && row.user_id !== user.id) {
+//       return res.status(403).json({ error: "Forbidden" });
+//     }
+
+//     res.json({
+//       Rounded_CFPH: row.Rounded_CFPH,
+//       course_fee_per_head: row.course_fee_per_head,
+//       total_course_cost: row.total_course_cost,
+//       no_of_participants: row.no_of_participants,
+//     });
+//   });
+// });
+
 // GET endpoint to fetch Rounded_CFPH by payment_main_details_id
 router.get("/rounded-cfph/:payment_main_details_id", (req, res) => {
   const { payment_main_details_id } = req.params;
-  const user = req.user;
-  const privileged = isPrivileged(user);
+  const user = req.user; // could be undefined if auth middleware missing
+  const privileged = user ? isPrivileged(user) : false;
 
   const query = `
     SELECT pmd.user_id, ccs.Rounded_CFPH, ccs.course_fee_per_head, ccs.total_course_cost, ccs.no_of_participants
     FROM course_cost_summary ccs
-    JOIN payments_main_details pmd ON ccs.payment_main_details_id = pmd.id
+    LEFT JOIN payments_main_details pmd ON ccs.payment_main_details_id = pmd.id
     WHERE ccs.payment_main_details_id = ?
     ORDER BY ccs.created_at DESC
     LIMIT 1
   `;
 
   db.query(query, [payment_main_details_id], (err, results) => {
-    if (err) return res.status(500).json({ error: "DB error" });
-    if (results.length === 0)
-      return res.status(404).json({ error: "Course cost summary not found for this payment ID" });
+    if (err) {
+      console.error("DB error:", err);
+      return res.status(500).json({ error: "DB error" });
+    }
+
+    if (results.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "Course cost summary not found for this payment ID" });
+    }
 
     const row = results[0];
-    if (!privileged && row.user_id !== user.id) {
+
+    // Only enforce auth if user info exists and row has a user_id
+    if (user && !privileged && row.user_id && row.user_id !== user.id) {
       return res.status(403).json({ error: "Forbidden" });
     }
 
@@ -440,7 +458,7 @@ router.get("/rounded-cfph/:payment_main_details_id", (req, res) => {
       Rounded_CFPH: row.Rounded_CFPH,
       course_fee_per_head: row.course_fee_per_head,
       total_course_cost: row.total_course_cost,
-      no_of_participants: row.no_of_participants
+      no_of_participants: row.no_of_participants,
     });
   });
 });
@@ -689,57 +707,6 @@ router.patch("/:id/refresh", (req, res) => {
     );
   });
 });
-
-// router.delete("/:id", (req, res) => {
-//   const { id } = req.params;
-
-//   db.query(
-//     `
-//     SELECT ccs.payment_main_details_id, pmd.user_id
-//     FROM course_cost_summary ccs
-//     JOIN payments_main_details pmd ON ccs.payment_main_details_id = pmd.id
-//     WHERE ccs.id = ?
-//   `,
-//     [id],
-//     (err, rows) => {
-//       if (err) return res.status(500).json({ error: "DB error" });
-//       if (rows.length === 0)
-//         return res.status(404).json({ error: "Not found" });
-
-//       const { payment_main_details_id } = rows[0];
-//       const isOwner = req.user.id === rows[0].user_id;
-//       const privileged = isPrivileged(req.user);
-
-//       if (!isOwner && !privileged) {
-//         return res
-//           .status(403)
-//           .json({ error: "Forbidden: Not allowed to delete." });
-//       }
-
-//       // Step 1: Delete from course_cost_summary
-//       db.query(`DELETE FROM course_cost_summary WHERE id = ?`, [id], (err2) => {
-//         if (err2) return res.status(500).json({ error: "Delete failed" });
-
-//         // Step 2: Delete from course_revenue_summary
-//         db.query(
-//           `DELETE FROM course_revenue_summary WHERE payments_main_details_id = ?`,
-//           [payment_main_details_id],
-//           (err3) => {
-//             if (err3) {
-//               console.error("Revenue summary deletion failed:", err3);
-//               return res.status(500).json({
-//                 error:
-//                   "Cost summary deleted, but revenue summary deletion failed.",
-//               });
-//             }
-
-//             res.json({ message: "Deleted both cost and revenue summary." });
-//           }
-//         );
-//       });
-//     }
-//   );
-// });
 
 // DELETE endpoint
 router.delete("/:id", (req, res) => {

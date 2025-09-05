@@ -356,7 +356,7 @@ const Sidebar = ({ user, onLogout }) => {
   // Inactivity logout callback
   const handleInactivityLogout = useCallback(() => {
     onLogout()
-    window.location.href = "/login" // Redirect to login page
+            window.location.href = "/erp/login" // Redirect to login page
     alert("You have been logged out due to inactivity")
   }, [onLogout])
 

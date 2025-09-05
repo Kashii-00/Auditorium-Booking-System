@@ -85,7 +85,13 @@ const FIELD_PERMISSIONS = {
     "no_of_participants",
     "duration",
   ],
-  user: ["course_id", "course_name", "special_justifications", "no_of_participants", "duration"],
+  user: [
+    "course_id",
+    "course_name",
+    "special_justifications",
+    "no_of_participants",
+    "duration",
+  ],
   CTM: [
     "CTM_approved",
     "CTM_details",
@@ -192,11 +198,13 @@ function getAllowedFieldsForRole(roles, isOwner = false) {
 
 // Joi validation schemas
 const paymentSchema = Joi.object({
-  course_id: Joi.alternatives().try(
-    Joi.number().integer().positive(),
-    Joi.string().allow("", null),
-    Joi.valid(null)
-  ).optional(),
+  course_id: Joi.alternatives()
+    .try(
+      Joi.number().integer().positive(),
+      Joi.string().allow("", null),
+      Joi.valid(null)
+    )
+    .optional(),
   // batch_id: Joi.number().required(),
   course_name: Joi.string().required(),
   no_of_participants: Joi.number().optional(),
@@ -219,11 +227,13 @@ const paymentSchema = Joi.object({
 });
 
 const patchSchema = Joi.object({
-  course_id: Joi.alternatives().try(
-    Joi.number().integer().positive(),
-    Joi.string().allow("", null),
-    Joi.valid(null)
-  ).optional(),
+  course_id: Joi.alternatives()
+    .try(
+      Joi.number().integer().positive(),
+      Joi.string().allow("", null),
+      Joi.valid(null)
+    )
+    .optional(),
   course_name: Joi.string().optional(),
   customer_type: Joi.string().optional(),
   stream: Joi.string().optional(),

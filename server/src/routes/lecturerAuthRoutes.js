@@ -14,14 +14,14 @@ const generateTokens = (lecturer) => {
   // Access token - short lived (15 minutes)
   const accessToken = jwt.sign(
     { id: lecturer.id, email: lecturer.email, role: 'lecturer' },
-    process.env.JWT_SECRET || 'your-secret-key',
+    process.env.JWT_SECRET,
     { expiresIn: '15m' }
   );
   
   // Refresh token - longer lived (7 days)
   const refreshToken = jwt.sign(
     { id: lecturer.id, tokenVersion: lecturer.tokenVersion || 0 },
-    process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key',
+    process.env.JWT_REFRESH_SECRET,
     { expiresIn: '7d' }
   );
   
@@ -47,7 +47,7 @@ const lecturerAuthMiddleware = (req, res, next) => {
   try {
     const decoded = jwt.verify(
       token, 
-      process.env.JWT_SECRET || 'your-secret-key'
+      process.env.JWT_SECRET
     );
     
     // Check for lecturerId instead of role
@@ -108,13 +108,13 @@ router.post('/login', async (req, res) => {
     // Generate tokens with role included
     const token = jwt.sign(
       { lecturerId: user.lecturer_id, lecturerUserId: user.id, email: user.email, role: 'lecturer' },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
     
     const refreshToken = jwt.sign(
       { lecturerId: user.lecturer_id, email: user.email, role: 'lecturer' },
-      process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret-key',
+      process.env.JWT_REFRESH_SECRET,
       { expiresIn: '7d' }
     );
     
@@ -208,7 +208,7 @@ router.post('/refresh-token', async (req, res) => {
     // Verify the refresh token
     const decoded = jwt.verify(
       refreshToken, 
-      process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret-key'
+      process.env.JWT_REFRESH_SECRET
     );
     
     // Check if the lecturer exists and is active
@@ -226,7 +226,7 @@ router.post('/refresh-token', async (req, res) => {
     // Create a new access token
     const newToken = jwt.sign(
       { lecturerId: decoded.lecturerId, lecturerUserId: users[0].id, email: decoded.email, role: 'lecturer' },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
     

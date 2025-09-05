@@ -57,6 +57,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import SafeStyleSheet from "../../components/SafeStyleSheet"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -64,6 +65,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { SecureDisplay } from "../../components/SecureForm"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 
@@ -596,26 +598,7 @@ export default function StudentManagementSystem() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
-  // Add performance CSS to document head - Optimized
-  useLayoutEffect(() => {
-    const style = document.createElement("style")
-    style.innerHTML = PERFORMANCE_CSS
-    style.id = "student-management-performance-css"
-
-    // Remove existing style if present
-    const existingStyle = document.getElementById("student-management-performance-css")
-    if (existingStyle) {
-      document.head.removeChild(existingStyle)
-    }
-
-    document.head.appendChild(style)
-    return () => {
-      const styleToRemove = document.getElementById("student-management-performance-css")
-      if (styleToRemove) {
-        document.head.removeChild(styleToRemove)
-      }
-    }
-  }, [])
+  // Performance CSS is now handled by SafeStyleSheet component
 
 
 
@@ -719,6 +702,13 @@ export default function StudentManagementSystem() {
   })
 
   const [errors, setErrors] = useState({})
+
+  // Keep track of existing document paths for editing
+  const [existingDocuments, setExistingDocuments] = useState({
+    nic_document_path: null,
+    passport_document_path: null,
+    photo_path: null
+  })
 
   // Handle URL parameters for editing
   useEffect(() => {
@@ -931,6 +921,11 @@ export default function StudentManagementSystem() {
     setCurrentStep(0)
     setEditingStudent(null)
     setErrors({})
+    setExistingDocuments({
+      nic_document_path: null,
+      passport_document_path: null,
+      photo_path: null
+    })
     setCurrentView("dashboard")
     // Clear URL parameters
     navigate("/student-registration", { replace: true })
@@ -1005,6 +1000,13 @@ export default function StudentManagementSystem() {
             issue_date: "",
             };
           })(),
+        })
+
+        // Save existing document paths
+        setExistingDocuments({
+          nic_document_path: student.nic_document_path,
+          passport_document_path: student.passport_document_path,
+          photo_path: student.photo_path
         })
 
         setEditingStudent(studentId)
@@ -2625,7 +2627,7 @@ export default function StudentManagementSystem() {
                     errors.full_name ? "border-red-500" : "border-slate-200",
                   )}
                 />
-                {errors.full_name && <div className="text-sm text-red-500 font-semibold">{errors.full_name}</div>}
+                {errors.full_name && <div className="text-sm text-red-500 font-semibold"><SecureDisplay content={errors.full_name} /></div>}
               </div>
             )
           }
@@ -3170,10 +3172,18 @@ export default function StudentManagementSystem() {
               <div key={field} className="space-y-2">
                 <Label htmlFor="nic_document" className="flex items-center gap-2 text-sm font-bold text-slate-700">
                   <Upload className="w-4 h-4 text-blue-600" />
-                  NIC Document - Optional
+                  NIC Document {existingDocuments.nic_document_path ? '(Already Uploaded)' : '- Optional'}
                 </Label>
+                {existingDocuments.nic_document_path && (
+                  <div className="existing-document bg-green-50 border border-green-200 rounded-lg p-1 mb-2">
+                    <div className="flex items-center gap-2 text-green-800">
+                      <Upload className="w-4 h-4" />
+                      <span className="font-medium">Current document: {existingDocuments.nic_document_path.split('/').pop()}</span>
+                    </div>
+                  </div>
+                )}
                 <div className="text-xs text-slate-500 mb-2">
-                  You can upload this later if needed
+                  {existingDocuments.nic_document_path ? 'Upload a new file to replace the existing one' : 'You can upload this later if needed'}
                 </div>
                 <Input
                   type="file"
@@ -3201,10 +3211,18 @@ export default function StudentManagementSystem() {
               <div key={field} className="space-y-2">
                 <Label htmlFor="passport_document" className="flex items-center gap-2 text-sm font-bold text-slate-700">
                   <Upload className="w-4 h-4 text-blue-600" />
-                  Passport Document - Optional
+                  Passport Document {existingDocuments.passport_document_path ? '(Already Uploaded)' : '- Optional'}
                 </Label>
+                {existingDocuments.passport_document_path && (
+                  <div className="existing-document bg-green-50 border border-green-200 rounded-lg p-3 mb-2">
+                    <div className="flex items-center gap-2 text-green-800">
+                      <Upload className="w-4 h-4" />
+                      <span className="font-medium">Current document: {existingDocuments.passport_document_path.split('/').pop()}</span>
+                    </div>
+                  </div>
+                )}
                 <div className="text-xs text-slate-500 mb-2">
-                  You can upload this later if needed
+                  {existingDocuments.passport_document_path ? 'Upload a new file to replace the existing one' : 'You can upload this later if needed'}
                 </div>
                 <Input
                   type="file"
@@ -3234,10 +3252,18 @@ export default function StudentManagementSystem() {
               <div key={field} className="space-y-2">
                 <Label htmlFor="photo" className="flex items-center gap-2 text-sm font-bold text-slate-700">
                   <Upload className="w-4 h-4 text-blue-600" />
-                  Photo (Passport Size) - Optional
+                  Photo (Passport Size) {existingDocuments.photo_path ? '(Already Uploaded)' : '- Optional'}
                 </Label>
+                {existingDocuments.photo_path && (
+                  <div className="existing-document bg-green-50 border border-green-200 rounded-lg p-3 mb-2">
+                    <div className="flex items-center gap-2 text-green-800">
+                      <Upload className="w-4 h-4" />
+                      <span className="font-medium">Current photo: {existingDocuments.photo_path.split('/').pop()}</span>
+                    </div>
+                  </div>
+                )}
                 <div className="text-xs text-slate-500 mb-2">
-                  You can upload this later if needed
+                  {existingDocuments.photo_path ? 'Upload a new photo to replace the existing one' : 'You can upload this later if needed'}
                 </div>
                 <Input
                   type="file"
@@ -3795,7 +3821,7 @@ export default function StudentManagementSystem() {
                                 <AlertDescription className="text-red-700">
                                   <div className="space-y-1">
                                     {fileValidation.errors.map((error, index) => (
-                                      <div key={index}>• {error}</div>
+                                      <div key={index}>• <SecureDisplay content={error} /></div>
                                     ))}
                                   </div>
                                 </AlertDescription>
@@ -3809,7 +3835,7 @@ export default function StudentManagementSystem() {
                                 <AlertDescription className="text-yellow-700">
                                   <div className="space-y-1">
                                     {fileValidation.warnings.map((warning, index) => (
-                                      <div key={index}>• {warning}</div>
+                                      <div key={index}>• <SecureDisplay content={warning} /></div>
                                     ))}
                                   </div>
                                 </AlertDescription>
@@ -4549,19 +4575,25 @@ export default function StudentManagementSystem() {
                             <div className="flex items-center gap-4 mb-2">
                               <div className="flex items-center gap-2">
                                 <User className="h-4 w-4 text-red-600" />
-                                <span className="font-medium text-red-800">{record.name}</span>
+                                <span className="font-medium text-red-800">
+                                  <SecureDisplay content={record.name} />
+                                </span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <Mail className="h-4 w-4 text-red-600" />
-                                <span className="text-sm text-red-700">{record.email}</span>
+                                <span className="text-sm text-red-700">
+                                  <SecureDisplay content={record.email} />
+                                </span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <CreditCard className="h-4 w-4 text-red-600" />
-                                <span className="text-sm text-red-700">{record.id_number}</span>
+                                <span className="text-sm text-red-700">
+                                  <SecureDisplay content={record.id_number} />
+                                </span>
                               </div>
                             </div>
                             <div className="text-sm text-red-600 bg-red-100 rounded px-2 py-1">
-                              <strong>Error:</strong> {record.error}
+                              <strong>Error:</strong> <SecureDisplay content={record.error} />
                             </div>
                           </div>
                           <X className="h-5 w-5 text-red-500" />
@@ -4706,7 +4738,9 @@ export default function StudentManagementSystem() {
               {errorMessage && (
                 <Alert className="mb-6 border-2 border-red-200 bg-gradient-to-r from-red-50 to-rose-50 shadow-xl">
                   <AlertTriangle className="h-5 w-5 text-red-600" />
-                  <AlertDescription className="text-red-800 font-semibold text-base">{errorMessage}</AlertDescription>
+                  <AlertDescription className="text-red-800 font-semibold text-base">
+                    <SecureDisplay content={errorMessage} />
+                  </AlertDescription>
                 </Alert>
               )}
 
@@ -4962,12 +4996,20 @@ export default function StudentManagementSystem() {
 
   return (
     <div className="min-h-screen">
+      {/* Performance CSS */}
+      <SafeStyleSheet 
+        id="student-management-performance-css"
+        css={PERFORMANCE_CSS}
+      />
+      
       {/* Enhanced Success Notification */}
       {showSuccessNotification && (
         <div className="fixed top-4 right-4 z-50 max-w-md animate-fade-in">
           <Alert className="bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 shadow-2xl backdrop-blur-xl">
             <CheckCircle className="h-5 w-5 text-emerald-600" />
-            <AlertDescription className="text-emerald-800 font-bold text-base">{notificationMessage}</AlertDescription>
+            <AlertDescription className="text-emerald-800 font-bold text-base">
+              <SecureDisplay content={notificationMessage} />
+            </AlertDescription>
           </Alert>
         </div>
       )}

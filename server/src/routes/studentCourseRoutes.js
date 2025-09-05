@@ -6,39 +6,11 @@ const path = require('path');
 const fs = require('fs').promises;
 const logger = require('../logger');
 const { studentAuthMiddleware } = require('./studentAuthRoutes');
+const { createSecureUpload } = require('../middleware/secureMulterFactory');
+const { uploadRateLimiters } = require('../middleware/uploadRateLimit');
 
-// Configure multer for assignment submissions
-const storage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    const uploadPath = path.join(__dirname, '../uploads/submissions');
-    try {
-      await fs.mkdir(uploadPath, { recursive: true });
-      cb(null, uploadPath);
-    } catch (error) {
-      cb(error);
-    }
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ 
-  storage: storage,
-  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB limit
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|ppt|pptx|xls|xlsx|zip|txt/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Invalid file type'));
-    }
-  }
-});
+// SECURITY: Create secure upload configuration for assignment submissions
+const { uploadWithValidation } = createSecureUpload('assignments', 'student');
 
 /**
  * Get student's enrolled courses with progress
@@ -278,7 +250,11 @@ router.get('/assignments/:assignmentId', studentAuthMiddleware, async (req, res)
 /**
  * Submit assignment
  */
-router.post('/assignments/:assignmentId/submit', studentAuthMiddleware, upload.single('submission'), async (req, res) => {
+router.post('/assignments/:assignmentId/submit', 
+  uploadRateLimiters.general,
+  studentAuthMiddleware, 
+  uploadWithValidation('submission'), 
+  async (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] POST /api/student-courses/assignments/:assignmentId/submit`);
   console.log('POST body:', req.body);
@@ -702,7 +678,11 @@ router.get('/submissions', studentAuthMiddleware, async (req, res) => {
 /**
  * Submit assignment (batch context)
  */
-router.post('/submissions', studentAuthMiddleware, upload.single('submission'), async (req, res) => {
+router.post('/submissions', 
+  uploadRateLimiters.general,
+  studentAuthMiddleware, 
+  uploadWithValidation('submission'), 
+  async (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] POST /api/student-courses/submissions`);
   console.log('POST body:', req.body);

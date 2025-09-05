@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { authRequest } from "../../services/authService";
 import "./styles/styles2.css";
-import { getApiUrl } from '../../utils/apiUrl';
+import { getApiUrl } from "../../utils/apiUrl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -173,11 +173,7 @@ const CourseCostForm = () => {
           ? +formData.no_of_participants
           : null,
       };
-      const res = await authRequest(
-        "post",
-        getApiUrl("/payments"),
-        payload
-      );
+      const res = await authRequest("post", getApiUrl("/payments"), payload);
       setSuccessMessage(`Record created with ID: ${res.id}`);
       localStorage.setItem("mainCourseCostId", res.id);
       setStoredCourseCostId(res.id);
@@ -212,7 +208,9 @@ const CourseCostForm = () => {
         </div>
         <div>
           <p className="font-black text-lg">{message}</p>
-          <p className="text-emerald-100 text-sm">Your course cost details have been saved successfully</p>
+          <p className="text-emerald-100 text-sm">
+            Your course cost details have been saved successfully
+          </p>
         </div>
       </div>
     </div>
@@ -221,7 +219,7 @@ const CourseCostForm = () => {
   return (
     <>
       {successMessage && <SuccessPopup message={successMessage} />}
-      
+
       <div className="w-full max-w-9xl mx-auto">
         <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur-xl">
           <CardHeader className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">
@@ -235,7 +233,7 @@ const CourseCostForm = () => {
                   Complete course cost calculation and payment processing
                 </p>
               </div>
-              
+
               {/* Saved Course Cost ID Display */}
               {storedCourseCostId && (
                 <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg mt-5 px-5 py-3">
@@ -298,8 +296,8 @@ const CourseCostForm = () => {
                       variant={step === num ? "default" : "outline"}
                       onClick={() => setStep(num)}
                       className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
-                        step === num 
-                          ? "bg-blue-600 text-white shadow-lg" 
+                        step === num
+                          ? "bg-blue-600 text-white shadow-lg"
                           : "border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50"
                       }`}
                     >
@@ -396,8 +394,6 @@ const CourseCostForm = () => {
                 />
               )}
             </div>
-
-
           </CardContent>
         </Card>
       </div>
@@ -406,3 +402,295 @@ const CourseCostForm = () => {
 };
 
 export default CourseCostForm;
+
+// import React, { useEffect, useState, useRef } from "react";
+// import { useLocation } from "react-router-dom";
+// import { authRequest } from "../../services/authService";
+// import { getApiUrl } from "../../utils/apiUrl";
+// import MainCourseCostSection from "./MainCourseCostSection";
+// import CourseDevelopmentWorkForm from "./CourseDevelopmentWorkForm";
+// import CourseDeliveryCostForm from "./CourseDeliveryCostForm";
+// import CourseOverheadsForm from "./CourseOverheadsForm";
+// import CourseCostSummaryForm from "./CourseCostSummaryForm";
+// import SpecialCasePaymentsForm from "./SpecialCasePaymentsForm";
+// import PayHerePaymentForm from "./PayHerePaymentForm";
+
+// const defaultForm = {
+//   course_name: "",
+//   no_of_participants: "",
+//   duration: "",
+//   customer_type: "",
+//   stream: "",
+//   CTM_approved: "Pending",
+//   CTM_details: "",
+//   special_justifications: "",
+//   date: "",
+//   accountant_approval_obtained: "Pending",
+//   accountant_details: "",
+//   sectional_approval_obtained: "Pending",
+//   section_type: "",
+//   sectional_details: "",
+//   DCTM01_approval_obtained: "Pending",
+//   DCTM01_details: "",
+//   DCTM02_approval_obtained: "Pending",
+//   DCTM02_details: "",
+// };
+
+// const CourseCostForm = () => {
+//   const location = useLocation();
+//   const [sidebarCollapsed, setSidebarCollapsed] = useState(
+//     () => location.state?.sidebarState ?? false
+//   );
+//   const [formData, setFormData] = useState(() => {
+//     const saved = localStorage.getItem("draftMainCourseForm");
+//     return saved ? JSON.parse(saved) : defaultForm;
+//   });
+//   const [focused, setFocused] = useState({});
+//   const [reviewMode, setReviewMode] = useState(false);
+//   const [successMessage, setSuccessMessage] = useState("");
+//   const [error, setError] = useState("");
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+
+//   const successTimeoutRef = useRef(null);
+//   const errorTimeoutRef = useRef(null);
+
+//   const [step, setStep] = useState(1);
+//   const stepLabels = [
+//     "Main Course Cost",
+//     "Development Work",
+//     "Delivery Cost",
+//     "Overheads",
+//     "Special Payment Request",
+//     "Cost Summary",
+//     "Student Payment",
+//   ];
+
+//   const [storedCourseCostId, setStoredCourseCostId] = useState(
+//     () => localStorage.getItem("mainCourseCostId") || ""
+//   );
+
+//   // Sync step from location state
+//   useEffect(() => {
+//     if (location.state?.step) setStep(location.state.step);
+//   }, [location.state]);
+
+//   // Success/Error message timers
+//   useEffect(() => {
+//     if (successMessage) {
+//       clearTimeout(successTimeoutRef.current);
+//       successTimeoutRef.current = setTimeout(() => setSuccessMessage(""), 5000);
+//     }
+//   }, [successMessage]);
+
+//   useEffect(() => {
+//     if (error) {
+//       clearTimeout(errorTimeoutRef.current);
+//       errorTimeoutRef.current = setTimeout(() => setError(""), 5000);
+//     }
+//   }, [error]);
+
+//   const validateForm = () => {
+//     if (!formData.course_name) return "Course name is required.";
+//     return null;
+//   };
+
+//   const handleSubmit = async () => {
+//     const err = validateForm();
+//     if (err) return setError(err);
+
+//     setIsSubmitting(true);
+//     try {
+//       const payload = {
+//         ...formData,
+//         no_of_participants: formData.no_of_participants
+//           ? +formData.no_of_participants
+//           : null,
+//       };
+//       const res = await authRequest("post", getApiUrl("/payments"), payload);
+//       setSuccessMessage(`Record created with ID: ${res.id}`);
+//       localStorage.setItem("mainCourseCostId", res.id);
+//       setStoredCourseCostId(res.id);
+//       handleClear();
+//     } catch (err) {
+//       setError(err.response?.data?.error ?? "Submission failed.");
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
+
+//   const handleClear = () => {
+//     localStorage.removeItem("draftMainCourseForm");
+//     setFormData(defaultForm);
+//     setReviewMode(false);
+//     setError("");
+//   };
+
+//   const copyToClipboard = (id) => {
+//     navigator.clipboard.writeText(id.toString()).then(() => {
+//       setSuccessMessage(`Copied ID: ${id}`);
+//       setTimeout(() => setSuccessMessage(""), 3000);
+//     });
+//   };
+
+//   return (
+//     <div
+//       className={`min-h-screen p-6 transition-all ${
+//         sidebarCollapsed ? "ml-64" : "ml-0"
+//       } bg-gray-50`}
+//     >
+//       {/* Success/Error Alerts */}
+//       {successMessage && (
+//         <div className="mb-4 px-4 py-2 bg-green-100 text-green-800 rounded shadow">
+//           {successMessage}
+//         </div>
+//       )}
+//       {error && (
+//         <div className="mb-4 px-4 py-2 bg-red-100 text-red-800 rounded shadow">
+//           {error}
+//         </div>
+//       )}
+
+//       {/* Header */}
+//       <div className="mb-6 p-6 bg-white rounded-xl shadow-lg border border-gray-200">
+//         <h1 className="text-3xl font-bold text-gray-800 text-center">
+//           Course Cost Calculation Form
+//         </h1>
+//       </div>
+
+//       <div className="mt-8 flex flex-col lg:flex-row gap-8">
+//         {/* Dynamic Step Rendering */}
+//         <div className="flex-1 space-y-6 ">
+//           {step === 1 && (
+//             <MainCourseCostSection
+//               formData={formData}
+//               setFormData={setFormData}
+//               focused={focused}
+//               setFocused={setFocused}
+//               reviewMode={reviewMode}
+//               setReviewMode={setReviewMode}
+//               isSubmitting={isSubmitting}
+//               successMessage={successMessage}
+//               error={error}
+//               handleSubmit={handleSubmit}
+//               handleClear={handleClear}
+//             />
+//           )}
+//           {step === 2 && (
+//             <CourseDevelopmentWorkForm
+//               successMessage={successMessage}
+//               setSuccessMessage={setSuccessMessage}
+//               error={error}
+//               setError={setError}
+//             />
+//           )}
+//           {step === 3 && (
+//             <CourseDeliveryCostForm
+//               successMessage={successMessage}
+//               setSuccessMessage={setSuccessMessage}
+//               error={error}
+//               setError={setError}
+//               step={step}
+//               currentStep={3}
+//               setStep={setStep}
+//             />
+//           )}
+//           {step === 4 && (
+//             <CourseOverheadsForm
+//               successMessage={successMessage}
+//               setSuccessMessage={setSuccessMessage}
+//               error={error}
+//               setError={setError}
+//               step={step}
+//               currentStep={4}
+//               setStep={setStep}
+//             />
+//           )}
+//           {step === 5 && (
+//             <SpecialCasePaymentsForm
+//               successMessage={successMessage}
+//               setSuccessMessage={setSuccessMessage}
+//               error={error}
+//               setError={setError}
+//               step={step}
+//               currentStep={5}
+//               setStep={setStep}
+//             />
+//           )}
+//           {step === 6 && (
+//             <CourseCostSummaryForm
+//               successMessage={successMessage}
+//               setSuccessMessage={setSuccessMessage}
+//               error={error}
+//               setError={setError}
+//               step={step}
+//               currentStep={6}
+//               setStep={setStep}
+//             />
+//           )}
+//           {step === 7 && (
+//             <PayHerePaymentForm
+//               successMessage={successMessage}
+//               setSuccessMessage={setSuccessMessage}
+//               error={error}
+//               setError={setError}
+//               step={step}
+//               currentStep={7}
+//               setStep={setStep}
+//             />
+//           )}
+//         </div>
+
+//         {/* Step Navigation */}
+//         <div className="w-56 flex-shrink-0 flex flex-col gap-3 py-8">
+//           {stepLabels.map((label, index) => {
+//             const num = index + 1;
+//             return (
+//               <button
+//                 key={num}
+//                 type="button"
+//                 className={`px-4 py-2 rounded-lg font-medium border transition-all duration-200 text-left shadow-sm ${
+//                   step === num
+//                     ? "bg-blue-600 text-white border-blue-600 shadow-md"
+//                     : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:shadow-md"
+//                 }`}
+//                 onClick={() => setStep(num)}
+//                 aria-current={step === num ? "step" : undefined}
+//               >
+//                 {label}
+//               </button>
+//             );
+//           })}
+//         </div>
+//       </div>
+
+//       {/* Saved Payment ID Box */}
+//       {storedCourseCostId && (
+//         <div className="mt-6 p-6 bg-white shadow-lg rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 border border-gray-200">
+//           <p className="text-gray-700 font-medium">
+//             <span className="font-bold">Saved Payments Details ID:</span>{" "}
+//             <span className="text-blue-600">{storedCourseCostId}</span>
+//           </p>
+//           <div className="flex gap-2">
+//             <button
+//               onClick={() => copyToClipboard(storedCourseCostId)}
+//               className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+//             >
+//               Copy
+//             </button>
+//             <button
+//               onClick={() => {
+//                 localStorage.removeItem("mainCourseCostId");
+//                 setStoredCourseCostId("");
+//               }}
+//               className="px-3 py-1 bg-gray-400 text-white rounded hover:bg-gray-500"
+//             >
+//               Clear
+//             </button>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default CourseCostForm;

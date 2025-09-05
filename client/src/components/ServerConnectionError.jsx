@@ -1,245 +1,152 @@
-import React, { useState, useEffect } from 'react';
-import './styles/CSS/ServerConnectionError.css';
+"use client"
+
+import { useState, useEffect } from "react"
 
 const ServerConnectionError = ({ onRetry }) => {
-  const [animationPhase, setAnimationPhase] = useState('reaching');
-  const [attemptCount, setAttemptCount] = useState(0);
+  const [connectionAttempt, setConnectionAttempt] = useState(0)
+  const [isRetrying, setIsRetrying] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
-    const animationSequence = () => {
-      // Animation sequence: reaching -> connecting -> failed -> reaching (loop)
-      setTimeout(() => setAnimationPhase('connecting'), 1500);
-      setTimeout(() => setAnimationPhase('failed'), 3000);
-      setTimeout(() => {
-        setAnimationPhase('reaching');
-        setAttemptCount(prev => prev + 1);
-      }, 4500);
-    };
+    setIsVisible(true)
 
-    const interval = setInterval(animationSequence, 6000);
-    animationSequence(); // Start immediately
+    const interval = setInterval(() => {
+      setConnectionAttempt((prev) => prev + 1)
+    }, 3000)
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(interval)
+  }, [])
+
+  const handleRetry = async () => {
+    setIsRetrying(true)
+    setTimeout(() => {
+      setIsRetrying(false)
+      if (onRetry) {
+        onRetry()
+      } else {
+        window.location.reload()
+      }
+    }, 1500)
+  }
 
   return (
-    <div className="server-error-container">
-      <div className="error-background">
-        <div className="floating-dots">
-          {[...Array(20)].map((_, i) => (
-            <div key={i} className={`dot dot-${i + 1}`}></div>
-          ))}
-        </div>
-      </div>
-      
-      <div className="error-content">
-        <div className="connection-animation">
-          <div className="connection-scene">
-            {/* Left side - Server/Device */}
-            <div className="device left-device">
-              <div className="device-body">
-                <div className="device-screen">
-                  <div className="screen-lines">
-                    <div className="line"></div>
-                    <div className="line"></div>
-                    <div className="line"></div>
-                  </div>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 transition-colors duration-1000">
+      <div
+        className={`max-w-lg w-full transform transition-all duration-1000 ease-out ${
+          isVisible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-95"
+        }`}
+      >
+        {/* Main Card */}
+        <div className="bg-card rounded-2xl shadow-2xl border border-border p-8 text-center relative overflow-hidden">
+          {/* Subtle background animation */}
+          <div className="absolute inset-0 bg-gradient-to-br from-muted/20 to-transparent animate-pulse"></div>
+
+          {/* Icon Section */}
+          <div className="relative mb-8">
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center animate-gentle-shake">
+                  <svg className="w-10 h-10 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M12 2v3m6.364.636l-2.12 2.12M21 12h-3m-.636 6.364l-2.12-2.12M12 21v-3m-6.364-.636l2.12-2.12M3 12h3m.636-6.364l2.12 2.12"
+                    />
+                  </svg>
                 </div>
-                <div className="device-base"></div>
+
+                {/* Ripple effects */}
+                <div className="absolute inset-0 border-2 border-destructive/20 rounded-full animate-ping"></div>
+                <div
+                  className="absolute inset-0 border border-destructive/10 rounded-full animate-ping"
+                  style={{ animationDelay: "0.5s" }}
+                ></div>
               </div>
-              <div className="wire-connector left-connector">
-                <div className="connector-plug"></div>
-                <div className={`wire left-wire ${animationPhase}`}></div>
+            </div>
+          </div>
+
+          {/* Content Section */}
+          <div className="relative z-10 space-y-6">
+            <div
+              className={`space-y-4 transform transition-all duration-700 delay-300 ${
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              }`}
+            >
+              <h1 className="text-3xl font-bold text-foreground">Connection Lost</h1>
+              <p className="text-muted-foreground text-lg leading-relaxed max-w-md mx-auto">
+                We're having trouble connecting to our servers. Please check your internet connection and try again.
+              </p>
+            </div>
+
+            {/* Status Indicator */}
+            <div
+              className={`transform transition-all duration-700 delay-500 ${
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              }`}
+            >
+              <div className="bg-destructive/5 border border-destructive/20 rounded-xl p-4 mx-auto max-w-xs">
+                <div className="flex items-center justify-center gap-3 text-destructive">
+                  <div className="w-2 h-2 bg-destructive rounded-full animate-pulse"></div>
+                  <span className="font-medium text-sm">Server Offline</span>
+                </div>
               </div>
             </div>
 
-            {/* Monkey Character in the middle */}
-            <div className={`monkey ${animationPhase}`}>
-              <div className="monkey-body">
-                {/* Monkey Head */}
-                <div className="monkey-head">
-                  <div className="face">
-                    <div className="face-inner">
-                      <div className="eyes">
-                        <div className="eye left-eye">
-                          <div className="eyeball">
-                            <div className="pupil"></div>
-                            <div className="light-reflection"></div>
-                          </div>
-                        </div>
-                        <div className="eye right-eye">
-                          <div className="eyeball">
-                            <div className="pupil"></div>
-                            <div className="light-reflection"></div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="nose">
-                        <div className="nostril left-nostril"></div>
-                        <div className="nostril right-nostril"></div>
-                      </div>
-                      <div className="mouth">
-                        <div className="mouth-inner"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="ears">
-                    <div className="ear left-ear">
-                      <div className="ear-inner"></div>
-                    </div>
-                    <div className="ear right-ear">
-                      <div className="ear-inner"></div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Monkey Body */}
-                <div className="monkey-torso"></div>
-                
-                {/* Monkey Arms */}
-                <div className="monkey-arms">
-                  <div className="arm left-arm">
-                    <div className="upper-arm"></div>
-                    <div className="forearm"></div>
-                    <div className="hand">
-                      <div className="fingers">
-                        <div className="finger"></div>
-                        <div className="finger"></div>
-                        <div className="finger"></div>
-                      </div>
-                      <div className="thumb"></div>
-                    </div>
-                  </div>
-                  <div className="arm right-arm">
-                    <div className="upper-arm"></div>
-                    <div className="forearm"></div>
-                    <div className="hand">
-                      <div className="fingers">
-                        <div className="finger"></div>
-                        <div className="finger"></div>
-                        <div className="finger"></div>
-                      </div>
-                      <div className="thumb"></div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Monkey Legs */}
-                <div className="monkey-legs">
-                  <div className="leg left-leg">
-                    <div className="thigh"></div>
-                    <div className="shin"></div>
-                    <div className="foot"></div>
-                  </div>
-                  <div className="leg right-leg">
-                    <div className="thigh"></div>
-                    <div className="shin"></div>
-                    <div className="foot"></div>
-                  </div>
-                </div>
-                
-                {/* Monkey Tail */}
-                <div className="monkey-tail">
-                  <div className="tail-segment tail-1"></div>
-                  <div className="tail-segment tail-2"></div>
-                  <div className="tail-segment tail-3"></div>
-                  <div className="tail-tip"></div>
-                </div>
-              </div>
-              
-              {/* Thought bubbles and expressions */}
-              {animationPhase === 'failed' && (
-                <div className="thought-bubble">
-                  <div className="bubble">
-                    <span>🙈</span>
-                  </div>
-                  <div className="bubble-trail">
-                    <div className="small-bubble"></div>
-                    <div className="smaller-bubble"></div>
-                  </div>
-                </div>
-              )}
-              
-              {animationPhase === 'connecting' && (
-                <div className="excitement-effects">
-                  <div className="sweat-drop"></div>
-                  <div className="focus-lines">
-                    <div className="focus-line"></div>
-                    <div className="focus-line"></div>
-                    <div className="focus-line"></div>
-                  </div>
-                </div>
-              )}
-            </div>
 
-            {/* Right side - Client/Computer */}
-            <div className="device right-device">
-              <div className="device-body">
-                <div className="device-screen">
-                  <div className="screen-lines">
-                    <div className="line"></div>
-                    <div className="line"></div>
-                    <div className="line"></div>
-                  </div>
-                </div>
-                <div className="device-base"></div>
-              </div>
-              <div className="wire-connector right-connector">
-                <div className="connector-plug"></div>
-                <div className={`wire right-wire ${animationPhase}`}></div>
-              </div>
-            </div>
-
-            {/* Connection sparks */}
-            {animationPhase === 'connecting' && (
-              <div className="sparks">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className={`spark spark-${i + 1}`}></div>
-                ))}
-              </div>
-            )}
-
-            {/* Connection status indicator */}
-            <div className={`connection-status ${animationPhase}`}>
-              <div className="status-light"></div>
+            {/* Additional Info */}
+            <div
+              className={`text-sm text-muted-foreground space-y-1 pt-6 border-t border-border transform transition-all duration-700 delay-900 ${
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              }`}
+            >
+              <p>Our technical team has been notified and is working to resolve this issue</p>
             </div>
           </div>
         </div>
-
-        <div className="error-text">
-          <h1 className="error-title">
-            <span className="title-icon">🔌</span>
-            Connection Lost
-          </h1>
-          <p className="error-message">
-            Oops! We're having trouble connecting to the server.
-            <br />
-            Our technical team is working hard to restore the connection.
-          </p>
-
-        </div>
-
-        <div className="error-actions">
-          <button 
-            className="retry-button"
-            onClick={onRetry || (() => window.location.reload())}
-          >
-            Try Again
-          </button>
-          <button 
-            className="help-button"
-            onClick={() => {
-              // You can add help/contact functionality here
-              alert('Please contact support if the problem persists.\nEmail: support@yourdomain.com');
-            }}
-          >
-            <span className="button-icon">💬</span>
-            Get Help
-          </button>
-        </div>
       </div>
-    </div>
-  );
-};
 
-export default ServerConnectionError;
+      <style jsx>{`
+        @keyframes gentle-shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+          20%, 40%, 60%, 80% { transform: translateX(2px); }
+        }
+        
+        @keyframes bounce-in {
+          0% { 
+            transform: scale(0.8); 
+            opacity: 0; 
+          }
+          50% { 
+            transform: scale(1.05); 
+            opacity: 0.8; 
+          }
+          100% { 
+            transform: scale(1); 
+            opacity: 1; 
+          }
+        }
+        
+        .animate-gentle-shake {
+          animation: gentle-shake 2s ease-in-out infinite;
+          animation-delay: 1s;
+        }
+        
+        .animate-bounce-in {
+          animation: bounce-in 0.6s ease-out;
+          animation-delay: 0.8s;
+          animation-fill-mode: both;
+        }
+      `}</style>
+    </div>
+  )
+}
+
+export default ServerConnectionError

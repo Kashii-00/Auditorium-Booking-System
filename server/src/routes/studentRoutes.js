@@ -13,42 +13,21 @@ const { sendEmail } = require('../utils/emailService');
 const crypto = require('node:crypto');
 const studentIdGenerator = require('../services/studentIdGenerator');
 
-// Ensure uploads directory exists
-const baseUploadDir = path.join(__dirname, '../uploads/students');
-fs.mkdirSync(baseUploadDir, { recursive: true });
+// Import secure upload middleware components
+const { createSecureUpload } = require('../middleware/secureMulterFactory');
+const { uploadRateLimiters } = require('../middleware/uploadRateLimit');
 
-// Multer storage config
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    const folder = req.body.email
-      ? path.join(baseUploadDir, req.body.email.replace(/[^a-zA-Z0-9]/g, '_'))
-      : baseUploadDir;
-    fs.mkdirSync(folder, { recursive: true });
-    cb(null, folder);
-  },
-  filename(req, file, cb) {
-    const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${Date.now()}${ext}`);
-  }
-});
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter(req, file, cb) {
-    const allowed = /jpeg|jpg|png|gif|pdf|doc|docx/;
-    if (!allowed.test(path.extname(file.originalname).toLowerCase())) {
-      return cb(new Error('Only images, PDFs, and Office docs allowed'));
-    }
-    cb(null, true);
-  }
-});
+// SECURITY: Create secure upload configuration for student registration documents
+const { uploadMultipleWithValidation } = createSecureUpload('documents', 'student');
 
-// Define upload fields
-const uploadFields = upload.fields([
+// Define upload fields for student registration
+const studentRegistrationFields = [
   { name: 'nic_document', maxCount: 1 },
   { name: 'passport_document', maxCount: 1 },
   { name: 'photo', maxCount: 1 }
-]);
+];
+
+
 
 // Helper to parse JSON columns
 function parseStudent(row) {
@@ -114,7 +93,11 @@ router.get('/', auth.authMiddleware, async (req, res) => {
 });
 
 // POST /students
-router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
+router.post('/', 
+  uploadRateLimiters.registration,
+  auth.authMiddleware, 
+  uploadMultipleWithValidation(studentRegistrationFields), 
+  async (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] POST /api/students`);
 
@@ -148,15 +131,25 @@ router.post('/', auth.authMiddleware, uploadFields, async (req, res) => {
     // Handle email field - convert "null" string to actual null
     const emailValue = data.email === "null" || data.email === "" ? null : data.email;
     
+    // Helper function to convert absolute path to relative path for web serving
+    const getRelativePath = (absolutePath) => {
+      if (!absolutePath) return null;
+      // Convert absolute path to relative path from server root
+      const serverRoot = path.join(__dirname, '../..');
+      const relativePath = path.relative(serverRoot, absolutePath);
+      // Ensure forward slashes for web URLs
+      return relativePath.replace(/\\/g, '/');
+    };
+
     const vals = [
       data.full_name, emailValue, data.identification_type, data.id_number, data.nationality,
       data.date_of_birth, data.country||null, data.cdc_number||null, data.address, data.department||null,
       data.company||null, data.sea_service||null, data.emergency_contact_name, data.emergency_contact_number,
       isSwimmer ? 1 : 0, isSlpaEmployee ? 1 : 0, data.designation||null, data.division||null, data.service_no||null,
       data.section_unit||null,
-      files.nic_document?.[0].path||null,
-      files.passport_document?.[0].path||null,
-      files.photo?.[0].path||null,
+      getRelativePath(files.nic_document?.[0].path),
+      getRelativePath(files.passport_document?.[0].path),
+      getRelativePath(files.photo?.[0].path),
       data.driving_details ? JSON.stringify(typeof data.driving_details === 'string' ? JSON.parse(data.driving_details) : data.driving_details) : null,
       'Active', 'Pending', req.user.id
     ];
@@ -293,6 +286,7 @@ router.get('/:id', auth.authMiddleware, async (req, res) => {
   try {
     const [student] = await db.queryPromise('SELECT * FROM students WHERE id = ?', [req.params.id]);
     if (!student) return res.status(404).json({ error: 'Not found' });
+    
     // parse JSON
     parseStudent(student);
     // courses
@@ -311,6 +305,7 @@ router.get('/:id', auth.authMiddleware, async (req, res) => {
        WHERE sb.student_id = ? ORDER BY b.start_date DESC`,
       [req.params.id]
     );
+    
     res.json(student);
   } catch (err) {
     logger.error('GET /students/:id', err);
@@ -319,7 +314,11 @@ router.get('/:id', auth.authMiddleware, async (req, res) => {
 });
 
 // PUT /students/:id
-router.put('/:id', auth.authMiddleware, uploadFields, async (req, res) => {
+router.put('/:id', 
+  uploadRateLimiters.registration,
+  auth.authMiddleware, 
+  uploadMultipleWithValidation(studentRegistrationFields), 
+  async (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] PUT /api/students/:id`);
   console.log('GET params:', req.params);
@@ -366,10 +365,20 @@ router.put('/:id', auth.authMiddleware, uploadFields, async (req, res) => {
       fields.push('driving_details=?'); 
       vals.push(JSON.stringify(typeof data.driving_details === 'string' ? JSON.parse(data.driving_details) : data.driving_details)); 
     }
-    // file paths
-    if (files.nic_document) { fields.push('nic_document_path=?'); vals.push(files.nic_document[0].path); }
-    if (files.passport_document) { fields.push('passport_document_path=?'); vals.push(files.passport_document[0].path); }
-    if (files.photo) { fields.push('photo_path=?'); vals.push(files.photo[0].path); }
+    // Helper function to convert absolute path to relative path for web serving
+    const getRelativePath = (absolutePath) => {
+      if (!absolutePath) return null;
+      // Convert absolute path to relative path from server root
+      const serverRoot = path.join(__dirname, '../..');
+      const relativePath = path.relative(serverRoot, absolutePath);
+      // Ensure forward slashes for web URLs
+      return relativePath.replace(/\\/g, '/');
+    };
+
+    // file paths - store relative paths for web serving
+    if (files.nic_document) { fields.push('nic_document_path=?'); vals.push(getRelativePath(files.nic_document[0].path)); }
+    if (files.passport_document) { fields.push('passport_document_path=?'); vals.push(getRelativePath(files.passport_document[0].path)); }
+    if (files.photo) { fields.push('photo_path=?'); vals.push(getRelativePath(files.photo[0].path)); }
     
     if (fields.length) {
       fields.push('updated_at=CURRENT_TIMESTAMP()');

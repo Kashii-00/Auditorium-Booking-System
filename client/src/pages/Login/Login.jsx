@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { FaEnvelope, FaEye, FaEyeSlash, FaSpinner, FaUserGraduate, FaUserTie, FaExclamationTriangle, FaChalkboardTeacher, FaWrench, FaCog } from "react-icons/fa"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import MPMA from "./MPMA.png"
+import MPMA_WEBP from "./MPMA.webp"
+import MPMA_PNG from "./MPMA.png"
 
 import { login, checkServerStatus } from "@/services/authService"
 import { studentLogin } from "@/services/studentAuthService"
@@ -83,7 +84,7 @@ const MPMALoadingScreen = () => {
 
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes progressFill {
           0% { width: 0%; }
           100% { width: 100%; }
@@ -104,6 +105,7 @@ const Login = ({ onLogin }) => {
   const [loginType, setLoginType] = useState("staff") // "staff", "student", or "lecturer"
   
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   useEffect(() => {
     const checkServer = async () => {
@@ -114,17 +116,41 @@ const Login = ({ onLogin }) => {
   }, [])
 
   useEffect(() => {
-    // Simulate initial app loading
+    // Quick initialization check - only show loading briefly
     const timer = setTimeout(() => {
       setInitialLoading(false)
-    }, 3000) // 3 seconds loading time
+    }, 1000) // 300ms loading time - just enough for smooth transition
 
     return () => clearTimeout(timer)
   }, [])
 
+  // Set login type based on URL query parameter
+  useEffect(() => {
+    const type = searchParams.get('type')
+    if (type === 'student') {
+      setLoginType('student')
+    } else if (type === 'lecturer') {
+      setLoginType('lecturer')
+    } else {
+      setLoginType('staff') // Default to staff for any other value or no parameter
+    }
+  }, [searchParams])
+
   const handleLoginTypeChange = (type) => {
     setLoginType(type)
     setError("") // Clear any errors when switching types
+    
+    // Update URL to reflect the selected login type
+    const newSearchParams = new URLSearchParams(searchParams)
+    if (type === 'staff') {
+      newSearchParams.delete('type') // Remove type parameter for staff (default)
+    } else {
+      newSearchParams.set('type', type)
+    }
+    
+    // Update URL without triggering a navigation
+    const newUrl = newSearchParams.toString() ? `?${newSearchParams.toString()}` : ''
+    window.history.replaceState(null, '', `/erp/${newUrl}`)
   }
 
   const handleSubmit = async (e) => {
@@ -232,17 +258,24 @@ const Login = ({ onLogin }) => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            <div className="text-center mb-8 ">
+            <div className="text-center mb-8">
               <motion.div 
-                className="w-85 h-98 mx-auto"
+                className="w-80 h-80 mx-auto max-w-[320px] max-h-[320px]"
                 whileHover={{ scale: 1.05 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
-                <img
-                  src={MPMA || "/placeholder.svg"}
-                  alt="Sri Lanka Ports Authority"
-                  className="w-full h-full object-contain"
-                />
+                <picture>
+                  <source srcSet={MPMA_WEBP} type="image/webp" />
+                  <img
+                    src={MPMA_PNG}
+                    alt="Mahapola Ports & Maritime Academy"
+                    className="w-full h-full object-contain"
+                    loading="eager"
+                    fetchpriority="high"
+                    width="320"
+                    height="320"
+                  />
+                </picture>
               </motion.div>
             </div>
           </motion.div>
@@ -261,7 +294,7 @@ const Login = ({ onLogin }) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
-                Welcome to BookingNET
+                Welcome to EnterpriseNET
               </motion.h1>
               <motion.p 
                 className="text-gray-500"
@@ -383,6 +416,7 @@ const Login = ({ onLogin }) => {
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="m@example.com"
                           className="pr-10 transition-all duration-200 focus:scale-[1.02]"
+                          autoComplete="email"
                           required
                         />
                         <FaEnvelope className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -405,6 +439,7 @@ const Login = ({ onLogin }) => {
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Enter your password"
                           className="pr-10 transition-all duration-200 focus:scale-[1.02]"
+                          autoComplete="current-password"
                           required
                         />
                         <motion.button
@@ -419,7 +454,7 @@ const Login = ({ onLogin }) => {
                       </div>
                       <div className="mt-2 text-right">
                         <a 
-                          href={loginType === "student" ? "/student-forgot-password" : loginType === "lecturer" ? "/lecturer-forgot-password" : ""} 
+                          href={loginType === "student" ? "/erp/student-forgot-password" : loginType === "lecturer" ? "/erp/lecturer-forgot-password" : ""} 
                           className="text-sm text-blue-600 hover:underline transition-colors duration-200"
                         >
                           Forgot your password?

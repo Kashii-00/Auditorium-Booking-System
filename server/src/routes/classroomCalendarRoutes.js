@@ -5,6 +5,132 @@ const logger = require("../logger");
 const auth = require("../auth");
 const moment = require("moment");
 
+// router.post("/", auth.authMiddleware, (req, res) => {
+//   const now = new Date().toISOString();
+//   console.log(`[${now}] POST /api/classroom-calendar`);
+//   console.log("Calendar entry POST body:", req.body);
+
+//   const {
+//     user_id,
+//     request_id,
+//     date_from,
+//     date_to,
+//     time_from,
+//     time_to,
+//     course_name,
+//     preferred_days_of_week,
+//     classes_allocated,
+//   } = req.body;
+
+//   const calendarSql = `
+//     INSERT INTO classroom_booking_calendar
+//     (user_id, request_id, date_from, date_to, time_from, time_to, course_name, preferred_days_of_week, classes_allocated)
+//     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+//   `;
+
+//   const shortToFullDayMap = {
+//     mon: "monday",
+//     tue: "tuesday",
+//     wed: "wednesday",
+//     thu: "thursday",
+//     fri: "friday",
+//     sat: "saturday",
+//     sun: "sunday",
+//   };
+
+//   const calendarValues = [
+//     user_id,
+//     request_id || null,
+//     date_from,
+//     date_to,
+//     time_from,
+//     time_to,
+//     course_name,
+//     preferred_days_of_week,
+//     classes_allocated,
+//   ];
+
+//   db.query(calendarSql, calendarValues, (err, result) => {
+//     if (err) {
+//       logger.error("Error inserting calendar entry:", err);
+//       return res.status(500).json({ error: "Database insert error" });
+//     }
+
+//     const calendar_id = result.insertId;
+//     const preferredDays = preferred_days_of_week
+//       .split(",")
+//       .map((d) => shortToFullDayMap[d.trim().slice(0, 3).toLowerCase()])
+//       .filter(Boolean);
+
+//     const allDates = [];
+//     const start = moment(date_from);
+//     const end = moment(date_to);
+
+//     for (let m = start.clone(); m.isSameOrBefore(end); m.add(1, "days")) {
+//       const dayName = m.format("dddd").toLowerCase();
+//       if (preferredDays.includes(dayName)) {
+//         allDates.push(m.format("YYYY-MM-DD"));
+//       }
+//     }
+
+//     const cancelDates = [];
+
+//     const detailsSql = `
+//       INSERT INTO classroom_booking_dates
+//       (calendar_id, user_id, request_id, course_name, all_dates, cancel_dates, time_from, time_to, classes_allocated)
+//       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+//     `;
+
+//     const detailsValues = [
+//       calendar_id,
+//       user_id,
+//       request_id || null,
+//       course_name || null,
+//       JSON.stringify(allDates),
+//       JSON.stringify(cancelDates),
+//       time_from,
+//       time_to,
+//       classes_allocated,
+//     ];
+
+//     db.query(detailsSql, detailsValues, (err2) => {
+//       if (err2) {
+//         logger.error("Error inserting booking details:", err2);
+//         return res.status(500).json({ error: "Details insert error" });
+//       }
+
+//       // <-- Add this update query here
+//       if (request_id) {
+//         db.query(
+//           "UPDATE aid_requests SET last_updated = NOW() WHERE id = ?",
+//           [request_id],
+//           (updateErr) => {
+//             if (updateErr) {
+//               logger.error(
+//                 `Error updating last_updated on aid_requests for id ${request_id}:`,
+//                 updateErr
+//               );
+//               // Not critical: don't fail the request because of this
+//             }
+//           }
+//         );
+//       }
+
+//       const logtime = moment().format("YYYY-MM-DD HH:mm:ss");
+//       logger.info(
+//         `Booking detail created at ${logtime} for calendar ID ${calendar_id}`
+//       );
+
+//       return res.json({
+//         success: true,
+//         message: "Calendar and details created successfully",
+//         calendar_id,
+//         booked_dates: allDates,
+//       });
+//     });
+//   });
+// });
+
 router.post("/", auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] POST /api/classroom-calendar`);
@@ -20,23 +146,15 @@ router.post("/", auth.authMiddleware, (req, res) => {
     course_name,
     preferred_days_of_week,
     classes_allocated,
+    req_officer_name,
+    req_officer_email,
   } = req.body;
 
   const calendarSql = `
     INSERT INTO classroom_booking_calendar 
-    (user_id, request_id, date_from, date_to, time_from, time_to, course_name, preferred_days_of_week, classes_allocated)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (user_id, request_id, date_from, date_to, time_from, time_to, course_name, preferred_days_of_week, classes_allocated, req_officer_name, req_officer_email)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
-
-  const shortToFullDayMap = {
-    mon: "monday",
-    tue: "tuesday",
-    wed: "wednesday",
-    thu: "thursday",
-    fri: "friday",
-    sat: "saturday",
-    sun: "sunday",
-  };
 
   const calendarValues = [
     user_id,
@@ -48,7 +166,19 @@ router.post("/", auth.authMiddleware, (req, res) => {
     course_name,
     preferred_days_of_week,
     classes_allocated,
+    req_officer_name || null,
+    req_officer_email || null,
   ];
+
+  const shortToFullDayMap = {
+    mon: "monday",
+    tue: "tuesday",
+    wed: "wednesday",
+    thu: "thursday",
+    fri: "friday",
+    sat: "saturday",
+    sun: "sunday",
+  };
 
   db.query(calendarSql, calendarValues, (err, result) => {
     if (err) {
@@ -57,7 +187,8 @@ router.post("/", auth.authMiddleware, (req, res) => {
     }
 
     const calendar_id = result.insertId;
-    const preferredDays = preferred_days_of_week
+
+    const preferredDays = (preferred_days_of_week || "")
       .split(",")
       .map((d) => shortToFullDayMap[d.trim().slice(0, 3).toLowerCase()])
       .filter(Boolean);
@@ -99,7 +230,7 @@ router.post("/", auth.authMiddleware, (req, res) => {
         return res.status(500).json({ error: "Details insert error" });
       }
 
-      // <-- Add this update query here
+      // Update aid_requests last_updated if request_id exists
       if (request_id) {
         db.query(
           "UPDATE aid_requests SET last_updated = NOW() WHERE id = ?",
@@ -126,6 +257,8 @@ router.post("/", auth.authMiddleware, (req, res) => {
         message: "Calendar and details created successfully",
         calendar_id,
         booked_dates: allDates,
+        req_officer_name: req_officer_name || null,
+        req_officer_email: req_officer_email || null,
       });
     });
   });
@@ -151,12 +284,58 @@ router.get("/", auth.authMiddleware, (req, res) => {
   });
 });
 
+// router.get("/details", auth.authMiddleware, (req, res) => {
+//   const now = new Date().toISOString();
+//   console.log(`[${now}] GET /api/classroom-calendar/details`);
+
+//   const sql = `
+//     SELECT cbd.*, u.name as user_name, cbc.course_name as calendar_course
+//     FROM classroom_booking_dates cbd
+//     LEFT JOIN users u ON cbd.user_id = u.id
+//     LEFT JOIN classroom_booking_calendar cbc ON cbd.calendar_id = cbc.id
+//     ORDER BY cbd.created_at DESC
+//   `;
+
+//   db.query(sql, (err, results) => {
+//     if (err) {
+//       console.error("Database error details:", err);
+//       return res.status(500).json({ error: "Database fetch error" });
+//     }
+
+//     // 🔁 Compute effectiveDates for each booking
+//     const transformedResults = results.map((row) => {
+//       const allDates = JSON.parse(row.all_dates || "[]");
+//       const cancelDates = JSON.parse(row.cancel_dates || "[]");
+//       const effectiveDates = allDates.filter(
+//         (date) => !cancelDates.includes(date)
+//       );
+
+//       return {
+//         ...row,
+//         effective_dates: effectiveDates,
+//       };
+//     });
+
+//     return res.json({
+//       success: true,
+//       message: "Classroom booking details fetched successfully",
+//       data: transformedResults,
+//     });
+//   });
+// });
+
+// GET /details
 router.get("/details", auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] GET /api/classroom-calendar/details`);
 
   const sql = `
-    SELECT cbd.*, u.name as user_name, cbc.course_name as calendar_course
+    SELECT 
+      cbd.*, 
+      u.name AS user_name, 
+      cbc.course_name AS calendar_course,
+      cbc.req_officer_name,
+      cbc.req_officer_email
     FROM classroom_booking_dates cbd
     LEFT JOIN users u ON cbd.user_id = u.id
     LEFT JOIN classroom_booking_calendar cbc ON cbd.calendar_id = cbc.id
@@ -169,7 +348,6 @@ router.get("/details", auth.authMiddleware, (req, res) => {
       return res.status(500).json({ error: "Database fetch error" });
     }
 
-    // 🔁 Compute effectiveDates for each booking
     const transformedResults = results.map((row) => {
       const allDates = JSON.parse(row.all_dates || "[]");
       const cancelDates = JSON.parse(row.cancel_dates || "[]");
@@ -191,6 +369,53 @@ router.get("/details", auth.authMiddleware, (req, res) => {
   });
 });
 
+// router.get("/details-with-request-info", auth.authMiddleware, (req, res) => {
+//   const now = new Date().toISOString();
+//   console.log(`[${now}] GET /api/classroom-calendar/details-with-request-info`);
+
+//   const sql = `
+//     SELECT
+//       cbd.*,
+//       u.name AS user_name,
+//       cbc.course_name AS calendar_course,
+//       ar.id AS request_id,
+//       ar.requesting_officer_name
+//     FROM classroom_booking_dates cbd
+//     LEFT JOIN users u ON cbd.user_id = u.id
+//     LEFT JOIN classroom_booking_calendar cbc ON cbd.calendar_id = cbc.id
+//     LEFT JOIN aid_requests ar ON cbd.request_id = ar.id
+//     ORDER BY cbd.created_at DESC
+//   `;
+
+//   db.query(sql, (err, results) => {
+//     if (err) {
+//       console.error("Database error details:", err);
+//       return res.status(500).json({ error: "Database fetch error" });
+//     }
+
+//     const transformedResults = results.map((row) => {
+//       const allDates = JSON.parse(row.all_dates || "[]");
+//       const cancelDates = JSON.parse(row.cancel_dates || "[]");
+//       const effectiveDates = allDates.filter(
+//         (date) => !cancelDates.includes(date)
+//       );
+
+//       return {
+//         ...row,
+//         effective_dates: effectiveDates,
+//       };
+//     });
+
+//     return res.json({
+//       success: true,
+//       message:
+//         "Classroom booking details with request info fetched successfully",
+//       data: transformedResults,
+//     });
+//   });
+// });
+
+// GET /details-with-request-info
 router.get("/details-with-request-info", auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] GET /api/classroom-calendar/details-with-request-info`);
@@ -200,8 +425,11 @@ router.get("/details-with-request-info", auth.authMiddleware, (req, res) => {
       cbd.*, 
       u.name AS user_name,
       cbc.course_name AS calendar_course,
+      cbc.req_officer_name,
+      cbc.req_officer_email,
       ar.id AS request_id,
-      ar.requesting_officer_name
+      ar.requesting_officer_name,
+      ar.requesting_officer_email
     FROM classroom_booking_dates cbd
     LEFT JOIN users u ON cbd.user_id = u.id
     LEFT JOIN classroom_booking_calendar cbc ON cbd.calendar_id = cbc.id
@@ -237,6 +465,62 @@ router.get("/details-with-request-info", auth.authMiddleware, (req, res) => {
   });
 });
 
+// router.get("/details-v2", auth.authMiddleware, (req, res) => {
+//   const now = new Date().toISOString();
+//   console.log(`[${now}] GET /api/classroom-calendar/details-v2`);
+
+//   const sql = `
+//     SELECT
+//       cbd.*,
+//       u.name AS user_name,
+//       cbc.course_name AS calendar_course,
+//       ar.id AS request_id,
+//       ar.requesting_officer_name,
+//       ar.requesting_officer_email,
+//       u.email AS user_email
+//     FROM classroom_booking_dates cbd
+//     LEFT JOIN users u ON cbd.user_id = u.id
+//     LEFT JOIN classroom_booking_calendar cbc ON cbd.calendar_id = cbc.id
+//     LEFT JOIN aid_requests ar ON cbd.request_id = ar.id
+//     ORDER BY cbd.created_at DESC
+//   `;
+
+//   db.query(sql, (err, results) => {
+//     if (err) {
+//       console.error("❌ Database error details:", err);
+//       return res.status(500).json({ error: "Database fetch error" });
+//     }
+
+//     const transformedResults = results.map((row) => {
+//       let allDates = [];
+//       let cancelDates = [];
+
+//       try {
+//         allDates = JSON.parse(row.all_dates || "[]");
+//         cancelDates = JSON.parse(row.cancel_dates || "[]");
+//       } catch (err) {
+//         console.error("❌ JSON parse error:", err, row);
+//       }
+
+//       const effectiveDates = allDates.filter(
+//         (date) => !cancelDates.includes(date)
+//       );
+
+//       return {
+//         ...row,
+//         effective_dates: effectiveDates,
+//       };
+//     });
+
+//     return res.json({
+//       success: true,
+//       message: "Classroom booking details fetched with aid request info",
+//       data: transformedResults,
+//     });
+//   });
+// });
+
+// GET /details-v2
 router.get("/details-v2", auth.authMiddleware, (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] GET /api/classroom-calendar/details-v2`);
@@ -245,10 +529,13 @@ router.get("/details-v2", auth.authMiddleware, (req, res) => {
     SELECT 
       cbd.*, 
       u.name AS user_name,
+      u.email AS user_email,
       cbc.course_name AS calendar_course,
+      cbc.req_officer_name,
+      cbc.req_officer_email,
       ar.id AS request_id,
       ar.requesting_officer_name,
-      ar.requesting_officer_email   -- added here
+      ar.requesting_officer_email
     FROM classroom_booking_dates cbd
     LEFT JOIN users u ON cbd.user_id = u.id
     LEFT JOIN classroom_booking_calendar cbc ON cbd.calendar_id = cbc.id
@@ -348,55 +635,64 @@ router.get("/:request_id", auth.authMiddleware, (req, res) => {
   });
 });
 
-router.put(
-  "/details/by-request/:request_id/cancel-dates",
-  auth.authMiddleware,
-  (req, res) => {
-    const { request_id } = req.params;
-    const { cancel_dates } = req.body;
+router.put("/details/cancel-dates", auth.authMiddleware, (req, res) => {
+  const { id, cancel_dates, id_type } = req.body;
 
-    if (!Array.isArray(cancel_dates)) {
-      return res
-        .status(400)
-        .json({ error: "cancel_dates must be an array of dates" });
-    }
+  // Validate required fields
+  if (!id) {
+    return res.status(400).json({ error: "id is required" });
+  }
 
-    const updateCancelDatesSql = `
-    UPDATE classroom_booking_dates
-    SET cancel_dates = ?
-    WHERE request_id = ?
-    LIMIT 1
-  `;
+  if (!Array.isArray(cancel_dates)) {
+    return res
+      .status(400)
+      .json({ error: "cancel_dates must be an array of dates" });
+  }
 
-    db.query(
-      updateCancelDatesSql,
-      [JSON.stringify(cancel_dates), request_id],
-      (err, result) => {
-        if (err) {
-          logger.error(
-            `Error updating cancel_dates for request_id ${request_id}:`,
-            err
-          );
-          return res.status(500).json({ error: "Database update error" });
-        }
+  if (!id_type || !["request_id", "calendar_id"].includes(id_type)) {
+    return res
+      .status(400)
+      .json({ error: "id_type must be either 'request_id' or 'calendar_id'" });
+  }
 
-        if (result.affectedRows === 0) {
-          return res
-            .status(404)
-            .json({ error: "No booking found for this request_id" });
-        }
+  // Build the WHERE clause based on id_type
+  const whereClause =
+    id_type === "request_id" ? "request_id = ?" : "calendar_id = ?";
 
-        // Update last_updated in aid_requests
-        const updateAidRequestSql = `
-      UPDATE aid_requests
-      SET last_updated = NOW()
-      WHERE id = ?
+  const updateCancelDatesSql = `
+      UPDATE classroom_booking_dates
+      SET cancel_dates = ?
+      WHERE ${whereClause}
+      LIMIT 1
     `;
 
-        db.query(updateAidRequestSql, [request_id], (aidErr) => {
+  db.query(
+    updateCancelDatesSql,
+    [JSON.stringify(cancel_dates), id],
+    (err, result) => {
+      if (err) {
+        logger.error(`Error updating cancel_dates for ${id_type} ${id}:`, err);
+        return res.status(500).json({ error: "Database update error" });
+      }
+
+      if (result.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ error: `No booking found for this ${id_type}` });
+      }
+
+      // Only update aid_requests if we're working with request_id and it's not null
+      if (id_type === "request_id") {
+        const updateAidRequestSql = `
+            UPDATE aid_requests
+            SET last_updated = NOW()
+            WHERE id = ?
+          `;
+
+        db.query(updateAidRequestSql, [id], (aidErr) => {
           if (aidErr) {
             logger.error(
-              `Error updating last_updated for aid_request ${request_id}:`,
+              `Error updating last_updated for aid_request ${id}:`,
               aidErr
             );
             // Not critical, still return success
@@ -413,10 +709,16 @@ router.put(
               "cancel_dates and aid_request.last_updated updated successfully",
           });
         });
+      } else {
+        // For calendar_id updates, we don't need to update aid_requests
+        return res.json({
+          success: true,
+          message: "cancel_dates updated successfully",
+        });
       }
-    );
-  }
-);
+    }
+  );
+});
 
 // DELETE calendar entry by ID
 router.delete("/:id", auth.authMiddleware, (req, res) => {

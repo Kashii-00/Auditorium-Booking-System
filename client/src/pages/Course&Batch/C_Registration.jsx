@@ -806,7 +806,7 @@ function CourseRegistrationForm({ onBack, onSuccess, editingCourse, isEditMode =
                       <div className="flex items-center justify-between">
                         <h4 className="font-bold text-blue-800 flex items-center gap-2">
                           <Calculator className="w-4 h-4" />
-                          Course Cost Summary Data
+                          Course Cost Summary Data for [ {cfphData.course_name || 'Unknown Course'} ]
                         </h4>
                         <Button
                           type="button"
@@ -817,7 +817,7 @@ function CourseRegistrationForm({ onBack, onSuccess, editingCourse, isEditMode =
                         </Button>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <span className="font-semibold text-slate-600">Rounded CFPH:</span>
                           <div className="text-lg font-bold text-emerald-600">
@@ -836,12 +836,7 @@ function CourseRegistrationForm({ onBack, onSuccess, editingCourse, isEditMode =
                             Rs.{cfphData.total_course_cost?.toLocaleString()}
                           </div>
                         </div>
-                        <div>
-                          <span className="font-semibold text-slate-600">Participants:</span>
-                          <div className="text-sm font-bold text-orange-600">
-                            {cfphData.no_of_participants}
-                          </div>
-                        </div>
+                      
                       </div>
                     </div>
                   )}

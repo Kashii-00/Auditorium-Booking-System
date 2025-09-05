@@ -8,11 +8,6 @@ const fs = require('fs');
 const auth = require('../auth');
 const logger = require('../logger');
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, '../uploads/courses');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
 
 // Configure multer storage
 const storage = multer.diskStorage({

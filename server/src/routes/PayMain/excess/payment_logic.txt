@@ -1,0 +1,269 @@
+Awesome—here’s a clean, complete blueprint you can implement right away. It covers: eligibility, user-chosen number of installments (up to 12), user-chosen first installment (validated), equal follow-ups, and “remainder to the last installment.” Defaults assume a \$5 gateway minimum.
+
+# Installment logic (complete)
+
+## 0) Definitions / constants
+
+* `MIN_INSTALLMENT` = 5.00  (gateway-safe floor)
+* `MAX_INSTALLMENTS` = 12
+* Currency minor units = 2 decimals (work in **cents** to avoid rounding issues).
+
+Let
+
+* `P` = total price **in cents** (include taxes/shipping if you want the plan to cover the whole checkout),
+* `n` = total number of installments chosen by user (integer, 2…12),
+* `F` = first installment chosen by user **in cents**.
+
+---
+
+## 1) Eligibility (“worthy of installments”)
+
+An item is eligible if it’s possible to make **at least 2** installments where each installment is ≥ `MIN_INSTALLMENT`.
+
+Necessary & sufficient condition for some `n ≥ 2` to exist:
+
+```
+P ≥ 2 * MIN_INSTALLMENT
+```
+
+(If false → only full payment.)
+
+---
+
+## 2) Which installment counts are allowed?
+
+For a given price `P`, the set of allowed `n` is:
+
+```
+Allowed n = { n ∈ [2, MAX_INSTALLMENTS] | P ≥ n * MIN_INSTALLMENT }
+```
+
+Explanation: after the first installment, you must still be able to keep each of the remaining `(n-1)` installments ≥ `MIN_INSTALLMENT`. That’s only possible if the total across `n` installments could be ≥ `n * MIN_INSTALLMENT`.
+
+Tip for UX:
+
+* Always offer **3, 6, 12** when eligible.
+* If you support “Custom”, validate with the rule above and grey out impossible `n`.
+
+---
+
+## 3) Valid range for the **first installment F**
+
+Constraints:
+
+1. Lower bound:
+
+   ```
+   F ≥ MIN_INSTALLMENT
+   ```
+2. Upper bound (to leave enough for the rest, each ≥ MIN\_INSTALLMENT):
+
+   ```
+   Remaining = P - F
+   floor(Remaining / (n-1)) ≥ MIN_INSTALLMENT  ⇒  Remaining ≥ (n-1)*MIN_INSTALLMENT
+   ⇒  F ≤ P - (n-1)*MIN_INSTALLMENT
+   ```
+
+Therefore the **valid interval** for `F` is:
+
+```
+F ∈ [ MIN_INSTALLMENT ,  P - (n-1)*MIN_INSTALLMENT ]
+```
+
+* If the interval is empty → chosen `n` is infeasible for this price.
+* If `P = n * MIN_INSTALLMENT`, then `F` is forced to exactly `MIN_INSTALLMENT`.
+
+(Optional “sensible” rule you might add for risk):
+
+* Require `F ≥ ceil(α * P)` for some α (e.g., 10%). Use whichever is larger:
+
+  ```
+  F ≥ max(MIN_INSTALLMENT, ceil(α * P))
+  ```
+
+---
+
+## 4) Build the schedule (remainder goes to **last**)
+
+Once `n` and a valid `F` are set:
+
+```
+R = P - F                                   # remaining cents
+k = n - 1                                   # follow-up count
+base = floor(R / k)
+rem  = R % k                                # 0 … (k-1)
+schedule = [ F ] + [ base ] * (k - 1) + [ base + rem ]
+```
+
+Properties:
+
+* All follow-ups are ≥ `MIN_INSTALLMENT` because `floor(R/k) ≥ MIN_INSTALLMENT` by validation.
+* The **last installment** is the only one that’s larger (absorbs the remainder).
+* Sum(schedule) = P exactly (since we work in cents).
+
+---
+
+## 5) Rounding & currency
+
+* Always convert UI inputs to **cents** first (`amount * 100`, then round).
+* Compute in cents, then convert back to display (two decimals).
+* For zero-decimal currencies (e.g., JPY), set minor units to 0 and skip the \*100 step.
+
+---
+
+## 6) Practical UI/validation rules
+
+**At item page / checkout:**
+
+1. If `P < 2*MIN_INSTALLMENT` → show only full payment.
+2. Else show installment options:
+
+   * Presets: 3, 6, 12 (hide those where `P < n*MIN_INSTALLMENT`)
+   * “Custom (2–12)” (enforce `P ≥ n*MIN_INSTALLMENT`)
+3. After user picks `n`, show a first-installment input with helper text:
+
+   * “Must be between `$minFirst` and `$maxFirst`.”
+   * Where:
+
+     ```
+     minFirst = MIN_INSTALLMENT
+     maxFirst = (P - (n-1)*MIN_INSTALLMENT)
+     ```
+   * (Optional) show “Recommended first payment” (e.g., 10–20% of price, clamped to the valid range).
+
+**On submit:**
+
+* Validate `n` and `F` against the rules above.
+* If invalid, show precise errors:
+
+  * “For a total of \$X and n = Y, the first payment must be between \$A and \$B.”
+* If valid, build schedule via step #4.
+
+**Dates:**
+
+* First installment charged immediately (or on ship date).
+* Subsequent charges: add 1 month each (be careful with the 28/29/30/31 edge; use “same day or last day of month” rule).
+
+---
+
+## 7) Worked examples (in dollars for readability)
+
+**Example A**
+P = \$1200, n = 12
+MIN = \$5 → allowed n: up to 12 (since 1200 ≥ 12\*5)
+Valid F range:
+
+* minFirst = \$5
+* maxFirst = \$1200 - 11\*\$5 = \$1200 - \$55 = **\$1145**
+  Choose F = \$200 → R = \$1000 → base = floor(1000/11) = \$90, rem = \$10
+  Schedule: **\[200, 90×10, 100]**
+
+**Example B**
+P = \$40, n = 3
+Allowed (since 40 ≥ 15)
+Valid F: min \$5, max \$40 - 2\*\$5 = **\$30**
+Pick F = \$5 → R = \$35 → base = floor(35/2) = \$17, rem = \$1
+Schedule: **\[5, 17, 18]**
+
+**Example C (tight case)**
+P = \$30, n = 6 → need 30 ≥ 6*5 (=30) ✅
+Valid F: min \$5, max \$30 - 5*\$5 = \$5 → **F must be exactly \$5**
+R = \$25 → base = floor(25/5) = \$5, rem = 0
+Schedule: **\[5, 5, 5, 5, 5, 5]**
+
+---
+
+## 8) Drop-in JavaScript (safe, cents-based)
+
+```js
+// All amounts in dollars in/out; internally uses cents.
+const MIN_INSTALLMENT = 5.00;
+const MAX_INSTALLMENTS = 12;
+const DECIMALS = 2;
+
+const toCents = (x) => Math.round(x * 100);
+const fromCents = (c) => (c / 100);
+
+/**
+ * Given price and optional max installments, returns allowed n values.
+ */
+function allowedInstallmentCounts(price) {
+  const P = toCents(price);
+  const MIN = toCents(MIN_INSTALLMENT);
+  const maxByPrice = Math.floor(P / MIN);
+  const maxN = Math.min(MAX_INSTALLMENTS, maxByPrice);
+  const out = [];
+  for (let n = 2; n <= maxN; n++) out.push(n);
+  return out; // e.g., [2,3,4,5,6,7,8,9,10,11,12]
+}
+
+/**
+ * Compute valid first installment range for chosen n.
+ * Returns { minFirst, maxFirst } in dollars.
+ * Throws if n is infeasible for this price.
+ */
+function firstInstallmentRange(price, n) {
+  const P = toCents(price);
+  const MIN = toCents(MIN_INSTALLMENT);
+  if (n < 2 || n > MAX_INSTALLMENTS) throw new Error("n out of range");
+  if (P < n * MIN) throw new Error(`Price too small for ${n} installments`);
+  const minFirst = MIN;
+  const maxFirst = P - (n - 1) * MIN;
+  return { minFirst: fromCents(minFirst), maxFirst: fromCents(maxFirst) };
+}
+
+/**
+ * Build schedule with user-chosen first installment F (dollars).
+ * Remainder goes to the LAST installment.
+ * Returns array of dollars that sums exactly to price (to cents).
+ */
+function buildInstallmentSchedule(price, n, firstInstallment) {
+  const P = toCents(price);
+  const MIN = toCents(MIN_INSTALLMENT);
+  if (n < 2 || n > MAX_INSTALLMENTS) throw new Error("n out of range");
+  if (P < n * MIN) throw new Error(`Price too small for ${n} installments`);
+
+  let F = toCents(firstInstallment);
+  const minFirst = MIN;
+  const maxFirst = P - (n - 1) * MIN;
+
+  if (F < minFirst || F > maxFirst) {
+    const a = fromCents(minFirst).toFixed(2);
+    const b = fromCents(maxFirst).toFixed(2);
+    throw new Error(`First installment must be between $${a} and $${b}`);
+  }
+
+  const k = n - 1;
+  const R = P - F;
+  const base = Math.floor(R / k);
+  const rem  = R % k;
+
+  // Build schedule in cents
+  const scheduleCents = [F];
+  for (let i = 0; i < k - 1; i++) scheduleCents.push(base);
+  scheduleCents.push(base + rem);
+
+  // Sanity checks
+  if (scheduleCents.some(v => v < MIN)) {
+    throw new Error("Follow-up installment fell below the minimum.");
+  }
+  const sum = scheduleCents.reduce((a,b)=>a+b,0);
+  if (sum !== P) throw new Error("Schedule math error (sum mismatch).");
+
+  // Convert to dollars
+  return scheduleCents.map(fromCents);
+}
+```
+
+---
+
+## 9) Optional policy levers (if the owner wants tighter control)
+
+* **Risk floor for first payment**: require `F ≥ max(MIN_INSTALLMENT, ceil(10% of P))`.
+* **Cap first payment**: avoid nearly-all-upfront plans by setting `F ≤ β * P` (e.g., β = 0.8).
+* **Minimum per-installment after first**: you already have this via `MIN_INSTALLMENT = $5`.
+* **Tiered allowable n**: e.g., if `P < $150` allow only `n ∈ {2,3}`; if `$150–$499` allow `{3,6}`; if `$500+` allow `{3,6,12}`.
+
+---
+
+That’s the complete, implementation-ready logic. If you want, I can tailor the code to your stack (TypeScript types, backend validation middleware, or a SQL check constraint for stored plans).

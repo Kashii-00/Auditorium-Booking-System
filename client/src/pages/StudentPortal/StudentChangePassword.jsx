@@ -44,7 +44,7 @@ const StudentChangePassword = () => {
     localStorage.removeItem("studentToken")
     localStorage.removeItem("studentRefreshToken")
     localStorage.removeItem("studentUser")
-    navigate("/student-login")
+    window.location.href = "/erp/?type=student"
   };
 
   // Password strength criteria

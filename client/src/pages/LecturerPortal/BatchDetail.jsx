@@ -61,6 +61,10 @@ const BatchDetail = () => {
   const [assignmentForm, setAssignmentForm] = useState({ title: '', description: '', dueDate: '', maxPoints: 100 });
   const [announcementForm, setAnnouncementForm] = useState({ title: '', content: '', priority: 'normal' });
   const [gradingForm, setGradingForm] = useState({ marks_obtained: '', feedback: '', status: 'Graded' });
+  
+  // Error states for user feedback
+  const [uploadError, setUploadError] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(null);
 
   // Function to get recent activity
   const getRecentActivity = () => {
@@ -215,6 +219,9 @@ const BatchDetail = () => {
 
   const handleMaterialUpload = async (e) => {
     e.preventDefault();
+    setUploadError(null);
+    setUploadSuccess(null);
+    
     try {
       const materialData = {
         title: materialForm.title,
@@ -226,14 +233,29 @@ const BatchDetail = () => {
       await materialsService.uploadMaterial(batchId, materialData);
       setShowMaterialModal(false);
       setMaterialForm({ title: '', description: '', file: null });
+      setUploadSuccess('Material uploaded successfully!');
       fetchMaterials();
       // Refresh activity for overview tab
       if (activeTab === 'overview') {
         fetchAssignments();
         fetchAnnouncements();
       }
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setUploadSuccess(null), 3000);
     } catch (error) {
       console.error('Error uploading material:', error);
+      
+      // Extract error message from response
+      let errorMessage = 'Failed to upload material. Please try again.';
+      
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setUploadError(errorMessage);
     }
   };
 
@@ -737,6 +759,18 @@ const BatchDetail = () => {
           </div>
         </div>
       </header>
+
+      {/* Success Notification */}
+      {uploadSuccess && (
+        <div className="fixed top-24 right-4 z-50 max-w-md">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg">
+            <div className="flex items-center">
+              <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+              <span className="text-sm text-green-700 font-medium">{uploadSuccess}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <LecturerSidebar
         lecturer={lecturer}
@@ -1387,11 +1421,35 @@ const BatchDetail = () => {
                     required
                   />
                 </div>
+                
+                {/* Error Message */}
+                {uploadError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <div className="flex items-center">
+                      <AlertCircle className="h-4 w-4 text-red-600 mr-2" />
+                      <span className="text-sm text-red-700 font-medium">{uploadError}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* File Type Information */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="flex items-center">
+                    <FileText className="h-4 w-4 text-blue-600 mr-2" />
+                    <div className="text-sm text-blue-700">
+                      <div className="font-medium">Allowed file types:</div>
+                      <div className="text-xs mt-1">PDF, DOC, DOCX, TXT (Max size: 10MB)</div>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="flex space-x-3 mt-6">
                 <Button
                   type="button"
-                  onClick={() => setShowMaterialModal(false)}
+                  onClick={() => {
+                    setShowMaterialModal(false);
+                    setUploadError(null);
+                  }}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                 >
                   Cancel

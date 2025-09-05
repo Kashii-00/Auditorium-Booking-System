@@ -74,16 +74,15 @@ router.post('/login', (req, res) => {
         }
       );
     };
-    if (user.password.startsWith('$2')) {
-      bcrypt.compare(password, user.password, (err, isMatch) => {
-        if (err) return res.status(500).json({ error: 'Authentication error' });
-        if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
-        loginUser();
-      });
-    } else {
-      if (password !== user.password) return res.status(401).json({ error: 'Invalid email or password' });
+    // Always use bcrypt for password comparison
+    bcrypt.compare(password, user.password, (err, isMatch) => {
+      if (err) {
+        logger.error('Password comparison error:', err);
+        return res.status(500).json({ error: 'Authentication error' });
+      }
+      if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
       loginUser();
-    }
+    });
   });
 });
 

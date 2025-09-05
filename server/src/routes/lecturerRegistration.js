@@ -10,27 +10,22 @@ const auth = require('../auth');
 const moment = require('moment');
 const bcrypt = require('bcryptjs');
 const { sendEmail } = require('../utils/emailService');
+const { createSecureUpload } = require('../middleware/secureMulterFactory');
+const { uploadRateLimiters } = require('../middleware/uploadRateLimit');
 
-// Setup upload directory
-const uploadDir = path.join(__dirname, '../uploads/lecturers');
-fs.mkdirSync(uploadDir, { recursive: true });
+// SECURITY: Create secure upload configuration for lecturer registration documents
+const { uploadMultipleWithValidation } = createSecureUpload('documents', 'lecturer');
 
-// Multer storage
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    const folder = req.body.email
-      ? path.join(uploadDir, req.body.email.replace(/[^a-zA-Z0-9]/g, '_'))
-      : uploadDir;
-    fs.mkdirSync(folder, { recursive: true });
-    cb(null, folder);
-  },
-  filename(req, file, cb) {
-    const ext = path.extname(file.originalname);
-    const name = `${file.fieldname}-${Date.now()}${ext}`;
-    cb(null, name);
-  }
-});
-const upload = multer({ storage, limits: { fileSize: 10*1024*1024 } });
+// Define upload fields for lecturer registration
+const lecturerRegistrationFields = [
+  { name: 'nic_file', maxCount: 1 },
+  { name: 'photo_file', maxCount: 1 },
+  { name: 'passbook_file', maxCount: 1 },
+  { name: 'education_certificate_file', maxCount: 1 },
+  { name: 'driving_trainer_license_file', maxCount: 1 },
+  { name: 'other_documents_file', maxCount: 1 },
+  { name: 'cdc_book_file', maxCount: 1 }
+];
 
 // Generate a random temporary password
 const generateTempPassword = () => {
@@ -97,26 +92,10 @@ router.get('/', auth.authMiddleware, async (req, res) => {
 });
 
 // POST /lecturers
-router.post('/', auth.authMiddleware,
-  upload.fields([
-    { name: 'nic_file' }, { name: 'photo_file' }, { name: 'passbook_file' },
-    { name: 'education_certificate_file' }, { name: 'driving_trainer_license_file' },
-    { name: 'other_documents_file' }, { name: 'cdc_book_file' }
-  ]),
-
-  // Multer file size error handling
-  (err, req, res, next) => {
-    if (err instanceof multer.MulterError) {
-      if (err.code === "LIMIT_FILE_SIZE") {
-        return res.status(400).json({ error: "File too large. Maximum allowed is 10MB per file." });
-      }
-      return res.status(400).json({ error: "Multer error: " + err.message });
-    }
-    if (err) {
-      return res.status(500).json({ error: "Unknown upload error." });
-    }
-    next();
-  },
+router.post('/', 
+  uploadRateLimiters.registration,
+  auth.authMiddleware,
+  uploadMultipleWithValidation(lecturerRegistrationFields),
 
   async (req, res) => {
     const now = new Date().toISOString();
@@ -316,29 +295,10 @@ router.post('/', auth.authMiddleware,
 );
 
 // PUT /lecturers/:id
-router.put('/:id', auth.authMiddleware,
-  (req, res, next) => {
-    upload.fields([
-      { name: 'nic_file' }, { name: 'photo_file' }, { name: 'passbook_file' },
-      { name: 'education_certificate_file' }, { name: 'driving_trainer_license_file' },
-      { name: 'other_documents_file' }, { name: 'cdc_book_file' }
-    ])(req, res, (err) => {
-      if (err) {
-        if (err instanceof multer.MulterError) {
-          if (err.code === 'LIMIT_FILE_SIZE') {
-            return res.status(413).json({ 
-              error: 'File size too large', 
-              details: 'Maximum file size is 10MB', 
-              field: err.field 
-            });
-          }
-          return res.status(400).json({ error: err.message });
-        }
-        return next(err);
-      }
-      next();
-    });
-  },
+router.put('/:id', 
+  uploadRateLimiters.registration,
+  auth.authMiddleware,
+  uploadMultipleWithValidation(lecturerRegistrationFields),
   async (req, res) => {
     const now = new Date().toISOString();
     console.log(`[${now}] PUT /api/lecturers/:id`);

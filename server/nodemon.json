@@ -3,11 +3,20 @@
   "ignore": [
     ".git",
     "node_modules/**/node_modules",
-    "dist"
+    "dist",
+    "logs",
+    "uploads",
+    "backups",
+    "*.log"
   ],
   "verbose": true,
   "watch": [
     "src/"
   ],
-  "ext": "js,json,ts"
+  "ext": "js,json,ts",
+  "exec": "babel-node src/server.js",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "delay": "500"
 }
