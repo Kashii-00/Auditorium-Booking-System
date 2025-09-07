@@ -304,8 +304,8 @@ const LecturerDashboard = () => {
     localStorage.removeItem("lecturerToken")
     localStorage.removeItem("lecturerRefreshToken")
     localStorage.removeItem("lecturerUser")
-    navigate("/lecturer-login")
-  }, [navigate])
+    window.location.href = "/erp/?type=lecturer"
+  }, [])
 
   const handleChangePassword = useCallback(() => {
     navigate("/lecturer-change-password")

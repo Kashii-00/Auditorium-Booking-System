@@ -32,7 +32,7 @@ window.addEventListener('storage', (event) => {
     accessToken = null;
     setAuthHeader(null);
     localStorage.removeItem('user');
-    window.location.href = '/login';
+            window.location.href = '/erp/login';
     setTimeout(() => {
       alert('You have been logged out because your account was used to log in elsewhere.');
     }, 200);

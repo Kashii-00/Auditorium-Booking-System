@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:erp": "vite build --base=/erp/",
     "lint": "eslint .",
     "preview": "vite preview",
     "setup": "npm install react-to-print"

@@ -6,6 +6,14 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
+const { secureDownload } = require('../controllers/secureDownloadController');
+
+// Import secure upload middleware
+const { createSecureUpload } = require('../middleware/secureMulterFactory');
+const { uploadRateLimiters } = require('../middleware/uploadRateLimit');
+
+// SECURITY: Create secure upload configuration for lecture materials
+const { uploadWithValidation } = createSecureUpload('materials', 'lecturer');
 
 // Lecturer authentication middleware
 const lecturerAuthMiddleware = (req, res, next) => {
@@ -24,7 +32,7 @@ const lecturerAuthMiddleware = (req, res, next) => {
   try {
     const decoded = jwt.verify(
       token, 
-      process.env.JWT_SECRET || 'your-secret-key'
+      process.env.JWT_SECRET
     );
     
     if (!decoded.lecturerId) {
@@ -40,39 +48,7 @@ const lecturerAuthMiddleware = (req, res, next) => {
   }
 };
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    const uploadPath = path.join(__dirname, '../uploads/batch_materials');
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `${uniqueSuffix}-${file.originalname}`);
-  }
-});
-
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: 50 * 1024 * 1024 // 50MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    // Allow common file types
-    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|ppt|pptx|xls|xlsx|txt|zip|rar/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Invalid file type'));
-    }
-  }
-});
+// Legacy upload configuration REMOVED - now using secure middleware
 
 // ========== BATCH MANAGEMENT ==========
 
@@ -277,8 +253,12 @@ router.get('/batch/:batchId/materials', lecturerAuthMiddleware, async (req, res)
   }
 });
 
-// Upload material
-router.post('/batch/:batchId/materials', lecturerAuthMiddleware, upload.single('file'), async (req, res) => {
+// Upload material (SECURE VERSION)
+router.post('/batch/:batchId/materials', 
+  uploadRateLimiters.general,
+  lecturerAuthMiddleware, 
+  uploadWithValidation('file'), 
+  async (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] POST /api/lecturer-batches/batch/:batchId/materials`);
   console.log('POST body:', req.body);
@@ -286,6 +266,8 @@ router.post('/batch/:batchId/materials', lecturerAuthMiddleware, upload.single('
   try {
     const { batchId } = req.params;
     const { title, description, material_type = 'lecture' } = req.body;
+    
+
     
     // Check access
     const accessCheck = await db.queryPromise(
@@ -310,6 +292,8 @@ router.post('/batch/:batchId/materials', lecturerAuthMiddleware, upload.single('
       fileType = req.file.mimetype;
     }
     
+
+    
     const result = await db.queryPromise(`
       INSERT INTO batch_materials (
         batch_id, lecturer_id, title, description, file_name, file_path, 
@@ -330,78 +314,42 @@ router.post('/batch/:batchId/materials', lecturerAuthMiddleware, upload.single('
   }
 });
 
-// Download material
+// Download material (SECURE VERSION)
 router.get('/materials/:materialId/download', lecturerAuthMiddleware, async (req, res) => {
   try {
     const { materialId } = req.params;
+    const lecturerId = req.lecturer.lecturerId;
     
-    // Check if lecturer has access to this material
+    // Verify lecturer has access to this material
     const material = await db.queryPromise(`
       SELECT bm.*, lb.lecturer_id
       FROM batch_materials bm
       JOIN lecturer_batches lb ON bm.batch_id = lb.batch_id
       WHERE bm.id = ? AND lb.lecturer_id = ?
-    `, [materialId, req.lecturer.lecturerId]);
+    `, [materialId, lecturerId]);
     
     if (material.length === 0) {
       return res.status(403).json({ error: 'Access denied to this material' });
     }
     
-    const materialFile = material[0];
+    const mat = material[0];
     
-    if (!materialFile.file_path || !fs.existsSync(materialFile.file_path)) {
-      logger.error(`File not found at path: ${materialFile.file_path}`);
-      return res.status(404).json({ error: 'File not found' });
-    }
-    
-    // Extract original filename or use title
-    let downloadFileName = materialFile.title || 'download';
-    if (materialFile.file_name) {
-      // If file_name contains the original name after the timestamp, extract it
-      const parts = materialFile.file_name.split('-');
-      if (parts.length > 2) {
-        downloadFileName = parts.slice(2).join('-');
-      } else {
-        downloadFileName = materialFile.file_name;
+    // Extract appropriate filename
+    let downloadFilename = mat.file_name || mat.title || 'material';
+    if (mat.file_name && mat.file_name.includes('_')) {
+      // Extract original name from secure filename format
+      const parts = mat.file_name.split('_');
+      if (parts.length >= 4) {
+        downloadFilename = parts.slice(3).join('_');
       }
     }
     
-    // Ensure proper file extension
-    if (!downloadFileName.endsWith('.pdf') && materialFile.file_type === 'application/pdf') {
-      downloadFileName += '.pdf';
-    }
-    
-    // Get actual file size
-    const fileStats = fs.statSync(materialFile.file_path);
-    const fileSize = fileStats.size;
-    
-    // Set comprehensive headers for PDF download
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${downloadFileName}"`);
-    res.setHeader('Content-Length', fileSize);
-    res.setHeader('Accept-Ranges', 'bytes');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    
-    // Create read stream with proper options
-    const fileStream = fs.createReadStream(materialFile.file_path, {
-      highWaterMark: 16 * 1024 // 16KB chunks
+    await secureDownload(req, res, {
+      filePath: mat.file_path,
+      filename: downloadFilename,
+      userId: lecturerId,
+      userType: 'lecturer'
     });
-    
-    fileStream.on('error', (err) => {
-      logger.error('File stream error:', err);
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'Error streaming file' });
-      }
-    });
-    
-    fileStream.on('end', () => {
-      logger.info(`Successfully downloaded material ${materialId}`);
-    });
-    
-    // Pipe the file to response
-    fileStream.pipe(res);
     
   } catch (error) {
     logger.error('Error downloading material:', error);

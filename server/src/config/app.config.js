@@ -21,27 +21,34 @@ const config = {
     : 'https://mpmaerp.slpa.lk')
 };
 
-// PayHere Configuration (defined separately to avoid circular reference)
-config.payhere = {
-  // Webhook/Notify URL - use ngrok for development, server URL for production
-  notifyUrl: process.env.PAYHERE_NOTIFY_URL || (isDevelopment
-    ? (process.env.NGROK_URL ? process.env.NGROK_URL + '/api/student_payments/payhere/notify' : 'http://localhost:5003/api/student_payments/payhere/notify')
-    : config.serverUrl + '/api/student_payments/payhere/notify'),
-  
-  // Return URLs
-  successUrl: process.env.PAYHERE_SUCCESS_URL || (isDevelopment
-    ? 'http://localhost:3000/payment-success'
-    : 'https://mpmaerp.slpa.lk/payment-success'),
-    
-  cancelUrl: process.env.PAYHERE_CANCEL_URL || (isDevelopment
-    ? 'http://localhost:3000/payment-cancel'
-    : 'https://mpmaerp.slpa.lk/payment-cancel')
-};
+
 
 // Add CORS origins to the config
 config.corsOrigins = [
   'http://localhost:3000',
-  'https://mpmaerp.slpa.lk'
+  'https://mpmaerp.slpa.lk',
+  'https://mpma.slpa.lk/erp'
 ];
+
+// Add environment variable support for additional origins
+if (process.env.ADDITIONAL_CORS_ORIGINS) {
+  const additionalOrigins = process.env.ADDITIONAL_CORS_ORIGINS.split(',').map(origin => origin.trim());
+  config.corsOrigins.push(...additionalOrigins);
+}
+
+// Upload Security Configuration
+config.uploads = {
+  root: process.env.UPLOAD_ROOT || 'secure_uploads',
+  maxSizeMB: parseInt(process.env.MAX_UPLOAD_MB) || 100,
+  allowedExtensions: process.env.ALLOWED_EXTENSIONS?.split(',') || null
+};
+
+// Security Configuration
+config.security = {
+  uploadRateLimit: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: parseInt(process.env.UPLOAD_RATE_LIMIT) || 10
+  }
+};
 
 module.exports = config;

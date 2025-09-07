@@ -14,14 +14,14 @@ const generateTokens = (student) => {
   // Access token - short lived (15 minutes)
   const accessToken = jwt.sign(
     { id: student.id, email: student.email, role: 'student' },
-    process.env.JWT_SECRET || 'your-secret-key',
+    process.env.JWT_SECRET,
     { expiresIn: '15m' }
   );
   
   // Refresh token - longer lived (7 days)
   const refreshToken = jwt.sign(
     { id: student.id, tokenVersion: student.tokenVersion || 0 },
-    process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key',
+    process.env.JWT_REFRESH_SECRET,
     { expiresIn: '7d' }
   );
   
@@ -47,7 +47,7 @@ const studentAuthMiddleware = (req, res, next) => {
   try {
     const decoded = jwt.verify(
       token, 
-      process.env.JWT_SECRET || 'your-secret-key'
+      process.env.JWT_SECRET
     );
     
     // Check for studentId instead of role
@@ -108,13 +108,13 @@ router.post('/login', async (req, res) => {
     // Generate tokens with role included
     const token = jwt.sign(
       { studentId: user.student_id, email: user.email, role: 'student' },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
     
     const refreshToken = jwt.sign(
       { studentId: user.student_id, email: user.email, role: 'student' },
-      process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret-key',
+      process.env.JWT_REFRESH_SECRET,
       { expiresIn: '7d' }
     );
     
@@ -201,7 +201,7 @@ router.post('/refresh-token', async (req, res) => {
     // Verify the refresh token
     const decoded = jwt.verify(
       refreshToken, 
-      process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret-key'
+      process.env.JWT_REFRESH_SECRET
     );
     
     // Check if the student exists and is active
@@ -219,7 +219,7 @@ router.post('/refresh-token', async (req, res) => {
     // Create a new access token
     const newToken = jwt.sign(
       { id: decoded.id, email: decoded.email, type: 'student' },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
     

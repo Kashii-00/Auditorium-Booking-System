@@ -1,8 +1,32 @@
 import React, { memo, useCallback } from "react"
 import { Plus } from "lucide-react"
 
+interface Event {
+  id: number
+  user_id: number
+  description: string
+  booking_date: string
+  booking_time: string
+  bookingendtime?: string
+  no_of_people: number
+  status?: string
+}
+
+interface CalendarDayProps {
+  date: number
+  dayEvents: Event[]
+  isCurrentDay: boolean
+  isPast: boolean
+  isMobile: boolean
+  onQuickBook: (date: number) => void
+  onCalendarEventHover: (event: Event, mouseEvent: React.MouseEvent) => void
+  onCalendarEventMouseMove: (event: Event, mouseEvent: React.MouseEvent) => void
+  onCalendarEventMouseLeave: () => void
+  onCalendarEventClick: (event: Event, mouseEvent: React.MouseEvent) => void
+}
+
 // Memoized Calendar Day Component
-const CalendarDay = memo(
+const CalendarDay = memo<CalendarDayProps>(
   ({
     date,
     dayEvents,

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import CreatableSelect from "react-select/creatable";
 import { authRequest } from "../../services/authService";
 import "./styles/styles.css";
-import { getApiUrl } from '../../utils/apiUrl';
+import { getApiUrl } from "../../utils/apiUrl";
 
 const PRIVILEGED_ROLES = ["SuperAdmin", "finance_manager", "admin"];
 
@@ -24,6 +24,32 @@ const extractPrivilege = () => {
   } catch {
     return false;
   }
+};
+
+const customSelectStyles = {
+  control: (base, state) => ({
+    ...base,
+    backgroundColor: "transparent",
+    borderColor: state.isFocused ? "#01eeff" : "#00a6ff9d",
+    borderWidth: 2,
+    borderRadius: 6,
+    minHeight: 36,
+    boxShadow: "none",
+    fontSize: "14px",
+    "&:hover": { borderColor: "#01eeff" },
+  }),
+  valueContainer: (base) => ({ ...base, padding: "2px 6px", fontSize: "14px" }),
+  placeholder: (base) => ({ ...base, color: "#999", fontSize: "14px" }),
+  input: (base) => ({ ...base, color: "#000", fontSize: "14px" }),
+  singleValue: (base) => ({ ...base, color: "#000", fontSize: "14px" }),
+  menu: (base) => ({ ...base, backgroundColor: "#f0f4f8", borderRadius: 6 }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isFocused ? "#dbeafe" : "transparent",
+    color: "#000",
+    fontSize: "14px",
+    padding: "8px 12px",
+  }),
 };
 
 const CourseOverheadsForm = ({
@@ -357,8 +383,111 @@ const CourseOverheadsForm = ({
     return grouped;
   }, [rates]);
 
+  // if (reviewMode) {
+  //   // Define columns order based on your DB table schemas
+  //   const columnsBySection = {
+  //     "Teaching Aids": [
+  //       "item_description",
+  //       "required_quantity",
+  //       "required_hours",
+  //       "hourly_rate",
+  //       "cost",
+  //     ],
+  //     "Training Environments": [
+  //       "item_description",
+  //       "required_hours",
+  //       "hourly_rate",
+  //       "cost",
+  //     ],
+  //     Overheads: ["item_description", "required_quantity", "rate", "cost"],
+  //   };
+
+  //   return (
+  //     <div className="mainCostCon">
+  //       <div className="review2Con">
+  //         <h2>Review Your Course Overheads Submission</h2>
+
+  //         <div>
+  //           <strong>Payments Main Details ID:</strong>{" "}
+  //           {formData.payments_main_details_id || <em>Not Provided</em>}
+  //         </div>
+
+  //         {[
+  //           { title: "Teaching Aids", data: formData.teaching_aids },
+  //           {
+  //             title: "Training Environments",
+  //             data: formData.training_environments,
+  //           },
+  //           { title: "Overheads", data: formData.overheads },
+  //         ].map(({ title, data }) => {
+  //           const columns =
+  //             columnsBySection[title] || (data[0] ? Object.keys(data[0]) : []);
+
+  //           return (
+  //             <section key={title}>
+  //               <h3>{title}</h3>
+  //               {data.length === 0 ? (
+  //                 <p>
+  //                   <em>No entries</em>
+  //                 </p>
+  //               ) : (
+  //                 <div className="table-wrapper">
+  //                   <table>
+  //                     <thead>
+  //                       <tr>
+  //                         {columns.map((col) => (
+  //                           <th key={col}>
+  //                             {col
+  //                               .replace(/_/g, " ")
+  //                               .replace(/\b\w/g, (c) => c.toUpperCase())}
+  //                           </th>
+  //                         ))}
+  //                       </tr>
+  //                     </thead>
+  //                     <tbody>
+  //                       {data.map((item, idx) => (
+  //                         <tr key={idx}>
+  //                           {columns.map((col) => (
+  //                             <td key={col}>
+  //                               {item[col] === undefined || item[col] === "" ? (
+  //                                 <em>N/A</em>
+  //                               ) : (
+  //                                 item[col].toString()
+  //                               )}
+  //                             </td>
+  //                           ))}
+  //                         </tr>
+  //                       ))}
+  //                     </tbody>
+  //                   </table>
+  //                 </div>
+  //               )}
+  //             </section>
+  //           );
+  //         })}
+
+  //         <div className="review-buttons">
+  //           <button
+  //             type="button"
+  //             className="ccfbtn"
+  //             onClick={() => setReviewMode(false)}
+  //           >
+  //             Back to Edit
+  //           </button>
+  //           <button
+  //             type="button"
+  //             className="ccfbtn"
+  //             onClick={handleFinalSubmit}
+  //           >
+  //             Confirm & Submit
+  //           </button>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
   if (reviewMode) {
-    // Define columns order based on your DB table schemas
     const columnsBySection = {
       "Teaching Aids": [
         "item_description",
@@ -377,131 +506,447 @@ const CourseOverheadsForm = ({
     };
 
     return (
-      <div className="mainCostCon">
-        <div className="review2Con">
-          <h2>Review Your Course Overheads Submission</h2>
+      <div className="space-y-6 w-full max-w-5xl mx-auto bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+          Review Your Course Overheads Submission
+        </h2>
 
-          <div>
-            <strong>Payments Main Details ID:</strong>{" "}
-            {formData.payments_main_details_id || <em>Not Provided</em>}
-          </div>
+        <div className="text-gray-700 mb-6">
+          <strong>Payments Main Details ID:</strong>{" "}
+          {formData.payments_main_details_id || <em>Not Provided</em>}
+        </div>
 
-          {[
-            { title: "Teaching Aids", data: formData.teaching_aids },
-            {
-              title: "Training Environments",
-              data: formData.training_environments,
-            },
-            { title: "Overheads", data: formData.overheads },
-          ].map(({ title, data }) => {
-            const columns =
-              columnsBySection[title] || (data[0] ? Object.keys(data[0]) : []);
+        {[
+          { title: "Teaching Aids", data: formData.teaching_aids },
+          {
+            title: "Training Environments",
+            data: formData.training_environments,
+          },
+          { title: "Overheads", data: formData.overheads },
+        ].map(({ title, data }) => {
+          const columns =
+            columnsBySection[title] || (data[0] ? Object.keys(data[0]) : []);
 
-            return (
-              <section key={title}>
-                <h3>{title}</h3>
-                {data.length === 0 ? (
-                  <p>
-                    <em>No entries</em>
-                  </p>
-                ) : (
-                  <div className="table-wrapper">
-                    <table>
-                      <thead>
-                        <tr>
+          return (
+            <section key={title} className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
+
+              {data.length === 0 ? (
+                <p className="text-gray-500">
+                  <em>No entries</em>
+                </p>
+              ) : (
+                <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+                  <table className="w-full text-sm text-left text-gray-700">
+                    <thead className="bg-gray-100 text-gray-800 font-semibold">
+                      <tr>
+                        {columns.map((col) => (
+                          <th key={col} className="px-4 py-2">
+                            {col
+                              .replace(/_/g, " ")
+                              .replace(/\b\w/g, (c) => c.toUpperCase())}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.map((item, idx) => (
+                        <tr key={idx} className="border-t">
                           {columns.map((col) => (
-                            <th key={col}>
-                              {col
-                                .replace(/_/g, " ")
-                                .replace(/\b\w/g, (c) => c.toUpperCase())}
-                            </th>
+                            <td key={col} className="px-4 py-2">
+                              {item[col] === undefined || item[col] === "" ? (
+                                <em>N/A</em>
+                              ) : (
+                                item[col].toString()
+                              )}
+                            </td>
                           ))}
                         </tr>
-                      </thead>
-                      <tbody>
-                        {data.map((item, idx) => (
-                          <tr key={idx}>
-                            {columns.map((col) => (
-                              <td key={col}>
-                                {item[col] === undefined || item[col] === "" ? (
-                                  <em>N/A</em>
-                                ) : (
-                                  item[col].toString()
-                                )}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </section>
-            );
-          })}
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          );
+        })}
 
-          <div className="review-buttons">
-            <button
-              type="button"
-              className="ccfbtn"
-              onClick={() => setReviewMode(false)}
-            >
-              Back to Edit
-            </button>
-            <button
-              type="button"
-              className="ccfbtn"
-              onClick={handleFinalSubmit}
-            >
-              Confirm & Submit
-            </button>
-          </div>
+        <div className="flex justify-end gap-3 mt-6">
+          <button
+            type="button"
+            onClick={() => setReviewMode(false)}
+            className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition"
+          >
+            Back to Edit
+          </button>
+          <button
+            type="button"
+            onClick={handleFinalSubmit}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Confirm & Submit
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mainCostCon">
-      <form className="aid-request-form-type2" onSubmit={handleSubmit}>
-        <h2 className="page-description-type2 h2-type2">
+    // <div className="mainCostCon">
+    //   <form className="aid-request-form-type2" onSubmit={handleSubmit}>
+    //     <h2 className="page-description-type2 h2-type2">
+    //       Fill Out The Course Overheads{" "}
+    //       {isPrivileged && <span style={{ color: "cyan" }}>(PRIVILEGED)</span>}
+    //     </h2>
+
+    //     {successMessage && (
+    //       <div className="success-popup2">{successMessage}</div>
+    //     )}
+    //     {error && <div className="error-popup2">{error}</div>}
+
+    //     <div className="aid-request-form-type2">
+    //       <div className="step-two-grid aid-request-form-type2">
+    //         <div className="form-step">
+    //           <input
+    //             type="number"
+    //             name="payments_main_details_id"
+    //             value={formData.payments_main_details_id}
+    //             onChange={handleChange}
+    //             required
+    //             placeholder=" "
+    //             className="input"
+    //           />
+    //           <label
+    //             className={formData.payments_main_details_id ? "active2" : ""}
+    //           >
+    //             Payments Main Details ID
+    //           </label>
+    //         </div>
+    //       </div>
+    //     </div>
+
+    //     <h3 className="page-description-type2 h2-type2">Teaching Aids</h3>
+    //     <div className="step-two-grid aid-request-form-type2">
+    //       {formData.teaching_aids.map((item, idx) => (
+    //         <div key={idx} className="expense-entry">
+    //           <div className="form-step">
+    //             <CreatableSelect
+    //               styles={customSelectStyles}
+    //               classNamePrefix="custom-select"
+    //               placeholder=" "
+    //               value={
+    //                 item.item_description
+    //                   ? {
+    //                       label: item.item_description,
+    //                       value: item.item_description,
+    //                     }
+    //                   : null
+    //               }
+    //               onChange={(opt) =>
+    //                 handleTeachingAidChange(
+    //                   idx,
+    //                   "item_description",
+    //                   opt?.value || ""
+    //                 )
+    //               }
+    //               options={rateOptions["Course Delivery (Teaching Aid)"] || []}
+    //               isClearable
+    //             />
+    //             <label className={item.item_description ? "active2" : ""}>
+    //               Item Description
+    //             </label>
+    //           </div>
+
+    //           {[
+    //             "required_quantity",
+    //             "required_hours",
+    //             "hourly_rate",
+    //             "cost",
+    //           ].map((field, i) => (
+    //             <div className="form-step" key={i}>
+    //               <input
+    //                 type="number"
+    //                 placeholder=" "
+    //                 value={item[field] || ""}
+    //                 onChange={(e) =>
+    //                   handleTeachingAidChange(idx, field, e.target.value)
+    //                 }
+    //                 readOnly={
+    //                   field === "hourly_rate" &&
+    //                   !isPrivileged &&
+    //                   getRate(
+    //                     item.item_description,
+    //                     "Course Delivery (Teaching Aid)"
+    //                   )
+    //                 }
+    //                 className="input"
+    //               />
+    //               <label className={item[field] ? "active2" : ""}>
+    //                 {field
+    //                   .replace("_", " ")
+    //                   .replace("required ", "")
+    //                   .replace("hourly", "Hourly")
+    //                   .replace("rate", "Rate")
+    //                   .replace("cost", "Cost")}
+    //               </label>
+    //             </div>
+    //           ))}
+
+    //           <div className="pfbtns">
+    //             <button
+    //               type="button"
+    //               className="RemAdd"
+    //               onClick={() => removeEntry("teaching_aids", idx)}
+    //             >
+    //               Remove
+    //             </button>
+    //           </div>
+    //         </div>
+    //       ))}
+    //     </div>
+    //     <div className="pfbtns">
+    //       <button
+    //         type="button"
+    //         className="addNew"
+    //         onClick={() => addEntry("teaching_aids", {})}
+    //       >
+    //         + Add Teaching Aid
+    //       </button>
+    //     </div>
+
+    //     <h3 className="page-description-type2 h2-type2">
+    //       Training Environments
+    //     </h3>
+    //     <div className="step-two-grid aid-request-form-type2">
+    //       {formData.training_environments.map((item, idx) => (
+    //         <div key={idx} className="expense-entry">
+    //           <div className="form-step">
+    //             <CreatableSelect
+    //               styles={customSelectStyles}
+    //               classNamePrefix="custom-select"
+    //               placeholder=" "
+    //               value={
+    //                 item.item_description
+    //                   ? {
+    //                       label: item.item_description,
+    //                       value: item.item_description,
+    //                     }
+    //                   : null
+    //               }
+    //               onChange={(opt) =>
+    //                 handleTrainingEnvChange(
+    //                   idx,
+    //                   "item_description",
+    //                   opt?.value || ""
+    //                 )
+    //               }
+    //               options={rateOptions["Course Delivery (Teaching Env)"] || []}
+    //               isClearable
+    //             />
+    //             <label className={item.item_description ? "active2" : ""}>
+    //               Item Description
+    //             </label>
+    //           </div>
+
+    //           {["required_hours", "hourly_rate", "cost"].map((field, i) => (
+    //             <div className="form-step" key={i}>
+    //               <input
+    //                 type="number"
+    //                 placeholder=" "
+    //                 value={item[field] || ""}
+    //                 onChange={(e) =>
+    //                   handleTrainingEnvChange(idx, field, e.target.value)
+    //                 }
+    //                 readOnly={
+    //                   field === "hourly_rate" &&
+    //                   !isPrivileged &&
+    //                   getRate(
+    //                     item.item_description,
+    //                     "Course Delivery (Teaching Env)"
+    //                   )
+    //                 }
+    //                 className="input"
+    //               />
+    //               <label className={item[field] ? "active2" : ""}>
+    //                 {field
+    //                   .replace("_", " ")
+    //                   .replace("required ", "")
+    //                   .replace("hourly", "Hourly")
+    //                   .replace("rate", "Rate")
+    //                   .replace("cost", "Cost")}
+    //               </label>
+    //             </div>
+    //           ))}
+
+    //           <div className="pfbtns">
+    //             <button
+    //               type="button"
+    //               className="RemAdd"
+    //               onClick={() => removeEntry("training_environments", idx)}
+    //             >
+    //               Remove
+    //             </button>
+    //           </div>
+    //         </div>
+    //       ))}
+    //     </div>
+    //     <div className="pfbtns">
+    //       <button
+    //         type="button"
+    //         className="addNew"
+    //         onClick={() => addEntry("training_environments", {})}
+    //       >
+    //         + Add Training Environment
+    //       </button>
+    //     </div>
+
+    //     <h3 className="page-description-type2 h2-type2">Overheads</h3>
+    //     <div className="step-two-grid aid-request-form-type2">
+    //       {formData.overheads.map((item, idx) => (
+    //         <div key={idx} className="expense-entry">
+    //           <div className="form-step">
+    //             <CreatableSelect
+    //               styles={customSelectStyles}
+    //               classNamePrefix="custom-select"
+    //               placeholder=" "
+    //               value={
+    //                 item.item_description
+    //                   ? {
+    //                       label: item.item_description,
+    //                       value: item.item_description,
+    //                     }
+    //                   : null
+    //               }
+    //               onChange={(opt) =>
+    //                 handleOverheadChange(
+    //                   idx,
+    //                   "item_description",
+    //                   opt?.value || ""
+    //                 )
+    //               }
+    //               options={rateOptions["Overheads"] || []}
+    //               isClearable
+    //             />
+    //             <label className={item.item_description ? "active2" : ""}>
+    //               Item Description
+    //             </label>
+    //           </div>
+
+    //           {["required_quantity", "rate", "cost"].map((field, i) => (
+    //             <div className="form-step" key={i}>
+    //               <input
+    //                 type="number"
+    //                 placeholder=" "
+    //                 value={item[field] || ""}
+    //                 onChange={(e) =>
+    //                   handleOverheadChange(idx, field, e.target.value)
+    //                 }
+    //                 readOnly={
+    //                   field === "rate" &&
+    //                   !isPrivileged &&
+    //                   getRate(item.item_description, "Overheads")
+    //                 }
+    //                 className="input"
+    //               />
+    //               <label className={item[field] ? "active2" : ""}>
+    //                 {field.charAt(0).toUpperCase() + field.slice(1)}
+    //               </label>
+    //             </div>
+    //           ))}
+
+    //           <div className="pfbtns">
+    //             <button
+    //               type="button"
+    //               className="RemAdd"
+    //               onClick={() => removeEntry("overheads", idx)}
+    //             >
+    //               Remove
+    //             </button>
+    //           </div>
+    //         </div>
+    //       ))}
+    //     </div>
+    //     <div className="pfbtns">
+    //       <button
+    //         type="button"
+    //         className="addNew"
+    //         onClick={() => addEntry("overheads", {})}
+    //       >
+    //         + Add Overhead
+    //       </button>
+    //     </div>
+
+    //     <hr className="form-divider" />
+    //     <div className="form-buttons-sticky btnHalf">
+    //       <div className="navigation-buttons">
+    //         <button
+    //           type="submit"
+    //           className="ccfbtn"
+    //           style={{ marginRight: "10px" }}
+    //         >
+    //           Review
+    //         </button>
+    //         <button type="button" className="ccfbtn" onClick={handleClearForm}>
+    //           Clear Form
+    //         </button>
+    //       </div>
+    //     </div>
+    //   </form>
+    // </div>
+
+    <div className="space-y-6 w-full max-w-5xl mx-auto bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <h2 className="text-2xl font-semibold text-gray-800">
           Fill Out The Course Overheads{" "}
-          {isPrivileged && <span style={{ color: "cyan" }}>(PRIVILEGED)</span>}
+          {isPrivileged && <span className="text-cyan-500">(PRIVILEGED)</span>}
         </h2>
 
         {successMessage && (
-          <div className="success-popup2">{successMessage}</div>
+          <div className="p-3 bg-green-100 text-green-800 rounded shadow">
+            {successMessage}
+          </div>
         )}
-        {error && <div className="error-popup2">{error}</div>}
+        {error && (
+          <div className="p-3 bg-red-100 text-red-800 rounded shadow">
+            {error}
+          </div>
+        )}
 
-        <div className="aid-request-form-type2">
-          <div className="step-two-grid aid-request-form-type2">
-            <div className="form-step">
-              <input
-                type="number"
-                name="payments_main_details_id"
-                value={formData.payments_main_details_id}
-                onChange={handleChange}
-                required
-                placeholder=" "
-                className="input"
-              />
-              <label
-                className={formData.payments_main_details_id ? "active2" : ""}
-              >
-                Payments Main Details ID
-              </label>
-            </div>
+        {/* Payments Main Details */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="mb-1 text-gray-700 font-medium">
+              Payments Main Details ID
+            </label>
+            <input
+              type="number"
+              name="payments_main_details_id"
+              value={formData.payments_main_details_id}
+              onChange={handleChange}
+              required
+              min={1}
+              className="w-full border-2 border-[#00a6ff9d] rounded-md px-3 py-1.5
+                     focus:border-[#01eeff] focus:ring-1 focus:ring-[#01eeff]
+                     hover:border-[#01eeff] transition"
+            />
           </div>
         </div>
 
-        <h3 className="page-description-type2 h2-type2">Teaching Aids</h3>
-        <div className="step-two-grid aid-request-form-type2">
+        {/* Teaching Aids */}
+        <h3 className="text-xl font-semibold text-gray-800">Teaching Aids</h3>
+        <div className="space-y-4">
           {formData.teaching_aids.map((item, idx) => (
-            <div key={idx} className="expense-entry">
-              <div className="form-step">
+            <div
+              key={idx}
+              className="grid grid-cols-1 md:grid-cols-6 gap-3 items-end"
+            >
+              {/* Item Description */}
+              <div className="col-span-2">
+                <label className="mb-1 text-gray-700 font-medium">
+                  Item Description
+                </label>
                 <CreatableSelect
-                  classNamePrefix="custom-select"
+                  styles={customSelectStyles}
                   placeholder=" "
                   value={
                     item.item_description
@@ -520,22 +965,28 @@ const CourseOverheadsForm = ({
                   }
                   options={rateOptions["Course Delivery (Teaching Aid)"] || []}
                   isClearable
+                  isSearchable
                 />
-                <label className={item.item_description ? "active2" : ""}>
-                  Item Description
-                </label>
               </div>
 
+              {/* Numeric Fields */}
               {[
                 "required_quantity",
                 "required_hours",
                 "hourly_rate",
                 "cost",
               ].map((field, i) => (
-                <div className="form-step" key={i}>
+                <div key={i}>
+                  <label className="mb-1 text-gray-700 font-medium">
+                    {field
+                      .replace("_", " ")
+                      .replace("required ", "")
+                      .replace("hourly", "Hourly")
+                      .replace("rate", "Rate")
+                      .replace("cost", "Cost")}
+                  </label>
                   <input
                     type="number"
-                    placeholder=" "
                     value={item[field] || ""}
                     onChange={(e) =>
                       handleTeachingAidChange(idx, field, e.target.value)
@@ -548,50 +999,49 @@ const CourseOverheadsForm = ({
                         "Course Delivery (Teaching Aid)"
                       )
                     }
-                    className="input"
+                    className="w-full border-2 border-[#00a6ff9d] rounded-md px-3 py-1.5
+                             focus:border-[#01eeff] focus:ring-1 focus:ring-[#01eeff]
+                             hover:border-[#01eeff] transition disabled:bg-gray-100"
                   />
-                  <label className={item[field] ? "active2" : ""}>
-                    {field
-                      .replace("_", " ")
-                      .replace("required ", "")
-                      .replace("hourly", "Hourly")
-                      .replace("rate", "Rate")
-                      .replace("cost", "Cost")}
-                  </label>
                 </div>
               ))}
 
-              <div className="pfbtns">
+              <div>
                 <button
                   type="button"
-                  className="RemAdd"
                   onClick={() => removeEntry("teaching_aids", idx)}
+                  className="px-3 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 transition"
                 >
                   Remove
                 </button>
               </div>
             </div>
           ))}
-        </div>
-        <div className="pfbtns">
           <button
             type="button"
-            className="addNew"
             onClick={() => addEntry("teaching_aids", {})}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
           >
             + Add Teaching Aid
           </button>
         </div>
 
-        <h3 className="page-description-type2 h2-type2">
+        {/* Training Environments */}
+        <h3 className="text-xl font-semibold text-gray-800">
           Training Environments
         </h3>
-        <div className="step-two-grid aid-request-form-type2">
+        <div className="space-y-4">
           {formData.training_environments.map((item, idx) => (
-            <div key={idx} className="expense-entry">
-              <div className="form-step">
+            <div
+              key={idx}
+              className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end"
+            >
+              <div className="col-span-2">
+                <label className="mb-1 text-gray-700 font-medium">
+                  Item Description
+                </label>
                 <CreatableSelect
-                  classNamePrefix="custom-select"
+                  styles={customSelectStyles}
                   placeholder=" "
                   value={
                     item.item_description
@@ -610,17 +1060,22 @@ const CourseOverheadsForm = ({
                   }
                   options={rateOptions["Course Delivery (Teaching Env)"] || []}
                   isClearable
+                  isSearchable
                 />
-                <label className={item.item_description ? "active2" : ""}>
-                  Item Description
-                </label>
               </div>
 
               {["required_hours", "hourly_rate", "cost"].map((field, i) => (
-                <div className="form-step" key={i}>
+                <div key={i}>
+                  <label className="mb-1 text-gray-700 font-medium">
+                    {field
+                      .replace("_", " ")
+                      .replace("required ", "")
+                      .replace("hourly", "Hourly")
+                      .replace("rate", "Rate")
+                      .replace("cost", "Cost")}
+                  </label>
                   <input
                     type="number"
-                    placeholder=" "
                     value={item[field] || ""}
                     onChange={(e) =>
                       handleTrainingEnvChange(idx, field, e.target.value)
@@ -633,48 +1088,47 @@ const CourseOverheadsForm = ({
                         "Course Delivery (Teaching Env)"
                       )
                     }
-                    className="input"
+                    className="w-full border-2 border-[#00a6ff9d] rounded-md px-3 py-1.5
+                           focus:border-[#01eeff] focus:ring-1 focus:ring-[#01eeff]
+                           hover:border-[#01eeff] transition disabled:bg-gray-100"
                   />
-                  <label className={item[field] ? "active2" : ""}>
-                    {field
-                      .replace("_", " ")
-                      .replace("required ", "")
-                      .replace("hourly", "Hourly")
-                      .replace("rate", "Rate")
-                      .replace("cost", "Cost")}
-                  </label>
                 </div>
               ))}
 
-              <div className="pfbtns">
+              <div>
                 <button
                   type="button"
-                  className="RemAdd"
                   onClick={() => removeEntry("training_environments", idx)}
+                  className="px-3 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 transition"
                 >
                   Remove
                 </button>
               </div>
             </div>
           ))}
-        </div>
-        <div className="pfbtns">
           <button
             type="button"
-            className="addNew"
             onClick={() => addEntry("training_environments", {})}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
           >
             + Add Training Environment
           </button>
         </div>
 
-        <h3 className="page-description-type2 h2-type2">Overheads</h3>
-        <div className="step-two-grid aid-request-form-type2">
+        {/* Overheads */}
+        <h3 className="text-xl font-semibold text-gray-800">Overheads</h3>
+        <div className="space-y-4">
           {formData.overheads.map((item, idx) => (
-            <div key={idx} className="expense-entry">
-              <div className="form-step">
+            <div
+              key={idx}
+              className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end"
+            >
+              <div className="col-span-2">
+                <label className="mb-1 text-gray-700 font-medium">
+                  Item Description
+                </label>
                 <CreatableSelect
-                  classNamePrefix="custom-select"
+                  styles={customSelectStyles}
                   placeholder=" "
                   value={
                     item.item_description
@@ -693,17 +1147,17 @@ const CourseOverheadsForm = ({
                   }
                   options={rateOptions["Overheads"] || []}
                   isClearable
+                  isSearchable
                 />
-                <label className={item.item_description ? "active2" : ""}>
-                  Item Description
-                </label>
               </div>
 
               {["required_quantity", "rate", "cost"].map((field, i) => (
-                <div className="form-step" key={i}>
+                <div key={i}>
+                  <label className="mb-1 text-gray-700 font-medium">
+                    {field.charAt(0).toUpperCase() + field.slice(1)}
+                  </label>
                   <input
                     type="number"
-                    placeholder=" "
                     value={item[field] || ""}
                     onChange={(e) =>
                       handleOverheadChange(idx, field, e.target.value)
@@ -713,50 +1167,48 @@ const CourseOverheadsForm = ({
                       !isPrivileged &&
                       getRate(item.item_description, "Overheads")
                     }
-                    className="input"
+                    className="w-full border-2 border-[#00a6ff9d] rounded-md px-3 py-1.5
+                           focus:border-[#01eeff] focus:ring-1 focus:ring-[#01eeff]
+                           hover:border-[#01eeff] transition disabled:bg-gray-100"
                   />
-                  <label className={item[field] ? "active2" : ""}>
-                    {field.charAt(0).toUpperCase() + field.slice(1)}
-                  </label>
                 </div>
               ))}
 
-              <div className="pfbtns">
+              <div>
                 <button
                   type="button"
-                  className="RemAdd"
                   onClick={() => removeEntry("overheads", idx)}
+                  className="px-3 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 transition"
                 >
                   Remove
                 </button>
               </div>
             </div>
           ))}
-        </div>
-        <div className="pfbtns">
           <button
             type="button"
-            className="addNew"
             onClick={() => addEntry("overheads", {})}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
           >
             + Add Overhead
           </button>
         </div>
 
-        <hr className="form-divider" />
-        <div className="form-buttons-sticky btnHalf">
-          <div className="navigation-buttons">
-            <button
-              type="submit"
-              className="ccfbtn"
-              style={{ marginRight: "10px" }}
-            >
-              Review
-            </button>
-            <button type="button" className="ccfbtn" onClick={handleClearForm}>
-              Clear Form
-            </button>
-          </div>
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Review
+          </button>
+          <button
+            type="button"
+            onClick={handleClearForm}
+            className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 transition"
+          >
+            Clear Form
+          </button>
         </div>
       </form>
     </div>

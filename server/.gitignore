@@ -8,8 +8,8 @@ pnpm-debug.log*
 # Environment variables
 .env
 .env.local
-.env.development
 .env.test
+!.env.development
 .env.production
 
 # Logs
@@ -88,3 +88,13 @@ test_lms_setup.js
 
 # Optional eslint cache
 .eslintcache
+
+# SSL Certificates and Keys (SECURITY CRITICAL)
+ssl/
+*.crt
+*.key
+*.pem
+*.p12
+*.pfx
+certificates/
+certs/

@@ -1,62 +1,74 @@
-"use client"
-
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, Suspense, lazy } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import ErrorBoundary from "./ErrorBoundary"
+import ServerConnectionError from "./components/ServerConnectionError"
+
+// Critical components loaded immediately
 import Login from "./pages/Login/Login"
-import EventCalendar from "./pages/Auditorium_Reservation/EventCalendar"
-import EventBooking from "./pages/Auditorium_Reservation/EventBooking"
-import UserDetails from "./pages/Login/UserDetails"
-import CreateUser from "./pages/Login/CreateUser"
 import Sidebar from "./components/Sidebar"
 import AccessDenied from "./pages/AccessDenied"
 import Navbar from "./components/Navbar"
-import BusBooking from "./pages/Bus_Booking/busBooking"
-import BusBookingList from "./pages/Bus_Booking/BusBookingList"
-import BatchRegistration from "./pages/Course&Batch/BatchRegistration"
-import C_Registration from "./pages/Course&Batch/C_Registration"
-import Student_Registration from "./pages/Student/Student_Registration"
-import lecturerRegistration from "./pages/Lecturer/lecturerRegistration"
-import BatchStudents from "./pages/Course&Batch/BatchStudents"
-import BatchAddStudents from "./pages/Course&Batch/BatchAddStudents"
-import StudentEdit from "./pages/Student/StudentEdit"
-import StudentView from "./pages/Student/StudentView"
-import BatchLecturers from "./pages/Course&Batch/BatchLecturers"
-import BatchAddLecturers from "./pages/Course&Batch/BatchAddLecturers"
-import AnnualPlan from "./pages/Course&Batch/AnnualPlan"
-import LecturerView from "./pages/Lecturer/LecturerView"
-import AnnualPlanPrintReport from "./pages/Course&Batch/annual-plan-print-report"
-import ErrorBoundary from "./ErrorBoundary" // Add this import
-import ServerConnectionError from "./components/ServerConnectionError"
-import ClassroomCalendar from "./pages/Classroom_Booking/ClassroomReservationCalendar"
-import ClassroomBooking from "./pages/Classroom_Booking/ClassroomBooking"
-import ClassroomBookingForm from "./pages/Classroom_Booking/ClassroomBookingForm"
-import CalendarBookingTable from "./pages/Classroom_Booking/CalendarBookingTable"
-import ScheduleChecker from "./pages/Classroom_Booking/ScheduleChecker"
-import SingleBookingFullDetails from "./pages/Classroom_Booking/SingleBookingFullDetails"
-import CancelRequestForm from "./pages/Classroom_Booking/CancelRequestForm"
 
-// Import the new student portal components
-import StudentChangePassword from "./pages/StudentPortal/StudentChangePassword"
-import StudentForgotPassword from "./pages/StudentPortal/StudentForgotPassword"
-import StudentResetPassword from "./pages/StudentPortal/StudentResetPassword"
-import StudentDashboard from "./pages/StudentPortal/StudentDashboard"
-import StudentProfile from "./pages/StudentPortal/StudentProfile"
-import StudentPreferences from "./pages/StudentPortal/StudentPreferences"
-import StudentBatchDetail from "./pages/StudentPortal/StudentBatchDetail"
+// Lazy load non-critical components with error boundaries
+const EventCalendar = lazy(() => import("./pages/Auditorium_Reservation/EventCalendar"))
+const EventBooking = lazy(() => import("./pages/Auditorium_Reservation/EventBooking"))
+const UserDetails = lazy(() => import("./pages/Login/UserDetails"))
+const CreateUser = lazy(() => import("./pages/Login/CreateUser"))
 
-// Import the new lecturer portal components
-import LecturerChangePassword from "./pages/LecturerPortal/LecturerChangePassword"
-import LecturerDashboard from "./pages/LecturerPortal/LecturerDashboard"
-import BatchDetail from "./pages/LecturerPortal/BatchDetail"
-import LecturerForgotPassword from "./pages/LecturerPortal/LecturerForgotPassword"
-import LecturerResetPassword from "./pages/LecturerPortal/LecturerResetPassword"
-import LecturerProfile from "./pages/LecturerPortal/LecturerProfile"
+// Bus booking components
+const BusBooking = lazy(() => import("./pages/Bus_Booking/busBooking"))
+const BusBookingList = lazy(() => import("./pages/Bus_Booking/BusBookingList"))
 
-//Import the new Finance Function components 
-import EditRatesPanel from "./pages/Accounts_section/EditRatesPanel";
-import CourseCostForm from "./pages/Accounts_section/CourseCostForm";
-import PaymentsDetailsTable from "./pages/Accounts_section/PaymentsDetailsTable";
-import PaymentSingleDetails from "./pages/Accounts_section/PaymentsSingleDetails";
+// Course and batch components
+const BatchRegistration = lazy(() => import("./pages/Course&Batch/BatchRegistration"))
+const C_Registration = lazy(() => import("./pages/Course&Batch/C_Registration"))
+const BatchStudents = lazy(() => import("./pages/Course&Batch/BatchStudents"))
+const BatchAddStudents = lazy(() => import("./pages/Course&Batch/BatchAddStudents"))
+const BatchLecturers = lazy(() => import("./pages/Course&Batch/BatchLecturers"))
+const BatchAddLecturers = lazy(() => import("./pages/Course&Batch/BatchAddLecturers"))
+const AnnualPlan = lazy(() => import("./pages/Course&Batch/AnnualPlan"))
+const AnnualPlanPrintReport = lazy(() => import("./pages/Course&Batch/annual-plan-print-report"))
+
+// Student components
+const Student_Registration = lazy(() => import("./pages/Student/Student_Registration"))
+const StudentEdit = lazy(() => import("./pages/Student/StudentEdit"))
+const StudentView = lazy(() => import("./pages/Student/StudentView"))
+
+// Lecturer components
+const lecturerRegistration = lazy(() => import("./pages/Lecturer/lecturerRegistration"))
+const LecturerView = lazy(() => import("./pages/Lecturer/LecturerView"))
+
+// Classroom booking components
+const ClassroomCalendar = lazy(() => import("./pages/Classroom_Booking/ClassroomReservationCalendar"))
+const ClassroomBooking = lazy(() => import("./pages/Classroom_Booking/ClassroomBooking"))
+const ClassroomBookingForm = lazy(() => import("./pages/Classroom_Booking/ClassroomBookingForm"))
+const CalendarBookingTable = lazy(() => import("./pages/Classroom_Booking/CalendarBookingTable"))
+const ScheduleChecker = lazy(() => import("./pages/Classroom_Booking/ScheduleChecker"))
+const SingleBookingFullDetails = lazy(() => import("./pages/Classroom_Booking/SingleBookingFullDetails"))
+const CancelRequestForm = lazy(() => import("./pages/Classroom_Booking/CancelRequestForm"))
+
+// Student portal components
+const StudentChangePassword = lazy(() => import("./pages/StudentPortal/StudentChangePassword"))
+const StudentForgotPassword = lazy(() => import("./pages/StudentPortal/StudentForgotPassword"))
+const StudentResetPassword = lazy(() => import("./pages/StudentPortal/StudentResetPassword"))
+const StudentDashboard = lazy(() => import("./pages/StudentPortal/StudentDashboard"))
+const StudentProfile = lazy(() => import("./pages/StudentPortal/StudentProfile"))
+const StudentPreferences = lazy(() => import("./pages/StudentPortal/StudentPreferences"))
+const StudentBatchDetail = lazy(() => import("./pages/StudentPortal/StudentBatchDetail"))
+
+// Lecturer portal components
+const LecturerChangePassword = lazy(() => import("./pages/LecturerPortal/LecturerChangePassword"))
+const LecturerDashboard = lazy(() => import("./pages/LecturerPortal/LecturerDashboard"))
+const BatchDetail = lazy(() => import("./pages/LecturerPortal/BatchDetail"))
+const LecturerForgotPassword = lazy(() => import("./pages/LecturerPortal/LecturerForgotPassword"))
+const LecturerResetPassword = lazy(() => import("./pages/LecturerPortal/LecturerResetPassword"))
+const LecturerProfile = lazy(() => import("./pages/LecturerPortal/LecturerProfile"))
+
+// Finance Function components (lazy loaded)
+const EditRatesPanel = lazy(() => import("./pages/Accounts_section/EditRatesPanel"))
+const CourseCostForm = lazy(() => import("./pages/Accounts_section/CourseCostForm"))
+const PaymentsDetailsTable = lazy(() => import("./pages/Accounts_section/PaymentsDetailsTable"))
+const PaymentSingleDetails = lazy(() => import("./pages/Accounts_section/PaymentsSingleDetails"))
 
 import "./styles/CSS/App.css"
 import "./styles/CSS/global.css"
@@ -121,6 +133,16 @@ function App() {
     }
   }, [])
 
+  // Handle direct access to /erp (without trailing slash)
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    const currentSearch = window.location.search;
+    // If someone accesses exactly /erp (without trailing slash), redirect to /erp/
+    if (currentPath === '/erp') {
+      window.location.replace('/erp/' + currentSearch);
+    }
+  }, [])
+
   const handleLogin = (userData) => {
     if (typeof userData.role === "string") {
       try {
@@ -143,9 +165,13 @@ function App() {
 
       await logout()
       setLoggedInUser(null)
+      // Force redirect to login page after logout
+      window.location.href = '/erp/login'
     } catch (error) {
       console.error("Logout error in App:", error)
       setLoggedInUser(null)
+      // Force redirect to login page even on error
+      window.location.href = '/erp/login'
     }
   }
 
@@ -221,20 +247,37 @@ function App() {
     return "/access-denied"
   }
 
-  const ProtectedRoute = ({ element: Element, canAccess, ...props }) => {
-    if (!loggedInUser) return <Navigate to="/" />
-    if (!canAccess) return <Navigate to="/access-denied" replace />
-    return <Element {...props} />
-  }
-
-  // Enhanced ProtectedRoute with Error Boundary for data-heavy components
+  // Enhanced ProtectedRoute with Error Boundary and Suspense for lazy-loaded components
   const ProtectedRouteWithErrorBoundary = ({ element: Element, canAccess, ...props }) => {
     if (!loggedInUser) return <Navigate to="/" />
     if (!canAccess) return <Navigate to="/access-denied" replace />
     return (
       <ErrorBoundary>
-        <Element {...props} />
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-lg font-medium text-gray-700">Loading...</span>
+          </div>
+        }>
+          <Element {...props} />
+        </Suspense>
       </ErrorBoundary>
+    )
+  }
+
+  // Standard ProtectedRoute with Suspense for lazy-loaded components
+  const ProtectedRoute = ({ element: Element, canAccess, ...props }) => {
+    if (!loggedInUser) return <Navigate to="/" />
+    if (!canAccess) return <Navigate to="/access-denied" replace />
+    return (
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-lg font-medium text-gray-700">Loading...</span>
+        </div>
+      }>
+        <Element {...props} />
+      </Suspense>
     )
   }
 
@@ -252,7 +295,13 @@ function App() {
   }
 
   return (
-    <Router>
+    <Router 
+      basename="/erp"
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
       {loggedInUser && (
         <>
           <Navbar user={loggedInUser} onLogout={handleLogout} />
@@ -536,7 +585,7 @@ function App() {
           <Route path="/student-batch-detail/:batchId" element={<StudentBatchDetail />} />
 
           {/* Lecturer Portal Routes */}
-                  <Route path="/lecturer-login" element={<Navigate to="/?type=lecturer" replace />} />
+        <Route path="/lecturer-login" element={<Navigate to="/?type=lecturer" replace />} />
         <Route path="/lecturer-dashboard" element={<LecturerDashboard />} />
         <Route path="/lecturer/batch/:batchId" element={<BatchDetail />} />
         <Route path="/lecturer-change-password" element={<LecturerChangePassword />} />

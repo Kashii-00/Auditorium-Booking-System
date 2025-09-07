@@ -118,7 +118,7 @@ const StudentResetPassword = () => {
         
         // Redirect to login after 3 seconds
         setTimeout(() => {
-          navigate("/?type=student");
+          window.location.href = "/erp/?type=student";
         }, 3000);
       }
     } catch (error) {

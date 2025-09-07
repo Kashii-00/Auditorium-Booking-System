@@ -41,31 +41,6 @@ const patchSchema = Joi.object({
   amount_paid: Joi.number().precision(2).min(0.01).required(),
 });
 
-// // Multer setup for proof uploads
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     const dir = path.join(__dirname, "../../../uploads/payment_proofs");
-//     fs.mkdirSync(dir, { recursive: true });
-//     cb(null, dir);
-//   },
-//   filename: (req, file, cb) => {
-//     cb(null, Date.now() + "_" + file.originalname);
-//   },
-// });
-
-// const upload = multer({
-//   storage,
-//   limits: { fileSize: 5 * 1024 * 1024 },
-//   fileFilter: (req, file, cb) => {
-//     const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
-//     if (allowedTypes.includes(file.mimetype)) {
-//       cb(null, true);
-//     } else {
-//       cb(new Error("Invalid file type. Only JPG, PNG, PDF allowed."));
-//     }
-//   },
-// });
-
 // Absolute path to src/uploads/payment_proofs
 const uploadDir = path.join(process.cwd(), "src/uploads/payment_proofs");
 
@@ -93,6 +68,21 @@ const upload = multer({
     }
   },
 });
+
+function handleFileUpload(fieldName) {
+  return (req, res, next) => {
+    upload.single(fieldName)(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        // Multer-specific errors (file size exceeded)
+        return res.status(400).json({ error: err.message });
+      } else if (err) {
+        // Custom errors from fileFilter (invalid type)
+        return res.status(400).json({ error: err.message });
+      }
+      next();
+    });
+  };
+}
 
 // PayHere fee percentage (3.30% as per your plan)
 const PAYHERE_FEE_PERCENT = 0.033;
@@ -366,9 +356,14 @@ function checkCourseCapacity(courseBatch_id, callback) {
 }
 
 // --- POST endpoint for manual/offline payments ---
-router.post("/", upload.single("payment_proof"), (req, res) => {
+router.post("/", handleFileUpload("payment_proof"), (req, res) => {
   const { error, value } = postSchema.validate(req.body);
   if (error) return res.status(400).json({ error: error.details[0].message });
+
+  // ✅ Require proof file
+  if (!req.file) {
+    return res.status(400).json({ error: "Payment proof file is required." });
+  }
 
   const { student_id, courseBatch_id, amount_paid } = value;
 
@@ -399,21 +394,19 @@ router.post("/", upload.single("payment_proof"), (req, res) => {
                   error: "Failed to record manual payment transaction",
                 });
 
-              // Save proof if uploaded
-              if (req.file) {
-                db.query(
-                  `INSERT INTO student_payment_proofs
-                   (transaction_id, file_path, file_name, file_type, uploaded_by)
-                   VALUES (?, ?, ?, ?, ?)`,
-                  [
-                    result.insertId,
-                    req.file.path,
-                    req.file.originalname,
-                    req.file.mimetype,
-                    req.user.id,
-                  ]
-                );
-              }
+              // Save proof (already validated as required)
+              db.query(
+                `INSERT INTO student_payment_proofs
+                 (transaction_id, file_path, file_name, file_type, uploaded_by)
+                 VALUES (?, ?, ?, ?, ?)`,
+                [
+                  result.insertId,
+                  req.file.path,
+                  req.file.originalname,
+                  req.file.mimetype,
+                  req.user.id,
+                ]
+              );
 
               res.status(201).json({
                 message: "Manual payment recorded and pending approval.",
@@ -444,9 +437,9 @@ router.post("/", upload.single("payment_proof"), (req, res) => {
 
             db.query(
               `INSERT INTO student_payments (
-              student_id, courseBatch_id, user_id,
-              amount_paid, full_amount_payable, payment_completed
-            ) VALUES (?, ?, ?, 0, ?, FALSE)`,
+                student_id, courseBatch_id, user_id,
+                amount_paid, full_amount_payable, payment_completed
+              ) VALUES (?, ?, ?, 0, ?, FALSE)`,
               [student_id, courseBatch_id, req.user.id, full_amount_payable],
               (err4, result) => {
                 if (err4) {
@@ -469,10 +462,15 @@ router.post("/", upload.single("payment_proof"), (req, res) => {
 });
 
 // --- PATCH endpoint for manual/offline payment increments ---
-router.patch("/:id", upload.single("payment_proof"), (req, res) => {
+router.patch("/:id", handleFileUpload("payment_proof"), (req, res) => {
   const { id } = req.params;
   const { error, value } = patchSchema.validate(req.body);
   if (error) return res.status(400).json({ error: error.details[0].message });
+
+  // ✅ Require proof file
+  if (!req.file) {
+    return res.status(400).json({ error: "Payment proof file is required." });
+  }
 
   const { amount_paid } = value;
 
@@ -511,20 +509,19 @@ router.patch("/:id", upload.single("payment_proof"), (req, res) => {
             .status(500)
             .json({ error: "Failed to record manual payment transaction" });
 
-        if (req.file) {
-          db.query(
-            `INSERT INTO student_payment_proofs
-             (transaction_id, file_path, file_name, file_type, uploaded_by)
-             VALUES (?, ?, ?, ?, ?)`,
-            [
-              result.insertId,
-              req.file.path,
-              req.file.originalname,
-              req.file.mimetype,
-              req.user.id,
-            ]
-          );
-        }
+        // Save proof (already validated as required)
+        db.query(
+          `INSERT INTO student_payment_proofs
+           (transaction_id, file_path, file_name, file_type, uploaded_by)
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            result.insertId,
+            req.file.path,
+            req.file.originalname,
+            req.file.mimetype,
+            req.user.id,
+          ]
+        );
 
         res.json({
           message: "Manual payment increment recorded and pending approval.",

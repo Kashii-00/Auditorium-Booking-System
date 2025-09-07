@@ -85,7 +85,7 @@ const LecturerChangePassword = () => {
 
   const handleLogout = () => {
     lecturerLogout()
-    navigate("/")
+    window.location.href = "/erp/?type=lecturer"
   }
 
   if (success) {

@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 // Configuration settings for JWTs
-const ACCESS_TOKEN_SECRET = process.env.JWT_ACCESS_SECRET;
+const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET;
 
 // Generate tokens with specific expirations

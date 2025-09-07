@@ -289,3 +289,9 @@ export const courseToStreamMap = groupedCourseOptions.reduce((map, group) => {
   });
   return map;
 }, {});
+
+// Utility function to parse classroom capacity from label
+export const parseClassroomCapacity = (classroomLabel) => {
+  const match = classroomLabel.match(/\((\d+)\)/);
+  return match ? parseInt(match[1], 10) : null;
+};

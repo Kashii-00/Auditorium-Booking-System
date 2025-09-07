@@ -5,42 +5,15 @@ const jwt = require('jsonwebtoken');
 const logger = require('../logger');
 const path = require('path');
 const fs = require('fs');
-const multer = require('multer');
+// multer removed - using secure middleware instead
 
-// Configure multer for assignment file uploads
-const storage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    const studentId = req.student.studentId;
-    const assignmentId = req.params.assignmentId;
-    const uploadPath = path.join(__dirname, '../uploads/assignments', `student_${studentId}`);
-    
-    // Create directory if it doesn't exist
-    fs.mkdirSync(uploadPath, { recursive: true });
-    cb(null, uploadPath);
-  },
-  filename: function (req, file, cb) {
-    const assignmentId = req.params.assignmentId;
-    const timestamp = Date.now();
-    const sanitizedFileName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
-    cb(null, `assignment_${assignmentId}_${timestamp}-${sanitizedFileName}`);
-  }
-});
+// Import secure upload middleware
+const { createSecureUpload } = require('../middleware/secureMulterFactory');
 
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 50 * 1024 * 1024 // 50MB limit
-  },
-  fileFilter: function (req, file, cb) {
-    // Allow common document and image formats
-    const allowedTypes = /\.(pdf|doc|docx|txt|png|jpg|jpeg|zip|rar)$/i;
-    if (allowedTypes.test(file.originalname)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF, DOC, DOCX, TXT, PNG, JPG, ZIP, and RAR files are allowed'));
-    }
-  }
-});
+// SECURITY: Create secure upload configuration for assignment submissions
+const { uploadWithValidation } = createSecureUpload('assignments', 'student');
+
+// Legacy upload config removed - all endpoints now use secure middleware
 
 /**
  * Middleware to verify student JWT token
@@ -61,7 +34,7 @@ const studentAuthMiddleware = (req, res, next) => {
   try {
     const decoded = jwt.verify(
       token, 
-      process.env.JWT_SECRET || 'your-secret-key'
+      process.env.JWT_SECRET
     );
     
     req.student = decoded;
@@ -372,10 +345,10 @@ router.get('/materials/:materialId/download', studentAuthMiddleware, async (req,
 });
 
 /**
- * Submit assignment with file upload
+ * Submit assignment with file upload (SECURE VERSION)
  * POST /api/student-batches/assignments/:assignmentId/submit
  */
-router.post('/assignments/:assignmentId/submit', studentAuthMiddleware, upload.single('assignmentFile'), async (req, res) => {
+router.post('/assignments/:assignmentId/submit', studentAuthMiddleware, uploadWithValidation('assignmentFile'), async (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] POST /api/student-batches/assignments/:assignmentId/submit`);
   console.log('POST body:', req.body);
@@ -486,7 +459,7 @@ router.post('/assignments/:assignmentId/submit', studentAuthMiddleware, upload.s
  * Edit/Update assignment submission (before deadline)
  * PUT /api/student-batches/assignments/:assignmentId/submit/:submissionId
  */
-router.put('/assignments/:assignmentId/submit/:submissionId', studentAuthMiddleware, upload.single('assignmentFile'), async (req, res) => {
+router.put('/assignments/:assignmentId/submit/:submissionId', studentAuthMiddleware, uploadWithValidation('assignmentFile'), async (req, res) => {
   const now = new Date().toISOString();
   console.log(`[${now}] PUT /api/student-batches/assignments/:assignmentId/submit/:submissionId`);
   console.log('PUT body:', req.body);

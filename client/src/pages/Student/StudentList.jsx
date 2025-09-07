@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { authRequest } from '../../services/authService';
 import { getApiUrl } from '../../utils/apiUrl';
 import { FaPlus, FaSearch, FaEdit, FaEye, FaTrash, FaUserGraduate, FaFilter, FaDownload } from 'react-icons/fa';
+import { SecureDisplay } from '../../components/SecureForm';
 import './styles/StudentList.css';
 
 const StudentList = () => {
@@ -260,12 +261,14 @@ const StudentList = () => {
               {filteredStudents.map(student => (
                 <tr key={student.id}>
                   <td>{student.id}</td>
-                  <td>{student.full_name}</td>
-                  <td>{student.email}</td>
-                  <td>{student.identification_type}: {student.id_number}</td>
+                  <td><SecureDisplay content={student.full_name} /></td>
+                  <td><SecureDisplay content={student.email} /></td>
+                  <td>
+                    <SecureDisplay content={student.identification_type} />: <SecureDisplay content={student.id_number} />
+                  </td>
                   <td>
                     <div className="courses-cell">
-                      {student.enrolled_courses || 'None'}
+                      <SecureDisplay content={student.enrolled_courses || 'None'} />
                       {student.course_count > 0 && (
                         <span className="course-count">{student.course_count}</span>
                       )}
@@ -273,7 +276,7 @@ const StudentList = () => {
                   </td>
                   <td>
                     <span className={`status-badge status-${student.status?.toLowerCase()}`}>
-                      {student.status || 'Unknown'}
+                      <SecureDisplay content={student.status || 'Unknown'} />
                     </span>
                   </td>
                   <td className="actions-cell">

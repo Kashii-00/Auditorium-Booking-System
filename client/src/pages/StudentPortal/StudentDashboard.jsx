@@ -480,8 +480,8 @@ const StudentDashboard = () => {
     localStorage.removeItem("studentToken")
     localStorage.removeItem("studentRefreshToken")
     localStorage.removeItem("studentUser")
-    navigate("/student-login")
-  }, [navigate])
+    window.location.href = "/erp/?type=student"
+  }, [])
 
   const handleChangePassword = useCallback(() => {
     navigate("/student-change-password")

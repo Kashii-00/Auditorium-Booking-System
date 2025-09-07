@@ -36,6 +36,8 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import SafeStyleSheet from "../../components/SafeStyleSheet"
+import { SecureDisplay } from "../../components/SecureForm"
 import { authRequest } from "../../services/authService"
 import { getApiUrl } from '../../utils/apiUrl'
 
@@ -254,7 +256,9 @@ const BookingRow = memo(({ booking, onApprove, onDeny, onDelete, selectedBooking
             </AvatarFallback>
           </Avatar>
           <div>
-            <div className="font-bold text-slate-900">{booking.forWho || "N/A"}</div>
+            <div className="font-bold text-slate-900">
+              <SecureDisplay content={booking.forWho || "N/A"} />
+            </div>
             <div className="text-sm text-slate-500 font-semibold">
               <Bus className="w-3 h-3 inline mr-1" />
               Bus Reservation
@@ -265,14 +269,18 @@ const BookingRow = memo(({ booking, onApprove, onDeny, onDelete, selectedBooking
       <td className={`p-4 transition-all duration-300 ${
         !sidebarCollapsed ? 'hidden opacity-0 w-0' : 'table-cell opacity-100'
       }`}>
-        <div className="text-sm font-semibold text-slate-700">{booking.ContactNo || "N/A"}</div>
+        <div className="text-sm font-semibold text-slate-700">
+          <SecureDisplay content={booking.ContactNo || "N/A"} />
+        </div>
       </td>
       <td className={`p-4 transition-all duration-300 ${
         !sidebarCollapsed ? 'hidden opacity-0 w-0' : 'table-cell opacity-100'
       }`}>
         <div className="text-sm">
           <div className="font-bold text-slate-900">Booked By</div>
-          <div className="text-slate-600 font-medium">{booking.name || "-"}</div>
+          <div className="text-slate-600 font-medium">
+            <SecureDisplay content={booking.name || "-"} />
+          </div>
         </div>
       </td>
       <td className="p-4">
@@ -1438,9 +1446,9 @@ export default function BusBookingFull() {
         </Card>
       </div>
 
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
+      <SafeStyleSheet 
+        id="bus-booking-highlight-styles"
+        css={`
           .highlight-pulse {
             animation: highlightPulse 2s ease-in-out;
           }
@@ -1455,8 +1463,7 @@ export default function BusBookingFull() {
               border-color: rgb(59 130 246);
             }
           }
-        `,
-        }}
+        `}
       />
     </div>
   )

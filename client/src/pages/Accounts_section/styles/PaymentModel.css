@@ -1,0 +1,19 @@
+/* Step container */
+.payment-choice-container,
+.manual-payment-placeholder {
+  text-align: center;
+  padding: 2rem;
+  background: transparent;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  color: aqua;
+}
+
+.manual-payment-placeholder h2,
+.payment-choice-container h2 {
+  color: aqua;
+  border-bottom: 3px solid rgb(255, 255, 255);
+  border-top: 3px solid rgb(255, 255, 255);
+  padding: 0.5rem;
+}
