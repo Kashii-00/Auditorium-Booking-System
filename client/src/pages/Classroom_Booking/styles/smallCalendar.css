@@ -1,0 +1,339 @@
+.cancel-dates-form {
+  padding: 1rem;
+  background: transparent;
+  margin: 1rem;
+  border: 2px solid #02eaff;
+  border-radius: 8px;
+}
+
+.cancel-dates-form input,
+.cancel-dates-form button {
+  margin: 0.5rem 0;
+  display: block;
+}
+
+.cancel-dates-form p.error-cancel {
+  color: red;
+}
+
+.cancel-dates-form p.success-cancel {
+  color: green;
+}
+
+.small-calendar {
+  width: fit-content;
+  font-size: 12px;
+  pointer-events: none;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.calendar-widget {
+  margin-bottom: 1.5rem;
+}
+
+/* Optional: style cancelled dates differently */
+.cancelled .rmdp-day span {
+  background-color: #ffe6e6;
+  color: #a00;
+  border-radius: 50%;
+}
+
+/* Base calendar styling */
+.react-calendar {
+  width: 400px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: transparent;
+  /* color: black; */
+  border: 2px solid #02eaff;
+  padding: 10px;
+}
+
+.small-Calendar {
+  margin: 0 auto;
+}
+
+/* Day tile */
+.react-calendar__tile {
+  padding: 6px 0;
+  height: 30px;
+  color: rgb(255, 255, 255); /* default text */
+}
+
+.react-calendar__tile:hover {
+  color: black !important;
+  background-color: aqua !important;
+}
+
+/* All booked dates - green background with white text */
+.highlight-all {
+  background-color: #28c76f !important;
+  color: rgb(0, 0, 0) !important;
+  border: 1px solid black !important;
+  box-sizing: border-box !important;
+  font-weight: bold;
+}
+.react-calendar__tile.highlight-all:hover {
+  background-color: rgb(89, 255, 0) !important;
+}
+
+/* Cancelled dates - red background with white text */
+.highlight-cancelled {
+  background-color: #ea5455 !important;
+  color: rgb(0, 0, 0) !important;
+  border: 1px solid black !important;
+  box-sizing: border-box !important;
+  font-weight: bold;
+}
+
+.react-calendar__tile.highlight-cancelled:hover {
+  background-color: rgb(255, 0, 0) !important;
+}
+
+/* Ensure inactive/other month days are muted */
+.react-calendar__tile--neighboringMonth {
+  color: #929292 !important;
+}
+
+.react-calendar__navigation {
+  overflow: auto;
+}
+
+/* Keep navigation and labels visible */
+.react-calendar__navigation button {
+  font-size: 0.85rem;
+  color: #ffffff;
+}
+
+.react-calendar__navigation button:hover,
+.react-calendar__navigation button:active {
+  color: yellow;
+  background-color: transparent !important;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr[title] {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.weekend-blue {
+  color: rgb(255, 238, 0) !important;
+}
+
+/* Style for today */
+.react-calendar__tile--now {
+  background-color: #143851 !important; /* or any color you like */
+  font-weight: bold;
+  border: 1px solid black !important;
+  box-sizing: border-box !important;
+}
+
+.react-calendar__tile--now:hover {
+  background-color: #0278cc !important;
+  color: white !important;
+}
+
+/* Today that is also a booked day */
+.react-calendar__tile--now.highlight-all {
+  background-color: #88ff00 !important;
+}
+
+/* Today that is cancelled */
+.react-calendar__tile--now.highlight-cancelled {
+  background-color: #ea5455 !important;
+}
+
+.selected-dates-list {
+  margin: 10px auto;
+  padding: 10px;
+  /* background: #f7f7f7; */
+  /* background: #17f3ff6f;
+  border-radius: 8px; */
+  border: 1px dashed #02f7ff;
+  max-height: 200px;
+  overflow-y: auto;
+  width: 200px;
+}
+
+.selected-date-item {
+  padding: 5px 8px;
+  margin: 2px 0;
+  background-color: #000000;
+  border-left: 4px solid #00ff00;
+  font-family: monospace;
+  color: #00ff00;
+}
+
+.no-dates {
+  padding: 5px 8px;
+  margin: 2px 0;
+  background-color: #000000;
+  border-left: 4px solid #ff0000;
+  font-family: monospace;
+  color: #ff0000;
+}
+
+.multi-Date {
+  font-size: 0.85rem;
+  border: 3px solid #00a6ff9d;
+  border-radius: 6px;
+  background-color: transparent;
+  color: #02f7ff;
+  transition: border-color 0.3s ease, background-color 0.3s ease,
+    box-shadow 0.3s ease;
+  margin: 0px auto;
+  width: fit-content;
+  padding: 5px;
+}
+
+.rmdp-container {
+  width: 0px;
+}
+
+.multi-Date-picker {
+  /* width: 260px;
+  padding: 0; */
+  display: flex;
+  width: fit-content;
+  margin: 10px auto !important;
+}
+
+/* Hover effect */
+.multi-Date:hover {
+  border-color: #02f7ff;
+  background-color: transparent;
+}
+
+/* Focus effect */
+.multi-Date:focus {
+  border-color: #02f7ff;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 255, 251, 0.8);
+  text-shadow: 0 0 10px rgba(0, 255, 251, 0.6);
+}
+
+/* Placeholder text */
+.multi-Date::placeholder {
+  color: #02eaff;
+  opacity: 1;
+}
+
+.Cancel-Dates-btn,
+.AllDates-fetchBtn {
+  background-color: #024d769d;
+  border: none;
+  color: #e3eaf5;
+  padding: 6px 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 3px solid white;
+  font-size: 0.8rem;
+}
+
+/* Hover effect: raise the button */
+.Cancel-Dates-btn:hover,
+.AllDates-fetchBtn:hover {
+  background-color: #0d2388;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.35);
+}
+
+/* Optional: Pressed effect */
+.Cancel-Dates-btn:active,
+.AllDates-fetchBtn:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+.searchRequest-Con-2 {
+  max-width: 550px;
+  /* background-color: black; */
+  display: flex;
+  justify-content: center;
+  margin: 0 auto;
+  /* padding: 10px; */
+}
+
+/* Wrapper for input + icon */
+.searchRequest-Con-2 .search-bar-wrapper-2 {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+}
+
+/* Input field styling */
+.searchRequest-Con-2 .input-field {
+  width: 100%;
+  padding: 6px 40px 6px 10px; /* leave space for icon on the right */
+  font-size: 0.85rem;
+  border: 3px solid #00a6ff9d;
+  border-radius: 6px;
+  background-color: transparent;
+  color: #02f7ff;
+  transition: border-color 0.3s ease, background-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Hover effect */
+.searchRequest-Con-2 .input-field:hover {
+  border-color: #02f7ff;
+}
+
+/* Focus effect */
+.searchRequest-Con-2 .input-field:focus {
+  border-color: #02f7ff;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 255, 251, 0.8);
+  text-shadow: 0 0 10px rgba(0, 255, 251, 0.6);
+}
+
+/* Placeholder text */
+.searchRequest-Con-2 .input-field::placeholder {
+  color: #02eaff;
+  opacity: 1;
+}
+
+/* Icon button inside the input */
+.searchRequest-Con-2 .search-icon-btn {
+  position: absolute;
+  right: 8px;
+  top: 20%;
+  transform: translateY(-20%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #02eaff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.searchRequest-Con-2 .search-icon-btn:hover {
+  color: #00f7ff;
+}
+
+/* SVG icon size */
+.searchRequest-Con-2 .icon {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+.react-calendar__month-view {
+  overflow: auto;
+}
+
+.cancel-dates-submit-sec {
+  margin: 0 auto;
+  width: fit-content;
+}

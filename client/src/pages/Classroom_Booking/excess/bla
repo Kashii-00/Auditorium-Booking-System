@@ -1,0 +1,185 @@
+/* Root FullCalendar container - sets full width/height and inherits font */
+.fc {
+  height: 100% !important;
+  font-family: inherit;
+  width: 100% !important;
+  min-width: 600px;
+  min-height: 600px;
+}
+
+/* Title text in the toolbar (e.g., month/year) */
+.fc-toolbar-title {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  color: var(--accent-purple) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* All buttons in the FullCalendar toolbar */
+.fc-button {
+  background-color: var(--accent-blue) !important;
+  border-color: var(--accent-blue) !important;
+  box-shadow: none !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.7rem !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Hover effect for toolbar buttons */
+.fc-button:hover {
+  background-color: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Active state for toolbar buttons */
+.fc-button-active {
+  background-color: var(--accent-purple) !important;
+  border-color: var(--accent-purple) !important;
+}
+
+/* "Today" button styling */
+.fc-today-button {
+  background-color: var(--accent-teal) !important;
+  border-color: var(--accent-teal) !important;
+}
+
+/* "Today" button hover effect */
+.fc-today-button:hover {
+  background-color: #1ba57f !important;
+  border-color: #1ba57f !important;
+}
+
+/* Calendar view harness container - outer wrapper for calendar content */
+.fc .fc-view-harness {
+  border-radius: var(--radius-md);
+  background-color: #fff;
+  overflow: auto !important;
+  width: 100% !important;
+  min-height: 200px;
+  border: 1px solid #edf2f7;
+}
+
+/* Grid view containers (monthly, weekly, etc.) */
+.fc .fc-timegrid,
+.fc .fc-daygrid {
+  height: 100% !important;
+  min-width: 200px;
+  overflow: auto !important;
+}
+
+/* Scrollable container for time grid and day grid */
+.fc-scrollgrid {
+  width: 100% !important;
+}
+
+/* Grid body for time and day views */
+.fc-timegrid-body,
+.fc-daygrid-body {
+  overflow: visible !important;
+  min-width: 100% !important;
+}
+
+/* Each day cell in the day grid */
+.fc .fc-daygrid-day {
+  transition: background-color 0.2s;
+}
+
+/* Hover state for day cells */
+.fc .fc-daygrid-day:hover {
+  background-color: #f8fafc;
+}
+
+/* Highlight for today's cell in the day grid */
+.fc .fc-daygrid-day.fc-day-today {
+  background-color: rgba(74, 108, 250, 0.1) !important;
+}
+
+/* Day number styling (1, 2, 3, ...) in each cell */
+.fc .fc-daygrid-day-number {
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Day header text (e.g., Mon, Tue) */
+.fc .fc-col-header-cell-cushion {
+  color: var(--accent-purple);
+  font-weight: 600;
+}
+
+/* Enforce full width for calendar tables */
+.fc table {
+  width: 100% !important;
+  min-width: 400px !important;
+}
+
+/* Duplicate rule: Highlight for today's cell in day grid (refined color) */
+.fc .fc-daygrid-day.fc-day-today {
+  background-color: var(--primary-light) !important;
+}
+
+/* Handle expanded layout for content wrapper */
+.content-wrapper.expanded .calendar-main .fc-view-harness {
+  min-width: 100%;
+}
+
+/* Header cells (top row with weekdays) */
+.fc-day-header,
+.fc-col-header-cell {
+  min-width: 100px;
+  background-color: #f9f9ff;
+}
+
+/* Base styling for each calendar event */
+.fc-event {
+  border-radius: var(--radius-sm) !important;
+  padding: 4px 8px !important;
+  font-size: 0.6rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+}
+
+/* Hover state for calendar events */
+.fc-event:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Approved status color theme */
+.fc-event.status-approved {
+  background: linear-gradient(135deg, #43a047, #2e7d32) !important;
+  border-left: 3px solid #1b5e20 !important;
+}
+
+/* Pending status color theme */
+.fc-event.status-pending {
+  background: linear-gradient(135deg, #ff9800, #f57c00) !important;
+  border-left: 3px solid #e65100 !important;
+}
+
+/* Denied status color theme */
+.fc-event.status-denied {
+  background: linear-gradient(135deg, #f44336, #d32f2f) !important;
+  border-left: 3px solid #b71c1c !important;
+}
+
+/* Change height of day cells in month view */
+.fc-daygrid-day-frame {
+  min-height: 80px !important; /* adjust to desired height */
+  height: 80px;
+}
+
+/* Title text inside an event */
+.fc-event-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

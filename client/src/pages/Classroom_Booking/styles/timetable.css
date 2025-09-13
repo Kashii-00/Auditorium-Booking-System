@@ -1,0 +1,105 @@
+/* Timetable Styles */
+.timetable-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.timetable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.timetable th,
+.timetable td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem;
+}
+
+.timetable th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  text-align: center;
+}
+
+.timetable td {
+  vertical-align: top;
+}
+
+.timetable-time {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.timetable-entry {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.timetable-entry:last-child {
+  margin-bottom: 0;
+}
+
+.timetable-entry-title {
+  font-weight: 600;
+}
+
+.timetable-entry-room {
+  font-size: 0.7rem;
+  color: #4b5563;
+}
+
+/* Acronym Legend Styles */
+.acronym-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.acronym-item {
+  display: flex;
+}
+
+.acronym-key {
+  font-weight: 600;
+  margin-right: 0.25rem;
+}
+
+/* Animation for highlighted row */
+@keyframes highlight-pulse {
+  0% {
+    background-color: #dbeafe;
+  }
+  50% {
+    background-color: #93c5fd;
+  }
+  100% {
+    background-color: #dbeafe;
+  }
+}
+
+.highlight-pulse {
+  animation: highlight-pulse 1s ease-in-out;
+}
+
+/* Print styles */
+@media print {
+  .timetable {
+    font-size: 8pt;
+  }
+
+  .timetable th,
+  .timetable td {
+    padding: 2pt;
+  }
+
+  .acronym-legend {
+    font-size: 7pt;
+    page-break-before: always;
+  }
+}

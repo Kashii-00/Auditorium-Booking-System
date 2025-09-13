@@ -1,0 +1,102 @@
+/* Loading screen */
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+.loading-spinner {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error screen */
+.error-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 0 20px;
+}
+
+.error-screen h2 {
+  color: #e74c3c;
+  margin-bottom: 15px;
+}
+
+.error-screen p {
+  margin-bottom: 20px;
+  max-width: 500px;
+  line-height: 1.6;
+}
+
+.error-screen button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.error-screen button:hover {
+  background-color: #2980b9;
+}
+
+/* Main content positioning - Updated for consistent transitions */
+.main-content {
+  position: fixed !important;
+  top: 64px; /* Match navbar height */
+  left: 280px;
+  right: 0;
+  bottom: 0;
+  width: calc(100% - 280px) !important;
+  overflow-y: auto;
+  margin-left: 0 !important; /* Remove margin, use position instead */
+  margin-top: 0 !important; /* Remove margin, use position instead */
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: left, width;
+  
+  /* Ensure proper background */
+  background-color: #f5f6fa;
+  z-index: 1;
+}
+
+/* When sidebar is collapsed */
+body.sidebar-collapsed .main-content {
+  left: 90px !important;
+  width: calc(100% - 90px) !important;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ensure app background prevents flash during transitions */
+body, #root, .app {
+  background-color: #f5f6fa;
+}
+
+/* Media query for mobile - Updated to match others */
+@media (max-width: 900px) {
+  .main-content {
+    left: 0 !important;
+    width: 100% !important;
+    transition: none !important;
+  }
+}

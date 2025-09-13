@@ -1,0 +1,37 @@
+{
+  "name": "auditorium-booking-system",
+  "version": "1.0.0",
+  "description": "Auditorium Booking System",
+  "private": true,
+  "scripts": {
+    "install:client": "cd client && pnpm install",
+    "install:server": "cd server && pnpm install",
+    "install": "pnpm run install:client && pnpm run install:server",
+    "build:client": "cd client && pnpm run build",
+    "build:server": "cd server && pnpm run build",
+    "build": "pnpm run build:server && pnpm run build:client",
+    "dev:client": "cd client && pnpm run dev",
+    "dev:server": "cd server && pnpm run dev",
+    "start:client": "cd client && pnpm run start",
+    "start:server": "cd server && pnpm run start",
+    "clean:client": "cd client && pnpm run clean",
+    "clean:server": "cd server && pnpm run clean",
+    "clean": "rm -rf client/node_modules server/node_modules client/dist server/dist",
+    "setup": "pnpm run install:sequential && pnpm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "keywords": [
+    "auditorium",
+    "booking",
+    "system",
+    "react",
+    "nodejs",
+    "express",
+    "mysql"
+  ],
+  "author": "",
+  "license": "ISC"
+}
