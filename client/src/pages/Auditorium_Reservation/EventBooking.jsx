@@ -402,6 +402,7 @@ const BookingRow = memo(({ booking, onApprove, onDeny, onDelete, selectedBooking
       </td>
     </tr>
   )
+  
 })
 
 BookingRow.displayName = "BookingRow"

@@ -167,13 +167,13 @@ function App() {
 
       await logout()
       setLoggedInUser(null)
-      // Force redirect to login page after logout
-      window.location.href = '/erp/login'
+      // Force redirect to login page after logout with correct reason
+      window.location.href = '/erp/login?reason=user_logout'
     } catch (error) {
       console.error("Logout error in App:", error)
       setLoggedInUser(null)
       // Force redirect to login page even on error
-      window.location.href = '/erp/login'
+      window.location.href = '/erp/login?reason=user_logout'
     }
   }
 

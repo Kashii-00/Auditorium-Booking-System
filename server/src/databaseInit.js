@@ -511,13 +511,8 @@ const tableQueries = {
     CREATE TABLE IF NOT EXISTS \`user_refresh_tokens\` (
       \`user_id\` int(11) NOT NULL,
       \`refresh_token\` varchar(512) NOT NULL,
-      \`session_id\` varchar(64) NOT NULL,
-      \`ip_address\` varchar(45),
-      \`user_agent\` text,
-      \`created_at\` datetime DEFAULT current_timestamp(),
       \`updated_at\` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
       PRIMARY KEY (\`user_id\`),
-      UNIQUE KEY \`unique_session\` (\`session_id\`),
       CONSTRAINT \`user_refresh_tokens_ibfk_1\` FOREIGN KEY (\`user_id\`) REFERENCES \`users\` (\`id\`) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
   `,
@@ -1518,10 +1513,6 @@ const tableColumnDefinitions = {
   user_refresh_tokens: [
     { name: 'user_id', definition: '\`user_id\` int(11) NOT NULL' },
     { name: 'refresh_token', definition: '\`refresh_token\` varchar(512) NOT NULL' },
-    { name: 'session_id', definition: '\`session_id\` varchar(64) NOT NULL' },
-    { name: 'ip_address', definition: '\`ip_address\` varchar(45)' },
-    { name: 'user_agent', definition: '\`user_agent\` text' },
-    { name: 'created_at', definition: '\`created_at\` datetime DEFAULT current_timestamp()' },
     { name: 'updated_at', definition: '\`updated_at\` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()' }
   ],
 

@@ -11,32 +11,53 @@ const PersistentNotification = ({
   const [timeRemaining, setTimeRemaining] = useState(0);
 
   useEffect(() => {
-    // Check for notification data in localStorage
+    // Check for notification data from URL parameters
     const checkForNotification = () => {
       try {
-        const storedNotification = localStorage.getItem('sessionNotification');
-        if (storedNotification) {
-          const notificationData = JSON.parse(storedNotification);
+        const urlParams = new URLSearchParams(window.location.search);
+        const reason = urlParams.get('reason');
+        
+        if (reason) {
+          let notificationData = null;
           
-          // Check if notification is not too old (within 30 seconds)
-          const now = Date.now();
-          const timeDiff = now - notificationData.timestamp;
+          // Map URL reason to notification data
+          switch (reason) {
+            case 'session_expired':
+              notificationData = {
+                type: 'session_expired',
+                message: 'You\'ve been logged out because your account was accessed from another device.',
+                timestamp: Date.now()
+              };
+              break;
+            case 'inactivity':
+              notificationData = {
+                type: 'info',
+                message: 'You were logged out due to 10 minutes of inactivity.',
+                timestamp: Date.now()
+              };
+              break;
+            case 'user_logout':
+              notificationData = {
+                type: 'info',
+                message: 'You have been successfully logged out.',
+                timestamp: Date.now()
+              };
+              break;
+          }
           
-          if (timeDiff < 30000) { // 30 seconds
+          if (notificationData) {
             setNotification(notificationData);
             setIsVisible(true);
             setTimeRemaining(autoHideDelay / 1000);
             
-            // Clear the notification from localStorage
-            localStorage.removeItem('sessionNotification');
-          } else {
-            // Remove old notification
-            localStorage.removeItem('sessionNotification');
+            // Clean up URL parameter immediately to prevent re-showing
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.delete('reason');
+            window.history.replaceState({}, '', newUrl);
           }
         }
       } catch (error) {
-        console.error('Error reading notification data:', error);
-        localStorage.removeItem('sessionNotification');
+        console.error('Error reading URL parameters:', error);
       }
     };
 
@@ -115,111 +136,214 @@ const PersistentNotification = ({
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="fixed top-4 right-4 z-50 max-w-md"
-          initial={{ opacity: 0, x: 400, scale: 0.9 }}
-          animate={{ opacity: 1, x: 0, scale: 1 }}
-          exit={{ opacity: 0, x: 400, scale: 0.9 }}
+          className="fixed top-4 right-4 z-50"
+          initial={{ opacity: 0, x: 400, y: -50 }}
+          animate={{ opacity: 1, x: 0, y: 0 }}
+          exit={{ opacity: 0, x: 400, scale: 0.8 }}
           transition={{ 
             type: "spring", 
             damping: 25, 
             stiffness: 300,
-            duration: 0.4 
+            duration: 0.6 
           }}
         >
-          <div
-            className="rounded-xl shadow-2xl text-white relative overflow-hidden backdrop-blur-sm"
+          <motion.div
+            className="relative overflow-hidden backdrop-blur-md"
             style={{
-              ...getNotificationStyle(notification.type),
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15), 0 8px 32px rgba(255, 107, 107, 0.2)'
+              background: notification.type === 'session_expired' 
+                ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95))' 
+                : notification.type === 'info' && notification.message.includes('inactivity')
+                ? 'linear-gradient(135deg, rgba(249, 115, 22, 0.95), rgba(234, 88, 12, 0.95))'
+                : 'linear-gradient(135deg, rgba(34, 197, 94, 0.95), rgba(22, 163, 74, 0.95))',
+              borderRadius: '16px',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+              minWidth: '320px',
+              border: '1px solid rgba(255, 255, 255, 0.2)'
             }}
+            whileHover={{ scale: 1.02, y: -2 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
           >
+            {/* Animated background particles */}
+            <motion.div
+              className="absolute inset-0 opacity-20"
+              initial={{ rotate: 0 }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            >
+              <div className="absolute top-2 right-8 w-2 h-2 bg-white rounded-full"></div>
+              <div className="absolute top-8 right-4 w-1 h-1 bg-white rounded-full"></div>
+              <div className="absolute bottom-4 left-6 w-1.5 h-1.5 bg-white rounded-full"></div>
+            </motion.div>
+
             {/* Progress bar */}
             <motion.div
-              className="absolute top-0 left-0 h-1 bg-white/30"
+              className="absolute top-0 left-0 h-1 bg-white/30 rounded-t-2xl"
               initial={{ width: '100%' }}
               animate={{ width: '0%' }}
               transition={{ duration: autoHideDelay / 1000, ease: 'linear' }}
             />
 
-            <div className="p-6">
-              <div className="flex items-start gap-4">
-                {/* Icon */}
+            {/* Glowing edge effect */}
+            <motion.div
+              className="absolute inset-0 rounded-2xl"
+              style={{
+                background: `linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent)`,
+                transform: 'translateX(-100%)'
+              }}
+              animate={{
+                transform: 'translateX(100%)'
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse",
+                ease: "easeInOut"
+              }}
+            />
+
+            <div className="relative p-4">
+              <div className="flex items-start gap-3">
+                {/* Animated Icon */}
                 <motion.div
-                  className="flex-shrink-0 p-2 bg-white/20 rounded-full"
+                  className="flex-shrink-0 relative"
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+                  transition={{ 
+                    delay: 0.2, 
+                    type: "spring", 
+                    stiffness: 300,
+                    damping: 15
+                  }}
                 >
-                  {getNotificationIcon(notification.type)}
+                  <motion.div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white relative"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    animate={{
+                      boxShadow: [
+                        '0 0 0 0px rgba(255, 255, 255, 0.4)',
+                        '0 0 0 8px rgba(255, 255, 255, 0)',
+                        '0 0 0 0px rgba(255, 255, 255, 0)'
+                      ]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeOut"
+                    }}
+                  >
+                    {notification.type === 'session_expired' ? (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.4 }}
+                      >
+                        🔒
+                      </motion.div>
+                    ) : notification.type === 'info' && notification.message.includes('inactivity') ? (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.4 }}
+                      >
+                        ⏰
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.4 }}
+                      >
+                        ✅
+                      </motion.div>
+                    )}
+                  </motion.div>
                 </motion.div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <motion.h3
-                    className="text-lg font-semibold mb-2"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    Session Ended
-                  </motion.h3>
-                  <motion.p
-                    className="text-sm leading-relaxed opacity-95"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                  >
-                    {notification.message}
-                  </motion.p>
-                  
-                  {/* Timer and dismiss button */}
                   <motion.div
-                    className="flex items-center justify-between mt-4"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
+                    transition={{ delay: 0.3, duration: 0.4 }}
                   >
-                    <span className="text-xs opacity-75">
-                      Auto-dismiss in {timeRemaining}s
-                    </span>
-                    <button
-                      onClick={handleHide}
-                      className="text-xs px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full transition-colors duration-200"
+                    <h3 className="text-white font-semibold text-sm mb-1">
+                      {notification.type === 'session_expired' 
+                        ? '🔐 Session Ended' 
+                        : notification.type === 'info' && notification.message.includes('inactivity')
+                        ? '💤 Auto Logout'
+                        : '👋 Goodbye!'
+                      }
+                    </h3>
+                    <motion.p
+                      className="text-white/90 text-xs leading-relaxed"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.5 }}
                     >
-                      Dismiss
-                    </button>
+                      {notification.type === 'session_expired' 
+                        ? 'Logged in from another device' 
+                        : notification.type === 'info' && notification.message.includes('inactivity')
+                        ? 'Inactive for too long'
+                        : 'Successfully logged out'
+                      }
+                    </motion.p>
                   </motion.div>
                 </div>
 
                 {/* Close button */}
                 <motion.button
                   onClick={handleHide}
-                  className="flex-shrink-0 p-1 hover:bg-white/20 rounded-full transition-colors duration-200"
-                  whileHover={{ scale: 1.1 }}
+                  className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full transition-all duration-200 text-white/80 hover:text-white"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                  whileHover={{ 
+                    scale: 1.1, 
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    rotate: 90
+                  }}
                   whileTap={{ scale: 0.9 }}
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, rotate: -90 }}
+                  animate={{ opacity: 1, rotate: 0 }}
                   transition={{ delay: 0.6 }}
                 >
-                  <FaTimes className="text-sm" />
+                  <FaTimes className="text-xs" />
                 </motion.button>
               </div>
+              
+              {/* Timer with pulse animation */}
+              <motion.div
+                className="mt-3 flex items-center justify-center"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.7 }}
+              >
+                <motion.div
+                  className="px-3 py-1 rounded-full text-xs font-medium text-white"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.15)',
+                    backdropFilter: 'blur(10px)'
+                  }}
+                  animate={{
+                    scale: [1, 1.05, 1],
+                    opacity: [0.8, 1, 0.8]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  Auto-dismiss in {timeRemaining}s
+                </motion.div>
+              </motion.div>
             </div>
-
-            {/* Decorative elements */}
-            <motion.div
-              className="absolute -top-2 -right-2 w-16 h-16 bg-white/10 rounded-full"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.7, duration: 0.5 }}
-            />
-            <motion.div
-              className="absolute -bottom-4 -left-4 w-12 h-12 bg-white/5 rounded-full"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.8, duration: 0.5 }}
-            />
-          </div>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

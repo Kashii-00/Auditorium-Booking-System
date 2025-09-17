@@ -126,17 +126,10 @@ const handleSessionInvalidated = () => {
   // Show enhanced notification
   showSessionInvalidatedNotification();
   
-  // Store notification data for display on login page
-  localStorage.setItem('sessionNotification', JSON.stringify({
-    type: 'session_expired',
-    message: 'You\'ve been logged out because your account was accessed from another device.',
-    timestamp: Date.now()
-  }));
-  
   // Broadcast to other tabs
   broadcastSessionExpired();
   
-  // Redirect after showing notification
+  // Redirect with URL parameter for this specific tab
   setTimeout(() => {
     window.location.href = '/erp/login?reason=session_expired';
   }, 800);
@@ -157,61 +150,190 @@ const showInactivityWarning = () => {
       position: fixed;
       top: 20px;
       right: 20px;
-      background: linear-gradient(135deg, #ff9800, #f57c00);
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.95), rgba(234, 88, 12, 0.95));
       color: white;
-      padding: 20px 24px;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(255, 152, 0, 0.3);
+      padding: 16px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       z-index: 10000;
-      max-width: 400px;
+      min-width: 320px;
+      max-width: 380px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      animation: slideInFromRight 0.4s ease-out;
+      animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      position: relative;
+      overflow: hidden;
     ">
-      <div style="display: flex; align-items: flex-start; gap: 12px;">
-        <div style="
-          background: rgba(255, 255, 255, 0.2);
-          border-radius: 50%;
-          padding: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 32px;
-          height: 32px;
-        ">
-          ⏰
-        </div>
-        <div style="flex: 1;">
-          <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">
-            Session Expiring Soon
+      <!-- Animated background particles -->
+      <div style="
+        position: absolute;
+        inset: 0;
+        opacity: 0.2;
+        animation: rotate 20s linear infinite;
+      ">
+        <div style="position: absolute; top: 8px; right: 32px; width: 8px; height: 8px; background: white; border-radius: 50%;"></div>
+        <div style="position: absolute; top: 32px; right: 16px; width: 4px; height: 4px; background: white; border-radius: 50%;"></div>
+        <div style="position: absolute; bottom: 16px; left: 24px; width: 6px; height: 6px; background: white; border-radius: 50%;"></div>
+      </div>
+      
+      <!-- Progress bar -->
+      <div style="
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 16px 16px 0 0;
+        animation: progressBar 120s linear;
+        width: 100%;
+      "></div>
+      
+      <!-- Glowing edge effect -->
+      <div style="
+        position: absolute;
+        inset: 0;
+        border-radius: 16px;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        animation: shimmer 2s ease-in-out infinite alternate;
+      "></div>
+      
+      <div style="position: relative;">
+        <div style="display: flex; align-items: start; gap: 12px;">
+          <!-- Animated Icon -->
+          <div style="
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            animation: pulse 2s ease-in-out infinite;
+            position: relative;
+          ">
+            ⚠️
+            <div style="
+              position: absolute;
+              inset: 0;
+              border-radius: 50%;
+              animation: ripple 2s ease-out infinite;
+            "></div>
           </div>
-          <div style="font-size: 14px; line-height: 1.4; opacity: 0.95;">
-            You'll be logged out in 2 minutes due to inactivity. Move your mouse or press any key to stay logged in.
+          
+          <div style="flex: 1;">
+            <div style="
+              font-weight: 600; 
+              font-size: 15px; 
+              margin-bottom: 4px;
+              animation: fadeInUp 0.6s ease-out 0.2s both;
+            ">
+              ⏰ Session Expiring Soon
+            </div>
+            <div style="
+              font-size: 13px; 
+              opacity: 0.95;
+              line-height: 1.4;
+              animation: fadeInUp 0.6s ease-out 0.4s both;
+            ">
+              Auto-logout in 2 minutes. Any activity will extend your session.
+            </div>
           </div>
+          
           <button 
-            onclick="this.parentElement.parentElement.parentElement.parentElement.remove(); window.authService?.resetInactivityTimer?.()" 
+            onclick="this.parentElement.parentElement.parentElement.remove(); window.authService?.resetInactivityTimer?.()" 
             style="
-              margin-top: 12px;
-              padding: 8px 16px;
-              background: rgba(255, 255, 255, 0.2);
+              padding: 6px 12px;
+              background: rgba(255, 255, 255, 0.15);
+              backdrop-filter: blur(10px);
               border: none;
-              border-radius: 6px;
+              border-radius: 8px;
               color: white;
               font-size: 12px;
+              font-weight: 500;
               cursor: pointer;
-              transition: background 0.2s;
+              transition: all 0.3s ease;
+              animation: fadeInUp 0.6s ease-out 0.6s both;
             "
-            onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'"
-            onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'"
+            onmouseover="
+              this.style.background='rgba(255, 255, 255, 0.25)'; 
+              this.style.transform='scale(1.05)';
+            "
+            onmouseout="
+              this.style.background='rgba(255, 255, 255, 0.15)'; 
+              this.style.transform='scale(1)';
+            "
           >
-            Stay Logged In
+            Stay Active
           </button>
+        </div>
+        
+        <!-- Breathing indicator -->
+        <div style="
+          margin-top: 12px;
+          text-align: center;
+          animation: fadeInUp 0.6s ease-out 0.8s both;
+        ">
+          <div style="
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            animation: breathe 2s ease-in-out infinite;
+          ">
+            💭 Click, type, or move to stay logged in
+          </div>
         </div>
       </div>
     </div>
+    
     <style>
-      @keyframes slideInFromRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+      @keyframes bounceIn {
+        0% { transform: translateX(100%) scale(0.3); opacity: 0; }
+        50% { transform: translateX(-10%) scale(1.05); }
+        70% { transform: translateX(5%) scale(0.95); }
+        100% { transform: translateX(0) scale(1); opacity: 1; }
+      }
+      
+      @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+      
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+      
+      @keyframes ripple {
+        0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+        70% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+      }
+      
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      @keyframes breathe {
+        0%, 100% { opacity: 0.8; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.02); }
+      }
+      
+      @keyframes progressBar {
+        from { width: 100%; }
+        to { width: 0%; }
       }
     </style>
   `;
@@ -248,13 +370,6 @@ const resetInactivityTimer = () => {
     // Set logout timer (10 minutes)
     inactivityTimer = setTimeout(() => {
       log('Logging out due to inactivity');
-      
-      // Store notification for login page
-      localStorage.setItem('sessionNotification', JSON.stringify({
-        type: 'info',
-        message: 'You were logged out due to 10 minutes of inactivity.',
-        timestamp: Date.now()
-      }));
       
       // Perform logout
       logout('inactivity');
@@ -480,14 +595,7 @@ export const logout = async (reason = 'user_logout') => {
     }
     stopInactivityTimer();
     
-    // If this is a manual logout, we can store a different message
-    if (reason === 'user_logout') {
-      localStorage.setItem('sessionNotification', JSON.stringify({
-        type: 'info',
-        message: 'You have been successfully logged out.',
-        timestamp: Date.now()
-      }));
-    }
+    // No need to store notification - will be handled via URL parameter when redirecting
     
     await axios.post(`${API_URL}/auth/logout`);
     sessionStorage.removeItem('user');
